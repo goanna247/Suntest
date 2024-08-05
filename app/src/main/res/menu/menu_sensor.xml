@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/sensor_back_button"
+        android:title="Back"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/sensor_save_button"
+        android:title="Save 0"
+        app:showAsAction="always" />
+    <item android:id="@+id/sensor_options_button"
+        android:title="Tools"
+        app:showAsAction="always">
+        <menu>
+            <item android:id="@+id/sensor_tools_saveData"
+                android:title="Save Data"/>
+            <item android:id="@+id/sensor_tools_deleteDataFile"
+                android:title="Delete Data File"/>
+            <item android:id="@+id/sensor_tools_autoSaveOn"
+                android:title="Auto Save On"/>
+            <item android:id="@+id/sensor_tools_newAutoFile"
+                android:title="New Auto File"/>
+        </menu>
+    </item>
+    <item android:id="@+id/sensor_hold_button"
+        android:title="Hold"
+        app:showAsAction="always"/>
+</menu>

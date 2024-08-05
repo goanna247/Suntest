@@ -120,9 +120,9 @@ int	crc8_init(crc8_t *crc8, uint8_t poly, uint8_t initial_value, uint8_t final_x
 /// \retval 0 No error.
 /// \retval -1 Bad parameter. \p crc8 was NULL.
 
-
-int	crc8_begin(_jstring *inputArray);
-//int	crc8_begin(crc8_t *crc8);
+//
+//int	crc8_begin(_jstring *inputArray);
+int	crc8_begin(crc8_t *crc8);
 
 
 

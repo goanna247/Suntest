@@ -1,14 +1,20 @@
-//
-// Created by goanna on 6/06/2024.
-//
+////////////////////////////////////////////////////////////////////////////////
+/// \file   crc.c
+/// \brief  8, 16 and 32 bit CRC calculation.
+/// \author Martin Louis
+/// \date   Created: 2009-11-17
+///
+/// Provides table driven CRC calculation routines for 8, 16 and 32 bit CRC's
+/// with arbitary polygons.
 
-#include <jni.h>
-#include <string>
 #include "crc.h"
 
 /// \defgroup crc_private_group CRC private.
 /// \ingroup crc_group
 /// \{
+
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Configuration
@@ -34,15 +40,6 @@ static void crc32_bitwise(crc32_t *crc32, const uint8_t *buf, size_t size);
 // Initialises an 8 bit CRC state structure by generating an appropriate
 // look-up table for required polynomial and storing, initial and final XOR
 // values.
-
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc8Init(JNIEnv* env, jobject, jobjectArray crc8, jint poly, jint initial_value, jint final_xor) {
-    jobject *new_crc8_init;
-    for (int i = 0; i < (*env).GetArrayLength(crc8); i++) {
-        (new_crc8_init)[i] = (*env).GetObjectArrayElement(crc8, i);
-    }
-    return crc8_init(reinterpret_cast<crc8_t *>(new_crc8_init), poly, initial_value, final_xor);
-}
 
 int crc8_init(crc8_t *crc8, uint8_t poly, uint8_t initial_value, uint8_t final_xor)
 {
@@ -75,53 +72,8 @@ int crc8_init(crc8_t *crc8, uint8_t poly, uint8_t initial_value, uint8_t final_x
 ////////////////////////////////////////////////////////////////////////////////
 // Begins an 8 bit CRC calculation by setting the CRC accumulator to it's
 // initial value.
-using namespace std;
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc8Begin(JNIEnv* env, jobject, jstring crc8) {
-    return crc8_begin(crc8);
-
-}
-
-
-int crc8_begin(std::string inputArray)
-{
-    crc8_t *crc8 = nullptr;
-    std::string inputArrayString = inputArray;
-
-    std::string s = inputArrayString;
-    std::string delimiter = ",";
-    std::string arrayString[200];
-
-    int size = 0;
-
-    size_t pos = 0;
-    std::string token;
-    while ((pos = s.find(delimiter)) != std::string::npos) {
-        token = s.substr(0, pos);
-        arrayString[size] = token;
-        size++;
-        s.erase(0, pos + delimiter.length());
-    }
-
-    for (int i = 0; i < inputArrayString.length(); i++) {
-        crc8[i].crc = inputArrayString[i];
-        crc8[i].poly = inputArrayString[i];
-        crc8[i].initial_value = inputArrayString[i];
-        crc8[i].final_xor = inputArrayString[i];
-//        crc8[i].table[] = inputArrayString[i]; //TODO
-    }
-
-    if (!crc8)
-        return -1;
-
-    crc8->crc = crc8->initial_value;
-
-    return 0;
-}
-
-//int crc8_begin(crc8_t *crc8)
-//{
+//int crc8_begin(crc8_t *crc8) {
 //    if (!crc8)
 //        return -1;
 //
@@ -129,6 +81,15 @@ int crc8_begin(std::string inputArray)
 //
 //    return 0;
 //}
+
+int crc8_begin(crc8_t *crc8) {
+    if (!crc8)
+        return -1;
+
+    crc8->crc = crc8->initial_value;
+
+    return 0;
+}
 
 
 
@@ -138,19 +99,6 @@ int crc8_begin(std::string inputArray)
 // crc8_begin() and crc8_end() pair. More than one call to crc8_calc() may
 // appear between crc8_begin() and crc16_end() with the end result being a
 // correct CRC calculated over the concatenation of all specified blocks.
-
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc8Calc(JNIEnv* env, jobject,jobjectArray crc8, jobjectArray buf, jint size) {
-    jobject *newCrc;
-    for (int i = 0; i < (*env).GetArrayLength(crc8); i++) {
-        (newCrc)[i] = (*env).GetObjectArrayElement(crc8, i);
-    }
-    jobject *newBuf;
-    for (int i = 0; i < (*env).GetArrayLength(crc8); i++) {
-        (newBuf)[i] = (*env).GetObjectArrayElement(buf, i);
-    }
-    return crc8_calc(reinterpret_cast<crc8_t *>(newCrc), reinterpret_cast<const uint8_t *>(newBuf), size);
-}
 
 int crc8_calc(crc8_t *crc8, const uint8_t *buf, size_t size)
 {
@@ -186,15 +134,6 @@ int crc8_calc(crc8_t *crc8, const uint8_t *buf, size_t size)
 // calls to crc8_calc() are allowed to continue the calculation with additional
 // data.
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc8End(JNIEnv* env, jobject, jobjectArray crc8) {
-    jobject *newCrc8;
-    for (int i = 0; i < (*env).GetArrayLength(crc8); i++) {
-        (newCrc8)[i] = (*env).GetObjectArrayElement(crc8, i);
-    }
-    return crc8_end(reinterpret_cast<crc8_t *>(newCrc8)); //TODO
-}
-
 uint8_t crc8_end(crc8_t *crc8)
 {
     return crc8->crc ^ crc8->final_xor;
@@ -214,19 +153,6 @@ uint8_t crc8_end(crc8_t *crc8)
 /// crc8_init().
 /// \param buf Pointer to a block of bytes for the CRC calculation.
 /// \param size Number of bytes in block pointed to by \p buf.
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_work_libtest_MainActivity_lcrc8Bitwise(JNIEnv* env, jobject, jobjectArray crc8, jobjectArray buf, jint size) {
-    jobject *newCrc;
-    for (int i = 0; i < (*env).GetArrayLength(crc8); i++) {
-        (newCrc)[i] = (*env).GetObjectArrayElement(crc8, i);
-    }
-    jobject *newBuf;
-    for (int i = 0; i < (*env).GetArrayLength(buf); i++) {
-        (newBuf)[i] = (*env).GetObjectArrayElement(buf, i);
-    }
-    crc8_bitwise(reinterpret_cast<crc8_t *>(newCrc), reinterpret_cast<const uint8_t *>(newBuf), size);
-}
 
 static void crc8_bitwise(crc8_t *crc8, const uint8_t *buf, size_t size)
 {
@@ -252,11 +178,6 @@ static void crc8_bitwise(crc8_t *crc8, const uint8_t *buf, size_t size)
 // Initialises a 16 bit CRC state structure by generating an appropriate
 // look-up table for required polynomial and storing, initial and final XOR
 // values.
-
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc16Init(JNIEnv* env, jobject) {
-    return crc16_init(0,0,0,0); //TODO
-}
 
 int crc16_init(crc16_t *crc16, uint16_t poly, uint16_t initial_value, uint16_t final_xor)
 {
@@ -290,11 +211,6 @@ int crc16_init(crc16_t *crc16, uint16_t poly, uint16_t initial_value, uint16_t f
 // Begins a 16 bit CRC calculation by setting the CRC accumulator to it's
 // initial value.
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc16Begin(JNIEnv* env, jobject) {
-    return crc16_begin(0); //TODO
-}
-
 int crc16_begin(crc16_t *crc16)
 {
     if (!crc16)
@@ -313,11 +229,6 @@ int crc16_begin(crc16_t *crc16)
 // crc16_begin() and crc16_end() pair. More than one call to crc16_calc() may
 // appear between crc16_begin() and crc16_end() with the end result being a
 // correct CRC calculated over the concatenation of all specified blocks.
-
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc16Calc(JNIEnv* env, jobject) {
-    return crc16_calc(0, 0, 0); //TODO
-}
 
 int crc16_calc(crc16_t *crc16, const uint8_t *buf, size_t size)
 {
@@ -353,11 +264,6 @@ int crc16_calc(crc16_t *crc16, const uint8_t *buf, size_t size)
 // calls to crc16_calc() are allowed to continue the calculation with additional
 // data.
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc16End(JNIEnv* env, jobject) {
-    return crc16_end(0); //TODO
-}
-
 uint16_t crc16_end(crc16_t *crc16)
 {
     return crc16->crc ^ crc16->final_xor;
@@ -377,11 +283,6 @@ uint16_t crc16_end(crc16_t *crc16)
 /// crc16_init().
 /// \param buf Pointer to a block of bytes for the CRC calculation.
 /// \param size Number of bytes in block pointed to by \p buf.
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_work_libtest_MainActivity_lcrc16Bitwise(JNIEnv* env, jobject) {
-    crc16_bitwise(0, 0, 0); //TODO
-}
 
 static void crc16_bitwise(crc16_t *crc16, const uint8_t *buf, size_t size)
 {
@@ -407,11 +308,6 @@ static void crc16_bitwise(crc16_t *crc16, const uint8_t *buf, size_t size)
 // Initialises a 32 bit CRC state structure by generating an appropriate
 // look-up table for required polynomial and storing, initial and final XOR
 // values.
-
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc32Init(JNIEnv* env, jobject) {
-    return crc32_init(0, 0, 0,0); //TODO
-}
 
 int crc32_init(crc32_t *crc32, uint32_t poly, uint32_t initial_value, uint32_t final_xor)
 {
@@ -445,11 +341,6 @@ int crc32_init(crc32_t *crc32, uint32_t poly, uint32_t initial_value, uint32_t f
 // Begins a 32 bit CRC calculation by setting the CRC accumulator to it's
 // initial value.
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc32Begin(JNIEnv* env, jobject) {
-    return crc32_begin(0); //TODO
-}
-
 int crc32_begin(crc32_t *crc32)
 {
     if (!crc32)
@@ -468,11 +359,6 @@ int crc32_begin(crc32_t *crc32)
 // crc32_begin() and crc32_end() pair. More than one call to crc32_calc() may
 // appear between crc32_begin() and crc32_end() with the end result being a
 // correct CRC calculated over the concatenation of all specified blocks.
-
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc32Calc(JNIEnv* env, jobject) {
-    return crc32_calc(0, 0, 0); //TODO
-}
 
 int crc32_calc(crc32_t *crc32, const uint8_t *buf, size_t size)
 {
@@ -508,11 +394,6 @@ int crc32_calc(crc32_t *crc32, const uint8_t *buf, size_t size)
 // calls to crc32_calc() are allowed to continue the calculation with additional
 // data.
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_work_libtest_MainActivity_lcrc32End(JNIEnv* env, jobject) {
-    return crc32_end(0); //TODO
-}
-
 uint32_t crc32_end(crc32_t *crc32)
 {
     return crc32->crc ^ crc32->final_xor;
@@ -533,11 +414,6 @@ uint32_t crc32_end(crc32_t *crc32)
 /// \param buf Pointer to a block of bytes for the CRC calculation.
 /// \param size Number of bytes in block pointed to by \p buf.
 
-extern "C" JNIEXPORT void JNICALL
-Java_com_work_libtest_MainActivity_lcrc32Bitwise(JNIEnv* env, jobject) {
-    crc32_bitwise(0, 0, 0); //TODO
-}
-
 static void crc32_bitwise(crc32_t *crc32, const uint8_t *buf, size_t size)
 {
     int bit;
@@ -555,5 +431,7 @@ static void crc32_bitwise(crc32_t *crc32, const uint8_t *buf, size_t size)
         buf++;
     }
 }
+
+
 
 /// \} End of crc_private_group

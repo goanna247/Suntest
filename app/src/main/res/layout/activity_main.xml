@@ -1,19 +1,258 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:clickable="false"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/sample_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <!--TODO this is kinda ugly, fix-->
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/black_rec"
+            app:layout_constraintBottom_toTopOf="@+id/HoleIDBtn"></ImageView>
+
+        <LinearLayout
+            android:id="@+id/HoleIDBtn"
+            android:layout_width="fill_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="20dp"
+            android:background="#e8e8e8"
+            android:clickable="true"
+            android:onClick="holeIDBtnClick"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_home">
+
+            <TextView
+                android:id="@+id/HoleIDTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="20dp"
+                android:paddingTop="20dp"
+                android:text="Hole ID:"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/HoleIDDisplayTxt"
+                android:layout_width="fill_parent"
+                android:layout_height="40dp"
+                android:gravity="right"
+                android:paddingRight="20dp"
+                android:paddingBottom="10dp"
+                android:text="DEFAULT"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/black_rec"
+            app:layout_constraintBottom_toBottomOf="@+id/HoleIDBtn"></ImageView>
+
+        <LinearLayout
+            android:id="@+id/OperatorIDBtn"
+            android:layout_width="fill_parent"
+            android:layout_height="60dp"
+            android:background="#e8e8e8"
+            android:clickable="true"
+            android:onClick="operatorIDBtnClick"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/HoleIDBtn">
+
+            <TextView
+                android:id="@+id/OperatorNameTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="20dp"
+                android:paddingTop="20dp"
+                android:text="Operator Name:"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/OperatorNameDisplayTxt"
+                android:layout_width="fill_parent"
+                android:layout_height="40dp"
+                android:gravity="right"
+                android:paddingRight="20dp"
+                android:text="DEFAULT"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/imageView5"
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="1dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/black_rec"
+            app:layout_constraintBottom_toBottomOf="@+id/OperatorIDBtn"></ImageView>
+
+
+        <LinearLayout
+            android:id="@+id/BlackProbeContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="60dp"
+            android:background="#52BFBFBF"
+            android:orientation="vertical"
+            app:layout_constraintTop_toBottomOf="@+id/OperatorIDBtn">
+
+            <TextView
+                android:id="@+id/BlackProbeTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="28dp"
+                android:text="Black probe" />
+
+            <LinearLayout
+                android:id="@+id/BlackStatusContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="true"
+                android:onClick="blackProbeSelect"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/BlackProbeStatusImg"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="10dp" />
+
+                <TextView
+                    android:id="@+id/BlackProbeStatusTxt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="20dp"
+                    android:text="Disconnected" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/BlackProbeBtn"
+                android:layout_width="fill_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="8dp"
+                android:onClick="BlackProbeBtnClick"
+                android:text="Initialise Tool" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/WhiteProbeContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="20dp"
+            android:background="#52BFBFBF"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/BlackProbeContainer">
+
+            <TextView
+                android:id="@+id/WhiteProbeTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="30dp"
+                android:text="White probe" />
+
+            <LinearLayout
+                android:id="@+id/WhiteProbeStatusContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:onClick="WhiteProbeSelect"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/WhiteProbeStatusImg"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="10dp" />
+
+                <TextView
+                    android:id="@+id/WhiteProbeStatusTxt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="20dp"
+                    android:text="Disconnected" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/WhiteProbeBtn"
+                android:layout_width="fill_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="20dp"
+                android:text="Initialise Tool" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_home"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textSize="20sp"
+            tools:layout_editor_absoluteX="21dp"
+            tools:layout_editor_absoluteY="5dp" />
+
+<!--        <Button-->
+<!--            android:id="@+id/calibrate2"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:onClick="index"-->
+<!--            android:text="Get Calibration Index Next"-->
+<!--            app:layout_constraintTop_toBottomOf="@+id/WhiteProbeContainer" />-->
+
+<!--        <Button-->
+<!--            android:id="@+id/calibrate"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:onClick="calibrate"-->
+<!--            android:text="Get Calibration Data"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toBottomOf="@+id/calibrate2" />-->
+
+
+        <!--<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+        <!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
+        <!--    xmlns:tools="http://schemas.android.com/tools"-->
+        <!--    android:layout_width="match_parent"-->
+        <!--    android:layout_height="match_parent"-->
+        <!--    tools:context=".MainActivity">-->
+
+        <!--    <FrameLayout-->
+        <!--        android:id="@+id/container"-->
+        <!--        android:layout_width="fill_parent"-->
+        <!--        android:layout_height="fill_parent"-->
+        <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--        app:layout_constraintEnd_toEndOf="parent"-->
+        <!--        app:layout_constraintStart_toStartOf="parent"-->
+        <!--        app:layout_constraintTop_toTopOf="parent">-->
+        <!--    </FrameLayout>-->
+        <!--</androidx.constraintlayout.widget.ConstraintLayout>-->
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

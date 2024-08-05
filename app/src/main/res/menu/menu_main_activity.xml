@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/select_probe"
+        android:title="Select Probe"
+        app:showAsAction="always"/>
+    <item android:id="@+id/options"
+        android:title="Tools"
+        app:showAsAction="always">
+        <menu>
+            <item android:id="@+id/reset_survey"
+                  android:title="Reset Survey" />
+            <item android:id="@+id/reset_probe"
+                  android:title="Reset Probe"/>
+            <item android:id="@+id/preferences"
+                  android:title="Preferences"/>
+            <item android:id="@+id/about"
+                  android:title="About"/>
+        </menu>
+    </item>
+</menu>
