@@ -44,6 +44,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import com.work.libtest.CalibrationHelper;
+
 /*
 NEXT TIME ON THE BACHELOR
 
@@ -960,6 +962,7 @@ public class SensorActivity extends AppCompatActivity {
                                                 } else {
                                                     if (core_ax_binary.charAt(0) == '1') {
                                                         core_ax_binary = core_ax_binary.substring(1);
+                                                        Log.e(TAG, "CORE AX BINARY: " + core_ax_binary);
                                                         core_ax = Integer.toString(Integer.parseInt(core_ax_binary, 2));
                                                         core_ax = Integer.toString(Integer.valueOf(core_ax) * -1);
                                                         setUncalibratedX(core_ax);
@@ -1060,6 +1063,7 @@ public class SensorActivity extends AppCompatActivity {
                                                     if (core_az_binary.charAt(0) == '1') {
                                                         core_az_binary = core_az_binary.substring(1);
                                                         core_az = Integer.toString(Integer.parseInt(core_az_binary, 2));
+
                                                         core_az = Integer.toString(Integer.valueOf(core_az) * -1);
                                                         setUncalibratedZ(core_az);
                                                         calculateMeanMaxZ();
@@ -1076,6 +1080,20 @@ public class SensorActivity extends AppCompatActivity {
                                                 } catch (Exception e) {
                                                     Log.e(TAG, "Error calling calculate roll and dip functions: " + e);
                                                 }
+
+                                                double core_uax = Double.valueOf(core_ax);
+                                                double core_uay = Double.valueOf(core_ay);
+                                                double core_uaz = Double.valueOf(core_az);
+                                                double[] acc_values = CalibrationHelper.CalibrationHelp(CalibrationHelper.accelerationCalibration, core_uax,  core_uay, core_uaz);
+
+//                                                core_ax = String.valueOf(acc_values[0]);
+//                                                core_ay = String.valueOf(acc_values[1]);
+//                                                core_az = String.valueOf(acc_values[2]);
+//                                                setUncalibratedX(core_ax); //todo - this should be a set calibrated function
+//                                                setUncalibratedY(core_ay);
+//                                                setUncalibratedZ(core_az);
+                                                Log.e(TAG, "core uaX: " + core_ax + "core ax: " + acc_values[0]);
+                                                        //+  "core aY: " + String.valueOf(acc_values[1]) + "core aZ: " + String.valueOf(acc_values[2]));
 
                                             } else if (i == 11) { // MX 1
                                                 mag_x = bore_shot_data[i];

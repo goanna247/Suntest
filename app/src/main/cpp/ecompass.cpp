@@ -235,7 +235,8 @@ static std::string calibrateAllData(std::string data) {
 //    uint8_t startValueOne = calByteArray[4];
     uint8_t startValueOne = dataBuffer[2];
 
-    int storeReturn = ecompass_store_put(testCompass, dataBuffer, 264);
+//    int storeReturn = ecompass_store_put(testCompass, dataBuffer, 264);
+    int storeReturn = ecompass_store_get(testCompass, dataBuffer, 264);
 
 //    ecompass_store_put_sensor_v1(testCompass, &testCompass->accelerometer_calibration, &calByteArray, 291);
 
@@ -275,7 +276,7 @@ static std::string calibrateAllData(std::string data) {
      * END
      */
 
-//    ecompass_accelerometer_reading(testCompass, 1, 2, 3, 19, 1);
+    ecompass_accelerometer_reading(testCompass, 1, 2, 3, 19, 1);
 
 //    testCompass->accelerometer.x = 4;
 //    testCompass->accelerometer.y = 3;
@@ -306,18 +307,20 @@ static std::string calibrateAllData(std::string data) {
     /**
      * Get all concrete parameters from accelerometer calibration data
      */
-//    std::string caliDataFromAcc = "";
-//    for (int i = 0; i < 5; i++) {
-//        for (int j = 0; j < 3; j++) {
-//            for (int k = 0; k < 3; k++) {
-////                caliDataFromAcc = caliDataFromAcc + "," + std::to_string(testCompass->accelerometer_calibration.concrete.temperature);//term[i].temperature);
-//                caliDataFromAcc = caliDataFromAcc + "," + std::to_string(testCompass->accelerometer_calibration.term[0].parameter[i][j][k]);
-//
-//            }
-//            caliDataFromAcc = caliDataFromAcc + "\n";
-//        }
-//        caliDataFromAcc = caliDataFromAcc + "|";
-//    }
+    std::string caliDataFromAcc = "";
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 3; j++) {
+            for (int k = 0; k < 3; k++) {
+//                caliDataFromAcc = caliDataFromAcc + "," + std::to_string(testCompass->accelerometer_calibration.concrete.temperature);//term[i].temperature);
+                caliDataFromAcc = caliDataFromAcc + "," + std::to_string(testCompass->accelerometer_calibration.term[0].parameter[i][j][k]);
+
+            }
+            caliDataFromAcc = caliDataFromAcc + "\n";
+        }
+        caliDataFromAcc = caliDataFromAcc + "|";
+    }
+
+//    int caliDataFromAcc = testCompass->accelerometer_calibration.term[0].parameter[3][0][0];
     /**
      * END
      */
@@ -327,14 +330,14 @@ static std::string calibrateAllData(std::string data) {
 //
 //    std::string acc_valid = "Accelerometer value is valid: " + std::to_string(validFlag);
 //    std::string cal_valid = " , calibration is valid : " + std::to_string(calFlag);
-//
-//    std::string acc_ux = std::to_string(testCompass->accelerometer.uncalibrated_x);
-//    std::string acc_uy = std::to_string(testCompass->accelerometer.uncalibrated_y);
-//    std::string acc_uz = std::to_string(testCompass->accelerometer.uncalibrated_z);
-//
-//    std::string acc_cx = std::to_string(testCompass->accelerometer.x);
-//    std::string acc_cy = std::to_string(testCompass->accelerometer.y);
-//    std::string acc_cz = std::to_string(testCompass->accelerometer.z);
+
+    std::string acc_ux = std::to_string(testCompass->accelerometer.uncalibrated_x);
+    std::string acc_uy = std::to_string(testCompass->accelerometer.uncalibrated_y);
+    std::string acc_uz = std::to_string(testCompass->accelerometer.uncalibrated_z);
+
+    std::string acc_cx = std::to_string(testCompass->accelerometer.x);
+    std::string acc_cy = std::to_string(testCompass->accelerometer.y);
+    std::string acc_cz = std::to_string(testCompass->accelerometer.z);
 
     //1 is empty, 0 has been assigned parameters
 //    std::string cal_is_empty = std::to_string(ecompass_calibration_is_empty(&testCompass->accelerometer_calibration));
@@ -343,7 +346,8 @@ static std::string calibrateAllData(std::string data) {
 
 //    return outputFromFunctionCHANGED;
 //    return cal_is_empty + ", Calibration Data: " + all_calibration_data + "\n" + acc_ux + ":" + acc_cx + "|" + acc_uy + ":" + acc_cy + "|" + acc_uz + ":" + acc_cz + "|";
-    return "Start value 1: " + std::to_string(startValueOne) + ", SStorage return: " + std::to_string(storeReturn) + " FINISH\n";
+    std::string nameString = testCompass->name;
+    return nameString + ", \nCALIBRATION: " + caliDataFromAcc + ", Start value 1: " + std::to_string(startValueOne) + ", Storage return: " + std::to_string(storeReturn) + " FINISH\n" + acc_ux + ":" + acc_cx + "|" + acc_uy + ":" + acc_cy + "|" + acc_uz + ":" + acc_cz + "|";
 }
 static crc8_t crc_generator;
 #define CRC_OLD_POLY			CRC8_POLY_CCITT

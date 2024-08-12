@@ -100,9 +100,9 @@ size_t ecompass_store_space_required_for_format(ecompass_t *ecompass, ecompass_s
 /// \param size Size of buffer that  \p ecompass will be stored into.
 /// \return Number of bytes put into the buffer. 0 on error.
 
-size_t ecompass_store_put(ecompass_t *ecompass, uint8_t *buf, size_t size);
+int ecompass_store_put(ecompass_t *ecompass, uint8_t *buf, size_t size);
 
-int ecompass_store_put_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *cal, void *buf, size_t buf_size);
+int ecompass_store_put_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *cal, uint8_t *buf, size_t buf_size);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stores an ecompass into a byte buffer using specified format.
@@ -114,7 +114,7 @@ int ecompass_store_put_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *c
 /// \param format The format version that will be used to store \p ecompass.
 /// \return Number of bytes put into the buffer. 0 on error.
 
-size_t ecompass_store_put_using_format(ecompass_t *ecompass, uint8_t *buf, size_t size, ecompass_store_format_t format);
+int ecompass_store_put_using_format(ecompass_t *ecompass, uint8_t *buf, size_t size, ecompass_store_format_t format);
 
 
 
@@ -128,7 +128,7 @@ size_t ecompass_store_put_using_format(ecompass_t *ecompass, uint8_t *buf, size_
 /// \param size Size of buffer that \p ecompass will be retrieved from.
 /// \return Number of bytes read from buffer. 0 on error.
 
-size_t ecompass_store_get(ecompass_t *ecompass, const void *data, size_t size);
+size_t ecompass_store_get(ecompass_t *ecompass, const uint8_t *data, size_t size);
 
 
 

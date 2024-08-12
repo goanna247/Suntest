@@ -113,13 +113,13 @@ static size_t		ecompass_store_space_required_sensor_v1(ecompass_calibration_t *c
 static size_t		ecompass_store_space_required_scalar_v1(ecompass_scalar_calibration_t *cal);
 #endif
 #if defined(ECOMPASS_STORE_CAN_WRITE_FORMAT_1)
-static size_t		ecompass_store_put_v1(ecompass_t *ecompass, void *buf, size_t buf_size);
+static double		ecompass_store_put_v1(ecompass_t *ecompass, uint8_t *buf, size_t buf_size);
 //int			ecompass_store_put_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *cal, void *buf, size_t buf_size);
-static int			ecompass_store_put_scalar_v1(ecompass_scalar_calibration_t *cal, void *buf, size_t buf_size);
+static int			ecompass_store_put_scalar_v1(ecompass_scalar_calibration_t *cal, uint8_t *buf, size_t buf_size);
 #endif
 #if defined(ECOMPASS_STORE_CAN_READ_FORMAT_1)
-static size_t		ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size_t size);
-static size_t		ecompass_store_get_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *cal, const void *buf, size_t buf_size);
+static size_t		ecompass_store_get_v1(ecompass_t *ecompass, const uint8_t *data, size_t size);
+static size_t		ecompass_store_get_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *cal, const uint8_t *buf, size_t buf_size);
 static size_t		ecompass_store_get_scalar_v1(ecompass_scalar_calibration_t *cal, const void *buf, size_t buf_size);
 #endif
 
@@ -274,7 +274,7 @@ size_t ecompass_store_space_required_for_format(ecompass_t *ecompass, ecompass_s
 // \param size Size of buffer that  \p ecompass will be stored into.
 // \return Number of bytes put into the buffer. 0 on error.
 
-size_t ecompass_store_put(ecompass_t *ecompass, uint8_t *buf, size_t buf_size)
+int ecompass_store_put(ecompass_t *ecompass, uint8_t *buf, size_t buf_size)
 {
 
     uint8_t *data = static_cast<uint8_t *>(malloc(265 * sizeof(uint8_t)));
@@ -296,10 +296,11 @@ size_t ecompass_store_put(ecompass_t *ecompass, uint8_t *buf, size_t buf_size)
 // \param format The format version that will be used to store \p ecompass.
 // \return Number of bytes put into the buffer. 0 on error.
 
-size_t ecompass_store_put_using_format(ecompass_t *ecompass, uint8_t *buf, size_t buf_size, ecompass_store_format_t format)
+int ecompass_store_put_using_format(ecompass_t *ecompass, uint8_t *buf, size_t buf_size, ecompass_store_format_t format)
 {
     if (!ecompass)
         return 0;
+
 
     // If format is zero, chosethe most backward compatible one that the data can be stored to
     if (format == ecompassStoreFormatBest)
@@ -341,15 +342,18 @@ size_t ecompass_store_put_using_format(ecompass_t *ecompass, uint8_t *buf, size_
 /// \param size Size of buffer that \p ecompass will be retrieved from.
 /// \return Number of bytes read from buffer. 0 on error.
 
-size_t ecompass_store_get(ecompass_t *ecompass, const void *data, size_t size)
+size_t ecompass_store_get(ecompass_t *ecompass, const uint8_t *data, size_t size)
 {
     if (!ecompass || !data || (size < 1))
         return 0;
+
 
 #if defined(ECOMPASS_STORE_CAN_READ_FORMAT_1)
     if (*((uint8_t *)data) == 1)
 		return ecompass_store_get_v1(ecompass, data, size);
 #endif
+
+
 
 #if defined(ECOMPASS_STORE_CAN_READ_FORMAT_2)
     if (*((uint8_t *)data) == 2)
@@ -1095,7 +1099,7 @@ static size_t ecompass_store_space_required_scalar_v1(ecompass_scalar_calibratio
 // \param size Size of buffer that  \p ecompass will be stored into.
 // \return Number of bytes put into the buffer. 0 on error.
 
-static size_t ecompass_store_put_v1(ecompass_t *ecompass, void *buf, size_t buf_size)
+static double ecompass_store_put_v1(ecompass_t *ecompass, uint8_t *buf, size_t buf_size)
 {
 	#define BLOCK_START		{ block_ptr = ptr; ptr += HEADER_BYTES; store_size += HEADER_BYTES; buf_size -= HEADER_BYTES; }
 	#define BLOCK_END(i,s)	{ block_ptr[0] = (((i) << 4) & 0xF0) | ((s) >> 8) & 0x0F; block_ptr[1] = (s) & 0xFF; }
@@ -1121,8 +1125,6 @@ static size_t ecompass_store_put_v1(ecompass_t *ecompass, void *buf, size_t buf_
 	*ptr++ = 1;
 	store_size++;
 	buf_size--;
-//    return 4; //BACKSPACE
-//    return ptr[2];
 
 	// Add time stamp if it is valid
 	if (ecompass->calibration_timestamp_is_valid && (buf_size >= (HEADER_BYTES + TIMESTAMP_BYTES)))
@@ -1142,6 +1144,12 @@ static size_t ecompass_store_put_v1(ecompass_t *ecompass, void *buf, size_t buf_
 		BLOCK_END(HDR_ID_TIMESTAMP, TIMESTAMP_BYTES);
 	}
 
+    /**
+     * TESTING
+     * BACKTO
+     */
+//    int returningValue = ecompass_store_put_sensor_v1(ecompass, &ecompass->accelerometer_calibration, buf, buf_size);
+
 	BLOCK_START;
 	if ((block_size = ecompass_store_put_sensor_v1(ecompass, &ecompass->accelerometer_calibration, ptr, buf_size)) < 0)
 		return 0;
@@ -1157,6 +1165,7 @@ static size_t ecompass_store_put_v1(ecompass_t *ecompass, void *buf, size_t buf_
 	store_size += block_size;
 	buf_size -= block_size;
 	BLOCK_END(HDR_ID_MAGNETOMETER, block_size);
+
 
 	BLOCK_START;
 	if ((block_size = ecompass_store_put_scalar_v1(&ecompass->temperature_calibration, ptr, buf_size)) < 0)
@@ -1189,6 +1198,7 @@ static size_t ecompass_store_put_v1(ecompass_t *ecompass, void *buf, size_t buf_
 	ptr[-2] = (uint8_t)((crc >> 8) & 0xFF);
 	ptr[-1] = (uint8_t)(crc & 0xFF);
 
+//    return 13;
 #ifdef DEBUG_HEX_DUMP_STORE
 	debug_hex_dump_store("PUT:", buf, store_size);
 #endif
@@ -1200,8 +1210,12 @@ static size_t ecompass_store_put_v1(ecompass_t *ecompass, void *buf, size_t buf_
 		printf("Stored eCompass: Timestamp = INVALID\n");
 	ecompass_print(ecompass);
 #endif
+    ecompass_set_name(ecompass,"HARRY");
 
-	return store_size;
+//    return returningValue;
+	return store_size; //returning 32
+//    return ecompass->magnetometer_calibration.term[0].parameter[3][1][1];
+    return ecompass->manual_zero_offset[2]; //RETURNING 0 all the time
 
 	#undef BLOCK_START
 	#undef BLOCK_END
@@ -1216,11 +1230,18 @@ static size_t ecompass_store_put_v1(ecompass_t *ecompass, void *buf, size_t buf_
 ////////////////////////////////////////////////////////////////////////////////
 // Needs documentation.
 
-int ecompass_store_put_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *cal, void *buf, size_t buf_size)
+int ecompass_store_put_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *cal, uint8_t *buf, size_t buf_size)
 {
+    buf_size = 265;
 	uint8_t	flags[SENSOR_FL_BYTE_COUNT] = {0};
 	int i;
-	uint8_t *ptr = static_cast<uint8_t *>(buf);
+    uint8_t *buffer = static_cast<uint8_t *>(malloc(buf_size * sizeof(uint8_t)));
+    buffer = buf;
+
+    uint8_t *ptr = buf;
+//    static_cast<uint8_t *>(malloc(buf_size * sizeof(uint8_t)));
+//    ptr = static_cast<uint8_t *>(buf);
+
 	int store_size = 0;
 	uint64_t packed;
 	int		 bs, shift;
@@ -1275,7 +1296,7 @@ int ecompass_store_put_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *c
 			return -1;
 
 		packed = ecompass_store_pack(cal->term[0].temperature, FLOATING_POINT_SIZE_BITS, FLOATING_POINT_EXP_BITS);
-		for (shift = ((BYTES_PER_NUMBER - 1) << 3); shift >= 0; shift -= 8)
+        for (shift = ((BYTES_PER_NUMBER - 1) << 3); shift >= 0; shift -= 8)
 			*ptr++ = (packed >> shift) & 0xFF;
 
 		store_size += BYTES_PER_NUMBER;
@@ -1365,6 +1386,18 @@ int ecompass_store_put_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *c
 		// buf_size   -= bs; Dead store
 	}
 
+//    ecompass->accelerometer_calibration = *cal;
+
+    /**
+     * This indicates it cuts off the data after the timestamp but keeps the CRC of header block and block ID section
+     */
+//    return buf_size;
+//    return 44; //NOT ACTUALLY RETURNING
+//    return ptr[3];
+
+//    return cal->term[1].parameter[1][0][0];
+//    return buffer[10];
+//    return ecompass->accelerometer_calibration.term[0].parameter[3][0][0];
 	return store_size;
 }
 
@@ -1377,11 +1410,17 @@ int ecompass_store_put_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *c
 ////////////////////////////////////////////////////////////////////////////////
 // Needs documentation.
 
-static int ecompass_store_put_scalar_v1(ecompass_scalar_calibration_t *cal, void *buf, size_t buf_size)
+static int ecompass_store_put_scalar_v1(ecompass_scalar_calibration_t *cal, uint8_t *buf, size_t buf_size)
 {
 	uint8_t	flags[SENSOR_FL_BYTE_COUNT] = {0};
 	int i;
-	uint8_t *ptr = static_cast<uint8_t *>(buf);
+
+    uint8_t *buffer = static_cast<uint8_t *>(malloc(buf_size * sizeof(uint8_t)));
+    buffer = buf;
+
+    uint8_t *ptr = static_cast<uint8_t *>(malloc(buf_size * sizeof(uint8_t)));
+    ptr = static_cast<uint8_t *>(buf);
+
 	int store_size = 0;
 	uint64_t packed;
 	int		 bs, shift;
@@ -1434,8 +1473,7 @@ static int ecompass_store_put_scalar_v1(ecompass_scalar_calibration_t *cal, void
 // \param buf Pointer to buffer that \p ecompass will be retrieved from.
 // \param size Size of buffer that \p ecompass will be retrieved from.
 // \return Number of bytes read from buffer. 0 on error.
-
-static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size_t size)
+static size_t ecompass_store_get_v1(ecompass_t *ecompass, const uint8_t *data, size_t size)
 {
 	const uint8_t *ptr;
 	uint8_t  block_id, version;
@@ -1451,7 +1489,7 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 	ptr = (const uint8_t *)data;
 	read_size = 0;
 
-	// GET version number
+    // GET version number
 	if (size < 1)
 		return 0;
 
@@ -1461,11 +1499,14 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 	if (version != 1)
 		return 0;
 
+
+
 #ifdef DEBUG_HEX_DUMP_STORE
 	debug_hex_dump_store("GET:", data, size + 1);
 #endif
 
-	for (;;)
+
+    for (;;) //fancy while true;
 	{
 		if (size < 2)
 			break;
@@ -1482,11 +1523,14 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 		size -= block_len;
 		read_size += block_len;
 
-		switch (block_id)
+
+        block_id = HDR_ID_ACCELEROMETER;
+        switch (block_id)
 		{
 			case HDR_ID_CRC:
-				if (block_len != 2)
-					return 0;
+
+                if (block_len != 2)
+//					return 0; DOING THIS
 
 				// Calculate CRC
 				if (!crc_generator_initialised)
@@ -1494,6 +1538,7 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 					crc16_init(&crc_generator, CRC_POLY, CRC_INITIAL_VALUE, CRC_FINAL_XOR);
 					crc_generator_initialised = 1;
 				}
+
 
 				crc16_begin(&crc_generator);
 //				uint8_t *data2 = (uint8_t *)data;
@@ -1504,13 +1549,13 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 				crc_data |= (uint16_t)ptr[1];
 
 				if (crc_calc != crc_data)
-					return 0;
+//					return 0; //WAS DOING THIS
 
 				if (ecompass)
 				{
-					if (have_acc_cal)
+                    if (have_acc_cal) //FALSE
 					{
-						ecompass->accelerometer_calibration = ecompass_buf.accelerometer_calibration;
+                        ecompass->accelerometer_calibration = ecompass_buf.accelerometer_calibration;
 						ecompass->accelerometer_calibration.sensor = ecompassSensorAccelerometer;
 					}
 					if (have_mag_cal)
@@ -1518,14 +1563,14 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 						ecompass->magnetometer_calibration = ecompass_buf.magnetometer_calibration;
 						ecompass->magnetometer_calibration.sensor = ecompassSensorMagnetometer;
 					}
-					if (have_temp_cal)
+					if (have_temp_cal) //FALSE
 					{
-						ecompass->temperature_calibration = ecompass_buf.temperature_calibration;
+                        ecompass->temperature_calibration = ecompass_buf.temperature_calibration;
 						ecompass->temperature_calibration.sensor = ecompassSensorTemperature;
 					}
-					if (have_time_stamp)
+					if (have_time_stamp) //FALSE
 					{
-						ecompass->calibration_timestamp = time_stamp;
+                        ecompass->calibration_timestamp = time_stamp;
 						ecompass->calibration_timestamp_is_valid = (ecompass->calibration_timestamp == (time_t)-1) ? 0 : 1;
 					}
 //#if defined(ECOMPASS_MANUAL_ZERO_OFFSET_COUNT) && (ECOMPASS_MANUAL_ZERO_OFFSET_COUNT > 0)
@@ -1533,7 +1578,8 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 //						ecompass->manual_zero_offset[i] = ecompass_buf.manual_zero_offset[i];
 //#endif
 				}
-				return read_size;
+//                return 13;//ecompass->temperature_calibration.term[1];
+//                return read_size;
 			case HDR_ID_TIMESTAMP:
 				if (block_len > 0)
 				{
@@ -1556,8 +1602,10 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 				break;
 
 			case HDR_ID_ACCELEROMETER:
+//                return 26;
 				byte_count = ecompass_store_get_sensor_v1(&ecompass_buf, &ecompass_buf.accelerometer_calibration, ptr, block_len);
-				if (byte_count == (size_t)block_len)
+				return byte_count;
+                if (byte_count == (size_t)block_len)
 					have_acc_cal = 1;
 				break;
 
@@ -1574,10 +1622,14 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 				break;
 		}
 
-		ptr += block_len;
+
+
+        ptr += block_len;
 	}
 
-	return 0;
+//    return 13;
+
+    return 3;
 }
 
 #endif // defined(ECOMPASS_STORE_CAN_READ_FORMAT_1)
@@ -1589,8 +1641,10 @@ static size_t ecompass_store_get_v1(ecompass_t *ecompass, const void *data, size
 ////////////////////////////////////////////////////////////////////////////////
 // Needs documentation.
 
-static size_t ecompass_store_get_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *cal, const void *buf, size_t buf_size)
+static size_t ecompass_store_get_sensor_v1(ecompass_t *ecompass, ecompass_calibration_t *cal, const uint8_t *buf, size_t buf_size)
 {
+//    return 26;
+
 	uint8_t	*ptr, more;
 	uint8_t	 flags[SENSOR_FL_BYTE_COUNT] = {0};
 	size_t   read_size = 0;
@@ -1598,7 +1652,7 @@ static size_t ecompass_store_get_sensor_v1(ecompass_t *ecompass, ecompass_calibr
 	int      i, shift, bs;
 
 	if (!cal || !buf || (buf_size < 1))
-		return read_size;
+		return read_size; //NOT HERE
 
 	ptr = (uint8_t *)buf;
 
@@ -1621,20 +1675,23 @@ static size_t ecompass_store_get_sensor_v1(ecompass_t *ecompass, ecompass_calibr
 
 	if (flags[0] & SENSOR_FL_HAS_TEMPERATURE)
 	{
-		if (buf_size < BYTES_PER_NUMBER)
-			return 0;
+
+        if (buf_size < BYTES_PER_NUMBER)
+//			return 0; //HERE
 
 		packed = 0;
 		for (shift = ((BYTES_PER_NUMBER - 1) << 3); shift >= 0; shift -= 8)
 			packed |= (uint64_t)*ptr++ << shift;
 		cal->term[0].temperature = ecompass_store_unpack(packed, FLOATING_POINT_SIZE_BITS, FLOATING_POINT_EXP_BITS);
-		read_size += BYTES_PER_NUMBER;
+
+        read_size += BYTES_PER_NUMBER;
 		buf_size  -= BYTES_PER_NUMBER;
+
 	}
 
 	if (flags[0] & SENSOR_FL_HAS_OFFSET)
 	{
-		bs = 3 * BYTES_PER_NUMBER;
+        bs = 3 * BYTES_PER_NUMBER;
 		if (buf_size < bs)
 			return 0;
 
@@ -1652,15 +1709,19 @@ static size_t ecompass_store_get_sensor_v1(ecompass_t *ecompass, ecompass_calibr
 		cal->term[0].matrix_is_used[0]	   = 1;
 		cal->term[0].matrix_is_diagonal[0] = 1;
 		cal->term[0].is_valid = 1;
-	}
 
-	if (flags[0] & SENSOR_FL_HAS_TRANSFORM)
+    }
+
+//    return flags[0];
+//    return SENSOR_FL_HAS_TRANSFORM;
+	if (true) //flags[0] & SENSOR_FL_HAS_TRANSFORM
 	{
-		int r, c;
+
+        int r, c;
 
 		bs = 9 * BYTES_PER_NUMBER;
-		if (buf_size < bs)
-			return 0;
+//		if (buf_size < bs)
+////			return 0;
 
 		for (r = 0; r < 3; r++)
 		{
@@ -1670,14 +1731,16 @@ static size_t ecompass_store_get_sensor_v1(ecompass_t *ecompass, ecompass_calibr
 				for (shift = ((BYTES_PER_NUMBER - 1) << 3); shift >= 0; shift -= 8)
 					packed |= (uint64_t)*ptr++ << shift;
 				cal->term[0].parameter[1][r][c] = ecompass_store_unpack(packed, FLOATING_POINT_SIZE_BITS, FLOATING_POINT_EXP_BITS);
-			}
+            }
 		}
+
 
 		read_size += bs;
 		buf_size   -= bs;
 		cal->term[0].matrix_is_used[1]	   = 1;
 		cal->term[0].matrix_is_diagonal[1] = 0;
 		cal->term[0].is_valid = 1;
+        return cal->term[0].is_valid;
 	}
 
 	if (flags[0] & SENSOR_FL_HAS_HAS_OFFSET_POLY)
@@ -1776,7 +1839,8 @@ static size_t ecompass_store_get_sensor_v1(ecompass_t *ecompass, ecompass_calibr
 		cal->term[0].is_valid = 1;
 	}
 
-	return read_size;
+    return cal->term[0].matrix_is_used[3];
+	return read_size; //getting to here
 
 }
 
