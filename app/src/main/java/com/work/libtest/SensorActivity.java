@@ -111,6 +111,14 @@ public class SensorActivity extends AppCompatActivity {
 
     private int dShotFormat = 1; //error number
     private int dRecordNumber = 0;
+    private double dProbeTemp = 0;
+    private double dProbeAccX = 0;
+    private double dProbeAccY = 0;
+    private double dProbeAccZ = 0;
+
+    private double dProbeMagX = 0;
+    private double dProbeMagY = 0;
+    private double dProbeMagZ = 0;
 
     //Orientation
     private TextView orientation_roll_data;
@@ -637,654 +645,404 @@ public class SensorActivity extends AppCompatActivity {
                         shot_format = bore_shot_data[0];
                         Log.e(TAG, "SHOT FORMAT: " + shot_format);
 
-                        if (!hold) {
+//                        if (!hold) {
                             switch (shot_format) {
-                                case "1":
-//                                {
-//                                    //first format(12): Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), Accelerometer Temperature(1)
-//                                    String a = "", b = "";
-//                                    for (int i = 0; i < core_shot_data.length; i++) {
-//                                        if (i == 0) {
-//                                            dShotFormat = Integer.valueOf(shot_format);
-//                                            dev_shot_format.setText(shot_format);
-//                                        } else if (i == 1) {
-//                                            try {
-//                                                highByte = core_shot_data[i];
-////                                                Log.e(TAG, "high byte: " + highByte);
-//                                            } catch (Exception e) {
-//                                                Log.e(TAG, "Exception thrown in high byte: " + e);
-//                                            }
-//                                        } else if (i == 2) {
-//                                            try {
-//                                                int value = 0;
-//                                                if (Integer.valueOf(highByte) > 0 && Integer.valueOf(highByte) < 128) {
-//                                                    value = (128 * Integer.valueOf(highByte));
-//                                                } else if (Integer.valueOf(highByte) < 0 && Integer.valueOf(highByte) >= -128) {
-//                                                    value = (128 * (128 + Integer.valueOf(highByte))) + (128 * 127);
-//                                                }
-//                                                lowByte = core_shot_data[i];
-////                                                Log.e(TAG, "low byte: " + lowByte);
-//                                                if (Integer.valueOf(lowByte) > 0 && Integer.valueOf(lowByte) < 128) {
-//                                                    value = value + Integer.valueOf(lowByte);
-//                                                } else if (Integer.valueOf(lowByte) < 1 && Integer.valueOf(lowByte) >= -128) {
-//                                                    value = 128 + (128 + Integer.valueOf(lowByte));
-//                                                }
-////                                                Log.e(TAG, "final record number: " + value);
-//                                                dev_record_number.setText(Integer.toString(value));
-//                                                dRecordNumber = value;
-//                                            } catch (Exception e) {
-//                                                Log.e(TAG, "Exception thrown in low byte: " + e);
-//                                            }
-//                                        } else if (i == 3) {
-//                                            probe_temp = core_shot_data[i];
-//                                        } else if (i == 4) {
-//                                            //ISSUE the documentation says that temperature should be divided by 256 to be read correct, but this seems to work so idk
-//                                            probe_temp = probe_temp + "." + core_shot_data[i]; //as it is a fixed point value with 8 binary places
-//                                            orientation_temperature_data.setText(probe_temp);
-//                                            oTemp = Double.parseDouble(probe_temp);
-//                                        } else if (i == 5) { //AX 1
-//                                            core_ax_binary = "";
-//                                            core_ax = core_shot_data[i];
-//                                            int num = Integer.parseInt(core_shot_data[i]);
-//                                            if (num < 0) {
-//                                                //need to convert from -128 - 0 to a positive number
-//                                                num = 128 + (128 + num);
-//                                            }
-////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
-//                                            String binaryOutput = Integer.toBinaryString(num);
-//                                            if (Integer.toBinaryString(num).length() < 8) {
-//                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-//                                                    binaryOutput = "0" + binaryOutput;
-//                                                }
-//                                            }
-//                                            core_ax_binary = binaryOutput;
-////                                            Log.e(TAG, "binary core_ax: " + binaryOutput);
-//                                        } else if (i == 6) { //AX 2
-//                                            int num = Integer.parseInt(core_shot_data[i]);
-//                                            if (num < 0) {
-//                                                num  = 128 + (128 + num);
-//                                            }
-////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num);
-//                                            String binaryOutput = Integer.toBinaryString(num);
-//                                            if (Integer.toBinaryString(num).length() < 8) {
-//                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-//                                                    binaryOutput = "0" + binaryOutput;
-//                                                }
-//                                            }
-//                                            core_ax_binary = core_ax_binary + binaryOutput;
-////                                            Log.e(TAG, "Core AX Binary: " + core_ax_binary);
-//
-//                                            if (core_ax_binary.length() > 16) {
-////                                                Log.e(TAG, "Error, AX binary longer than 16 bits");
-//                                                accelerometer_x_data.setText("Error");
-//                                            } else {
-//                                                if (core_ax_binary.charAt(0) == '1') {
-//                                                    core_ax_binary = core_ax_binary.substring(1);
-//                                                    core_ax = Integer.toString(Integer.parseInt(core_ax_binary, 2));
-//                                                    core_ax = Integer.toString(Integer.valueOf(core_ax) * -1);
-//                                                    setUncalibratedX(core_ax);
-//                                                    calculateMeanMaxAccX();
-//
-//                                                } else {
-//                                                    core_ax = Integer.toString(Integer.parseInt(core_ax_binary, 2));
-//                                                    setUncalibratedX(core_ax);
-//                                                    calculateMeanMaxAccX();
-//                                                }
-//                                            }
-//                                        } else if (i == 7) { //AY 1
-//                                            core_ay_binary = "";
-//                                            core_ay = core_shot_data[i];
-//                                            int num = Integer.parseInt(core_shot_data[i]);
-//                                            if (num < 0) {
-//                                                //need to convert from -128 - 0 to a positive number
-//                                                num = 128 + (128 + num);
-//                                            }
-////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
-//                                            String binaryOutput = Integer.toBinaryString(num);
-//                                            if (Integer.toBinaryString(num).length() < 8) {
-//                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-//                                                    binaryOutput = "0" + binaryOutput;
-//                                                }
-//                                            }
-//                                            core_ay_binary = binaryOutput;
-////                                            Log.e(TAG, "binary core_ay: " + binaryOutput);
-//                                        } else if (i == 8) { //AY 2
-//                                            int num = Integer.parseInt(core_shot_data[i]);
-//                                            if (num < 0) {
-//                                                num  = 128 + (128 + num);
-//                                            }
-////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num);
-//                                            String binaryOutput = Integer.toBinaryString(num);
-//                                            if (Integer.toBinaryString(num).length() < 8) {
-//                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-//                                                    binaryOutput = "0" + binaryOutput;
-//                                                }
-//                                            }
-//                                            core_ay_binary = core_ay_binary + binaryOutput;
-////                                            Log.e(TAG, "Core AY Binary: " + core_ay_binary);
-//
-//                                            if (core_ay_binary.length() > 16) {
-////                                                Log.e(TAG, "Error, AY binary longer than 16 bits");
-//                                                accelerometer_y_data.setText("Error");
-//                                            } else {
-//                                                if (core_ay_binary.charAt(0) == '1') {
-//                                                    core_ay_binary = core_ay_binary.substring(1);
-//                                                    core_ay = Integer.toString(Integer.parseInt(core_ay_binary, 2));
-//                                                    core_ay = Integer.toString(Integer.valueOf(core_ay) * -1);
-//                                                    setUncalibratedY(core_ay);
-//                                                    calculateMeanMaxAccY();
-//                                                } else {
-//                                                    core_ay = Integer.toString(Integer.parseInt(core_ay_binary, 2));
-//                                                    setUncalibratedY(core_ay);
-//                                                    calculateMeanMaxAccY();
-//
-//                                                }
-//                                            }
-//                                        } else if (i == 9) { //AZ 1
-//                                            core_az_binary = "";
-//                                            core_az = core_shot_data[i];
-//                                            int num = Integer.parseInt(core_shot_data[i]);
-//                                            if (num < 0) {
-//                                                //need to convert from -128 - 0 to a positive number
-//                                                num = 128 + (128 + num);
-//                                            }
-////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
-//                                            String binaryOutput = Integer.toBinaryString(num);
-//                                            if (Integer.toBinaryString(num).length() < 8) {
-//                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-//                                                    binaryOutput = "0" + binaryOutput;
-//                                                }
-//                                            }
-//                                            core_az_binary = binaryOutput;
-////                                            Log.e(TAG, "binary core_az: " + binaryOutput);
-//                                        } else if (i == 10) { //AZ 2
-//                                            int num = Integer.parseInt(core_shot_data[i]);
-//                                            if (num < 0) {
-//                                                num  = 128 + (128 + num);
-//                                            }
-//
-////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num);
-//                                            String binaryOutput = Integer.toBinaryString(num);
-//                                            if (Integer.toBinaryString(num).length() < 8) {
-//                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-//                                                    binaryOutput = "0" + binaryOutput;
-//                                                }
-//                                            }
-//                                            core_az_binary = core_az_binary + binaryOutput;
-////                                            Log.e(TAG, "Core AY Binary: " + core_az_binary);
-//
-//                                            if (core_az_binary.length() > 16) {
-////                                                Log.e(TAG, "Error, AY binary longer than 16 bits");
-//                                                accelerometer_z_data.setText("Error");
-//                                            } else {
-//                                                if (core_az_binary.charAt(0) == '1') {
-//                                                    core_az_binary = core_az_binary.substring(1);
-//                                                    core_az = Integer.toString(Integer.parseInt(core_az_binary, 2));
-//                                                    core_az = Integer.toString(Integer.valueOf(core_az) * -1);
-//                                                    setUncalibratedZ(core_az);
-//                                                    calculateMeanMaxZ();
-//
-//                                                } else {
-//                                                    core_az = Integer.toString(Integer.parseInt(core_az_binary, 2));
-//                                                    setUncalibratedZ(core_az);
-//                                                    calculateMeanMaxZ();
-//                                                }
-//                                            }
-//                                            try {
-//                                                calculateRoll(Double.valueOf(core_ay), Double.valueOf(core_az));
-//                                                calculateDip(Double.valueOf(core_ax), Double.valueOf(core_ay), Double.valueOf(core_az));
-//                                            } catch (Exception e) {
-//                                                Log.e(TAG, "Error calling calculate roll and dip functions: " + e);
-//                                            }
-//
-//                                        } else if (i == 11) { // Temperature
-//                                            acc_temp = core_shot_data[i];
-////                                            Log.d(TAG, "Accelerometer temperature: " + acc_temp);
-//                                            if (accelerometer_temp_data.equals("-128")) {
-//                                                accelerometer_temp_data.setText("Not Avaliable");
-//                                            } else {
-//                                                accelerometer_temp_data.setText(acc_temp);
-//                                                accTemp = Double.parseDouble(acc_temp);
-//                                            }
-//                                        }
-//                                    }
-//                                }
-                                    break;
-                                case "2":
-                                    //second format(19) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), Accelerometer Temperature(1), MX (2), MY (2), MZ (2), Magnetometer Temperature (1)
-                                    Log.e(TAG, "SHOT FORMAT 2");
-                                    break;
+//                                case "1":
+////                                {
+////                                    //first format(12): Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), Accelerometer Temperature(1)
+////                                    String a = "", b = "";
+////                                    for (int i = 0; i < core_shot_data.length; i++) {
+////                                        if (i == 0) {
+////                                            dShotFormat = Integer.valueOf(shot_format);
+////                                            dev_shot_format.setText(shot_format);
+////                                        } else if (i == 1) {
+////                                            try {
+////                                                highByte = core_shot_data[i];
+//////                                                Log.e(TAG, "high byte: " + highByte);
+////                                            } catch (Exception e) {
+////                                                Log.e(TAG, "Exception thrown in high byte: " + e);
+////                                            }
+////                                        } else if (i == 2) {
+////                                            try {
+////                                                int value = 0;
+////                                                if (Integer.valueOf(highByte) > 0 && Integer.valueOf(highByte) < 128) {
+////                                                    value = (128 * Integer.valueOf(highByte));
+////                                                } else if (Integer.valueOf(highByte) < 0 && Integer.valueOf(highByte) >= -128) {
+////                                                    value = (128 * (128 + Integer.valueOf(highByte))) + (128 * 127);
+////                                                }
+////                                                lowByte = core_shot_data[i];
+//////                                                Log.e(TAG, "low byte: " + lowByte);
+////                                                if (Integer.valueOf(lowByte) > 0 && Integer.valueOf(lowByte) < 128) {
+////                                                    value = value + Integer.valueOf(lowByte);
+////                                                } else if (Integer.valueOf(lowByte) < 1 && Integer.valueOf(lowByte) >= -128) {
+////                                                    value = 128 + (128 + Integer.valueOf(lowByte));
+////                                                }
+//////                                                Log.e(TAG, "final record number: " + value);
+////                                                dev_record_number.setText(Integer.toString(value));
+////                                                dRecordNumber = value;
+////                                            } catch (Exception e) {
+////                                                Log.e(TAG, "Exception thrown in low byte: " + e);
+////                                            }
+////                                        } else if (i == 3) {
+////                                            probe_temp = core_shot_data[i];
+////                                        } else if (i == 4) {
+////                                            //ISSUE the documentation says that temperature should be divided by 256 to be read correct, but this seems to work so idk
+////                                            probe_temp = probe_temp + "." + core_shot_data[i]; //as it is a fixed point value with 8 binary places
+////                                            orientation_temperature_data.setText(probe_temp);
+////                                            oTemp = Double.parseDouble(probe_temp);
+////                                        } else if (i == 5) { //AX 1
+////                                            core_ax_binary = "";
+////                                            core_ax = core_shot_data[i];
+////                                            int num = Integer.parseInt(core_shot_data[i]);
+////                                            if (num < 0) {
+////                                                //need to convert from -128 - 0 to a positive number
+////                                                num = 128 + (128 + num);
+////                                            }
+//////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
+////                                            String binaryOutput = Integer.toBinaryString(num);
+////                                            if (Integer.toBinaryString(num).length() < 8) {
+////                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
+////                                                    binaryOutput = "0" + binaryOutput;
+////                                                }
+////                                            }
+////                                            core_ax_binary = binaryOutput;
+//////                                            Log.e(TAG, "binary core_ax: " + binaryOutput);
+////                                        } else if (i == 6) { //AX 2
+////                                            int num = Integer.parseInt(core_shot_data[i]);
+////                                            if (num < 0) {
+////                                                num  = 128 + (128 + num);
+////                                            }
+//////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num);
+////                                            String binaryOutput = Integer.toBinaryString(num);
+////                                            if (Integer.toBinaryString(num).length() < 8) {
+////                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
+////                                                    binaryOutput = "0" + binaryOutput;
+////                                                }
+////                                            }
+////                                            core_ax_binary = core_ax_binary + binaryOutput;
+//////                                            Log.e(TAG, "Core AX Binary: " + core_ax_binary);
+////
+////                                            if (core_ax_binary.length() > 16) {
+//////                                                Log.e(TAG, "Error, AX binary longer than 16 bits");
+////                                                accelerometer_x_data.setText("Error");
+////                                            } else {
+////                                                if (core_ax_binary.charAt(0) == '1') {
+////                                                    core_ax_binary = core_ax_binary.substring(1);
+////                                                    core_ax = Integer.toString(Integer.parseInt(core_ax_binary, 2));
+////                                                    core_ax = Integer.toString(Integer.valueOf(core_ax) * -1);
+////                                                    setUncalibratedX(core_ax);
+////                                                    calculateMeanMaxAccX();
+////
+////                                                } else {
+////                                                    core_ax = Integer.toString(Integer.parseInt(core_ax_binary, 2));
+////                                                    setUncalibratedX(core_ax);
+////                                                    calculateMeanMaxAccX();
+////                                                }
+////                                            }
+////                                        } else if (i == 7) { //AY 1
+////                                            core_ay_binary = "";
+////                                            core_ay = core_shot_data[i];
+////                                            int num = Integer.parseInt(core_shot_data[i]);
+////                                            if (num < 0) {
+////                                                //need to convert from -128 - 0 to a positive number
+////                                                num = 128 + (128 + num);
+////                                            }
+//////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
+////                                            String binaryOutput = Integer.toBinaryString(num);
+////                                            if (Integer.toBinaryString(num).length() < 8) {
+////                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
+////                                                    binaryOutput = "0" + binaryOutput;
+////                                                }
+////                                            }
+////                                            core_ay_binary = binaryOutput;
+//////                                            Log.e(TAG, "binary core_ay: " + binaryOutput);
+////                                        } else if (i == 8) { //AY 2
+////                                            int num = Integer.parseInt(core_shot_data[i]);
+////                                            if (num < 0) {
+////                                                num  = 128 + (128 + num);
+////                                            }
+//////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num);
+////                                            String binaryOutput = Integer.toBinaryString(num);
+////                                            if (Integer.toBinaryString(num).length() < 8) {
+////                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
+////                                                    binaryOutput = "0" + binaryOutput;
+////                                                }
+////                                            }
+////                                            core_ay_binary = core_ay_binary + binaryOutput;
+//////                                            Log.e(TAG, "Core AY Binary: " + core_ay_binary);
+////
+////                                            if (core_ay_binary.length() > 16) {
+//////                                                Log.e(TAG, "Error, AY binary longer than 16 bits");
+////                                                accelerometer_y_data.setText("Error");
+////                                            } else {
+////                                                if (core_ay_binary.charAt(0) == '1') {
+////                                                    core_ay_binary = core_ay_binary.substring(1);
+////                                                    core_ay = Integer.toString(Integer.parseInt(core_ay_binary, 2));
+////                                                    core_ay = Integer.toString(Integer.valueOf(core_ay) * -1);
+////                                                    setUncalibratedY(core_ay);
+////                                                    calculateMeanMaxAccY();
+////                                                } else {
+////                                                    core_ay = Integer.toString(Integer.parseInt(core_ay_binary, 2));
+////                                                    setUncalibratedY(core_ay);
+////                                                    calculateMeanMaxAccY();
+////
+////                                                }
+////                                            }
+////                                        } else if (i == 9) { //AZ 1
+////                                            core_az_binary = "";
+////                                            core_az = core_shot_data[i];
+////                                            int num = Integer.parseInt(core_shot_data[i]);
+////                                            if (num < 0) {
+////                                                //need to convert from -128 - 0 to a positive number
+////                                                num = 128 + (128 + num);
+////                                            }
+//////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
+////                                            String binaryOutput = Integer.toBinaryString(num);
+////                                            if (Integer.toBinaryString(num).length() < 8) {
+////                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
+////                                                    binaryOutput = "0" + binaryOutput;
+////                                                }
+////                                            }
+////                                            core_az_binary = binaryOutput;
+//////                                            Log.e(TAG, "binary core_az: " + binaryOutput);
+////                                        } else if (i == 10) { //AZ 2
+////                                            int num = Integer.parseInt(core_shot_data[i]);
+////                                            if (num < 0) {
+////                                                num  = 128 + (128 + num);
+////                                            }
+////
+//////                                            Log.e(TAG, "record number byte 1 in integer form is: " + num);
+////                                            String binaryOutput = Integer.toBinaryString(num);
+////                                            if (Integer.toBinaryString(num).length() < 8) {
+////                                                for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
+////                                                    binaryOutput = "0" + binaryOutput;
+////                                                }
+////                                            }
+////                                            core_az_binary = core_az_binary + binaryOutput;
+//////                                            Log.e(TAG, "Core AY Binary: " + core_az_binary);
+////
+////                                            if (core_az_binary.length() > 16) {
+//////                                                Log.e(TAG, "Error, AY binary longer than 16 bits");
+////                                                accelerometer_z_data.setText("Error");
+////                                            } else {
+////                                                if (core_az_binary.charAt(0) == '1') {
+////                                                    core_az_binary = core_az_binary.substring(1);
+////                                                    core_az = Integer.toString(Integer.parseInt(core_az_binary, 2));
+////                                                    core_az = Integer.toString(Integer.valueOf(core_az) * -1);
+////                                                    setUncalibratedZ(core_az);
+////                                                    calculateMeanMaxZ();
+////
+////                                                } else {
+////                                                    core_az = Integer.toString(Integer.parseInt(core_az_binary, 2));
+////                                                    setUncalibratedZ(core_az);
+////                                                    calculateMeanMaxZ();
+////                                                }
+////                                            }
+////                                            try {
+////                                                calculateRoll(Double.valueOf(core_ay), Double.valueOf(core_az));
+////                                                calculateDip(Double.valueOf(core_ax), Double.valueOf(core_ay), Double.valueOf(core_az));
+////                                            } catch (Exception e) {
+////                                                Log.e(TAG, "Error calling calculate roll and dip functions: " + e);
+////                                            }
+////
+////                                        } else if (i == 11) { // Temperature
+////                                            acc_temp = core_shot_data[i];
+//////                                            Log.d(TAG, "Accelerometer temperature: " + acc_temp);
+////                                            if (accelerometer_temp_data.equals("-128")) {
+////                                                accelerometer_temp_data.setText("Not Avaliable");
+////                                            } else {
+////                                                accelerometer_temp_data.setText(acc_temp);
+////                                                accTemp = Double.parseDouble(acc_temp);
+////                                            }
+////                                        }
+////                                    }
+////                                }
+//                                    break;
+//                                case "2":
+//                                    //second format(19) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), Accelerometer Temperature(1), MX (2), MY (2), MZ (2), Magnetometer Temperature (1)
+//                                    Log.e(TAG, "SHOT FORMAT 2");
+//                                    break;
                                 case "3":
                                     Log.e(TAG, "SHOT FORMAT 3");
-                                    //third format(20) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), MX(3), MY(3), MZ(3)
-
-                                    String a = "", b = "";
-                                    try {
-                                        for (int i = 0; i < bore_shot_data.length; i++) {
-                                            if (i == 0) { //format
-                                                dShotFormat = Integer.valueOf(shot_format);
-                                                dev_shot_format.setText(shot_format);
-                                            } else if (i == 1) { // record number 1
-                                                try {
-                                                    highByte = bore_shot_data[i];
-                                                } catch (Exception e) {
-                                                    Log.e(TAG, "Exception thrown in high byte: " + e);
-                                                }
-                                            } else if (i == 2) { //record number 2
-                                                try {
-                                                    int value = 0;
-                                                    if (Integer.valueOf(highByte) > 0 && Integer.valueOf(highByte) < 128) {
-                                                        value = (128 * Integer.valueOf(highByte));
-                                                    } else if (Integer.valueOf(highByte) < 0 && Integer.valueOf(highByte) >= -128) {
-                                                        value = (128 * (128 + Integer.valueOf(highByte))) + (128 * 127);
-                                                    }
-                                                    lowByte = bore_shot_data[i];
-                                                    if (Integer.valueOf(lowByte) > 0 && Integer.valueOf(lowByte) < 128) {
-                                                        value = value + Integer.valueOf(lowByte);
-                                                    } else if (Integer.valueOf(lowByte) < 1 && Integer.valueOf(lowByte) >= -128) {
-                                                        value = 128 + (128 + Integer.valueOf(lowByte));
-                                                    }
-                                                    dev_record_number.setText(Integer.toString(value));
-                                                    dRecordNumber = value;
-                                                } catch (Exception e) {
-                                                    Log.e(TAG, "Exception thrown in low byte: " + e);
-                                                }
-                                            } else if (i == 3) { //probe temp 1
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                ByteBuffer buf = ByteBuffer.allocate(Long.SIZE / 8);
-                                                buf.putInt(Integer.SIZE / 8, num);
-                                                Log.e(TAG, "UNSIGNED?: " + buf.getLong(0));
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                String finalOutput = "";
-                                                Log.e(TAG, "Probe temp 1 binary output: " + binaryOutput);
-                                                if (binaryOutput.length() > 8) {
-                                                    for (int l = binaryOutput.length(); l <= 0; l--) {
-                                                        if (l <= 8) {
-                                                            finalOutput = finalOutput + binaryOutput.charAt(binaryOutput.length()-(l+1));
-                                                        }
-                                                    }
-                                                }
-                                                Log.e(TAG, "final temp 1 output: " + finalOutput);
-                                                probe_temp = bore_shot_data[i];
-                                                Log.e(TAG, "FORMAT 3 Probe temp 1: " + probe_temp);
-                                            } else if (i == 4) { //probe temp 2 ISSUE -> BROKEN
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                Log.e(TAG, "Probe temp 2 binary output: " + binaryOutput);
-                                                String finalOutput = "";
-                                                if (binaryOutput.length() > 8) {
-                                                    for (int l = binaryOutput.length(); l <= 0; l--) {
-                                                        if (l <= 8) {
-                                                            finalOutput = finalOutput + binaryOutput.charAt(binaryOutput.length()-(l+1));
-                                                        }
-                                                    }
-                                                }
-                                                Log.e(TAG, "final temp 2 output: " + finalOutput);
-                                                probe_temp = probe_temp + "." + bore_shot_data[i]; //as it is a fixed point value with 8 binary places
-                                                Log.e(TAG, "FORMAT 3 Probe temp 2: " + probe_temp);
-                                                orientation_temperature_data.setText(probe_temp);
-                                                oTemp = Double.parseDouble(probe_temp);
-                                            } else if (i == 5) { //AX 1
-                                                core_ax_binary = "";
-                                                core_ax = bore_shot_data[i];
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    //need to convert from -128 - 0 to a positive number
-                                                    num = 128 + (128 + num);
-                                                }
-//                                            Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                core_ax_binary = binaryOutput;
-//                                            Log.e(TAG, "binary core_ax: " + binaryOutput);
-                                            } else if (i == 6) { //AX 2
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num = 128 + (128 + num);
-                                                }
-//                                            Log.e(TAG, "record number byte 1 in integer form is: " + num);
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                core_ax_binary = core_ax_binary + binaryOutput;
-//                                            Log.e(TAG, "Core AX Binary: " + core_ax_binary);
-
-                                                if (core_ax_binary.length() > 16) {
-//                                                Log.e(TAG, "Error, AX binary longer than 16 bits");
-                                                    accelerometer_x_data.setText("Error");
-                                                } else {
-                                                    if (core_ax_binary.charAt(0) == '1') {
-                                                        core_ax_binary = core_ax_binary.substring(1);
-                                                        Log.e(TAG, "CORE AX BINARY: " + core_ax_binary);
-                                                        core_ax = Integer.toString(Integer.parseInt(core_ax_binary, 2));
-                                                        core_ax = Integer.toString(Integer.valueOf(core_ax) * -1);
-                                                        setUncalibratedX(core_ax);
-                                                        calculateMeanMaxAccX();
-
-                                                    } else {
-                                                        core_ax = Integer.toString(Integer.parseInt(core_ax_binary, 2));
-                                                        setUncalibratedX(core_ax);
-                                                        calculateMeanMaxAccX();
-                                                    }
-                                                }
-                                            } else if (i == 7) { //AY 1
-                                                core_ay_binary = "";
-                                                core_ay = bore_shot_data[i];
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    //need to convert from -128 - 0 to a positive number
-                                                    num = 128 + (128 + num);
-                                                }
-//                                            Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                core_ay_binary = binaryOutput;
-//                                            Log.e(TAG, "binary core_ay: " + binaryOutput);
-                                            } else if (i == 8) { //AY 2
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num = 128 + (128 + num);
-                                                }
-//                                            Log.e(TAG, "record number byte 1 in integer form is: " + num);
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                core_ay_binary = core_ay_binary + binaryOutput;
-//                                            Log.e(TAG, "Core AY Binary: " + core_ay_binary);
-
-                                                if (core_ay_binary.length() > 16) {
-//                                                Log.e(TAG, "Error, AY binary longer than 16 bits");
-                                                    accelerometer_y_data.setText("Error");
-                                                } else {
-                                                    if (core_ay_binary.charAt(0) == '1') {
-                                                        core_ay_binary = core_ay_binary.substring(1);
-                                                        core_ay = Integer.toString(Integer.parseInt(core_ay_binary, 2));
-                                                        core_ay = Integer.toString(Integer.valueOf(core_ay) * -1);
-                                                        setUncalibratedY(core_ay);
-                                                        calculateMeanMaxAccY();
-                                                    } else {
-                                                        core_ay = Integer.toString(Integer.parseInt(core_ay_binary, 2));
-                                                        setUncalibratedY(core_ay);
-                                                        calculateMeanMaxAccY();
-
-                                                    }
-                                                }
-                                            } else if (i == 9) { //AZ 1
-                                                core_az_binary = "";
-                                                core_az = bore_shot_data[i];
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    //need to convert from -128 - 0 to a positive number
-                                                    num = 128 + (128 + num);
-                                                }
-//                                            Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                core_az_binary = binaryOutput;
-//                                            Log.e(TAG, "binary core_az: " + binaryOutput);
-                                            } else if (i == 10) { //AZ 2
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num = 128 + (128 + num);
-                                                }
-
-//                                            Log.e(TAG, "record number byte 1 in integer form is: " + num);
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                core_az_binary = core_az_binary + binaryOutput;
-//                                            Log.e(TAG, "Core AY Binary: " + core_az_binary);
-
-                                                if (core_az_binary.length() > 16) {
-//                                                Log.e(TAG, "Error, AY binary longer than 16 bits");
-                                                    accelerometer_z_data.setText("Error");
-                                                } else {
-                                                    if (core_az_binary.charAt(0) == '1') {
-                                                        core_az_binary = core_az_binary.substring(1);
-                                                        core_az = Integer.toString(Integer.parseInt(core_az_binary, 2));
-
-                                                        core_az = Integer.toString(Integer.valueOf(core_az) * -1);
-                                                        setUncalibratedZ(core_az);
-                                                        calculateMeanMaxZ();
-
-                                                    } else {
-                                                        core_az = Integer.toString(Integer.parseInt(core_az_binary, 2));
-                                                        setUncalibratedZ(core_az);
-                                                        calculateMeanMaxZ();
-                                                    }
-                                                }
-                                                try {
-                                                    calculateRoll(Double.valueOf(core_ay), Double.valueOf(core_az));
-                                                    calculateDip(Double.valueOf(core_ax), Double.valueOf(core_ay), Double.valueOf(core_az));
-                                                } catch (Exception e) {
-                                                    Log.e(TAG, "Error calling calculate roll and dip functions: " + e);
-                                                }
-
-                                                double core_uax = Double.valueOf(core_ax);
-                                                double core_uay = Double.valueOf(core_ay);
-                                                double core_uaz = Double.valueOf(core_az);
-                                                double[] acc_values = CalibrationHelper.CalibrationHelp(CalibrationHelper.accelerationCalibration, core_uax,  core_uay, core_uaz);
-
-//                                                core_ax = String.valueOf(acc_values[0]);
-//                                                core_ay = String.valueOf(acc_values[1]);
-//                                                core_az = String.valueOf(acc_values[2]);
-//                                                setUncalibratedX(core_ax); //todo - this should be a set calibrated function
-//                                                setUncalibratedY(core_ay);
-//                                                setUncalibratedZ(core_az);
-                                                Log.e(TAG, "core uaX: " + core_ax + "core ax: " + acc_values[0]);
-                                                        //+  "core aY: " + String.valueOf(acc_values[1]) + "core aZ: " + String.valueOf(acc_values[2]));
-
-                                            } else if (i == 11) { // MX 1
-                                                mag_x = bore_shot_data[i];
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num = 128 + (128 + num);
-                                                }
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                mag_x_binary = binaryOutput;
-                                            } else if (i == 12) { //MX 2
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num  = 128 + (128 + num);
-                                                }
-
-//                                              Log.e(TAG, "record number byte 1 in integer form is: " + num);
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                mag_x_binary = mag_x_binary + binaryOutput;
-
-                                            } else if (i == 13) { //MX 3
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num  = 128 + (128 + num);
-                                                }
-
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                mag_x_binary = mag_x_binary + binaryOutput;
-
-                                                if (mag_x_binary.length() != 24) {
-                                                    Log.e(TAG, "ERROR, Mag x binary length not 24 bytes");
-                                                } else {
-                                                    if (mag_x_binary.charAt(0) == '1') {
-                                                        mag_x_binary = mag_x_binary.substring(1);
-                                                        mag_x = Integer.toString(Integer.parseInt(mag_x_binary, 2));
-                                                        mag_x = Integer.toString(Integer.valueOf(mag_x) * -1);
-                                                        setUncalibratedMagX(mag_x);
-                                                        calculateMeanMaxMagX();
-                                                    } else {
-                                                        mag_x = Integer.toString(Integer.parseInt(mag_x_binary, 2));
-                                                        setUncalibratedMagX(mag_x);
-                                                        calculateMeanMaxMagX();
-                                                    }
-                                                }
-
-                                            } else if (i == 14) { //MY 1
-                                                mag_y = bore_shot_data[i];
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num = 128 + (128 + num);
-                                                }
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                mag_y_binary = binaryOutput;
-
-                                            } else if (i == 15) { //MY 2
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num  = 128 + (128 + num);
-                                                }
-
-//                                              Log.e(TAG, "record number byte 1 in integer form is: " + num);
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                mag_y_binary = mag_y_binary + binaryOutput;
-
-                                            } else if (i == 16) { //MY 3
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num  = 128 + (128 + num);
-                                                }
-
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                mag_y_binary = mag_y_binary + binaryOutput;
-
-                                                if (mag_y_binary.length() != 24) {
-                                                    Log.e(TAG, "ERROR, Mag x binary length not 24 bytes");
-                                                } else {
-                                                    if (mag_y_binary.charAt(0) == '1') {
-                                                        mag_y_binary = mag_y_binary.substring(1);
-                                                        mag_y = Integer.toString(Integer.parseInt(mag_y_binary, 2));
-                                                        mag_y = Integer.toString(Integer.valueOf(mag_y) * -1);
-                                                        setUncalibratedMagY(mag_y);
-                                                        calculateMeanMaxMagY();
-                                                    } else {
-                                                        mag_y = Integer.toString(Integer.parseInt(mag_y_binary, 2));
-                                                        setUncalibratedMagY(mag_y);
-                                                        calculateMeanMaxMagY();
-                                                    }
-                                                }
-
-                                            } else if (i == 17) { //MZ 1
-                                                mag_z = bore_shot_data[i];
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num = 128 + (128 + num);
-                                                }
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                mag_z_binary = binaryOutput;
-
-                                            } else if (i == 18) { //MZ 2
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num  = 128 + (128 + num);
-                                                }
-
-//                                              Log.e(TAG, "record number byte 1 in integer form is: " + num);
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                mag_z_binary = mag_z_binary + binaryOutput;
-                                            } else if (i == 19) { //MZ 3
-                                                int num = Integer.parseInt(bore_shot_data[i]);
-                                                if (num < 0) {
-                                                    num  = 128 + (128 + num);
-                                                }
-
-                                                String binaryOutput = Integer.toBinaryString(num);
-                                                if (Integer.toBinaryString(num).length() < 8) {
-                                                    for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                        binaryOutput = "0" + binaryOutput;
-                                                    }
-                                                }
-                                                mag_z_binary = mag_z_binary + binaryOutput;
-
-                                                if (mag_z_binary.length() != 24) {
-                                                    Log.e(TAG, "ERROR, Mag x binary length not 24 bytes");
-                                                } else {
-                                                    if (mag_z_binary.charAt(0) == '1') {
-                                                        mag_z_binary = mag_z_binary.substring(1);
-                                                        mag_z = Integer.toString(Integer.parseInt(mag_z_binary, 2));
-                                                        mag_z = Integer.toString(Integer.valueOf(mag_z) * -1);
-                                                        setUncalibratedMagZ(mag_z);
-                                                        calculateMeanMaxMagZ();
-
-                                                    } else {
-                                                        mag_z = Integer.toString(Integer.parseInt(mag_z_binary, 2));
-                                                        setUncalibratedMagZ(mag_z);
-                                                        calculateMeanMaxMagZ();
-                                                        calculateAzimuth(magX, magY, magZ, oRoll, oDip);
-                                                        Log.e(TAG, "YASSSS");
-
-                                                    }
-                                                }
-                                            }
+//                                    //third format(20) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), MX(3), MY(3), MZ(3)
+//
+//                                    dShotFormat = Integer.valueOf(shot_format);
+                                    dev_shot_format.setText(shot_format);
+//
+                                    Log.e(TAG, "ANNA ----------------------------------");
+                                    byte[] char_all_bore_shot = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                                    String[] string_all_bore_shot = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
+                                    for (int i = 0; i < bore_shot_data.length; i++) {
+////                                        Log.e(TAG, "Shot " + i + ": " + bore_shot_data[i]);
+                                        int bore_value;
+                                        try {
+                                            bore_value = Integer.valueOf(bore_shot_data[i]);
+                                        } catch (Exception e) {
+                                            bore_value = -2;
                                         }
-                                    } catch (Exception e) {
-                                        Log.e(TAG, "Exception thrown getting data: " + e);
+                                        try {
+//                                            char_all_bore_shot[i] = Byte.parseByte(Integer.toHexString(bore_value));
+                                            if (bore_value < 0) {
+                                                String unsignedHex = String.format("%02X", bore_value & 0xff);
+                                                string_all_bore_shot[i] = unsignedHex;
+//                                                char_all_bore_shot[i] = (byte) Integer.parseInt(string_all_bore_shot[i], 16);//Byte.parseByte();
+//                                                char_all_bore_shot[i] = (byte) (Integer.parseInt(string_all_bore_shot[i], 16) & 0xFF);
+                                            } else {
+                                                string_all_bore_shot[i] = Integer.toHexString(bore_value);
+                                            }
+                                        } catch (Exception e) {
+                                            string_all_bore_shot[i] = "-1";
+                                        }
                                     }
+
+                                    //Format all the displayed numbers so they arent incredibly long
+                                    DecimalFormat numberFormat = new DecimalFormat("0.0000000");
+
+//                                  //first 2 bytes after shot type is the record number
+                                    try {
+                                        byte value1 = (byte) Integer.parseInt(string_all_bore_shot[1], 16);
+                                        byte value2 = (byte) Integer.parseInt(string_all_bore_shot[2], 16);
+                                        dRecordNumber = (int) twoBytesToValue(value2, value1);
+                                        numberFormat.format(dRecordNumber);
+                                        dev_record_number.setText(String.valueOf(dRecordNumber));
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "EXCEPTION thrown in record number: " + e);
+                                    }
+
+//                                  next 2 bytes after probe temperature
+                                    try {
+                                        byte value1 = (byte) Integer.parseInt(string_all_bore_shot[3], 16);
+                                        byte value2 = (byte) Integer.parseInt(string_all_bore_shot[4], 16);
+                                        int shotProbeTempRaw = ((int)value1 << 8) + (((int)value2) & 0x00FF);
+                                        double probeTempU = (double)shotProbeTempRaw/256.0;
+                                        double probeTemp = CalibrationHelper.temp_param[0] + (CalibrationHelper.temp_param[1] * probeTempU);
+
+                                        orientation_temperature_data.setText(numberFormat.format(probeTemp));
+                                        //TODO make so if the accelerometer or magnetometer are actually passing temp data it displays the corresponding value
+                                        accelerometer_temp_data.setText(numberFormat.format(probeTemp));
+                                        magnetometer_temp_data.setText(numberFormat.format(probeTemp));
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Exception thrown in probe temperature: " + e);
+                                    }
+
+                                    double ux = 0;
+                                    double uy = 0;
+                                    double uz = 0;
+                                    double[] calAcc;
+
+                                    //TODO could probably turn this into a function for better code functionality
+                                    try {
+                                        byte value1 = (byte) Integer.parseInt(string_all_bore_shot[5], 16);
+                                        byte value2 = (byte) Integer.parseInt(string_all_bore_shot[6], 16);
+                                        int shotAccX = ((int)value1 << 8) + (((int)value2) & 0x00FF);
+                                        ux = ((double)shotAccX)/32.0/512.0;
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Exception thrown setting ux: " + e);
+                                    }
+
+                                    try {
+                                        byte value1 = (byte) Integer.parseInt(string_all_bore_shot[7], 16);
+                                        byte value2 = (byte) Integer.parseInt(string_all_bore_shot[8], 16);
+                                        int shotAccY = ((int)value1 << 8) + (((int)value2) & 0x00FF);
+                                        uy = ((double)shotAccY)/32.0/512.0;
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Exception thrown setting uy: " + e);
+                                    }
+
+                                    try {
+                                        byte value1 = (byte) Integer.parseInt(string_all_bore_shot[9], 16);
+                                        byte value2 = (byte) Integer.parseInt(string_all_bore_shot[10], 16);
+                                        int shotAccZ = ((int)value1 << 8) + (((int)value2) & 0x00FF);
+                                        uz = ((double)shotAccZ)/32.0/512.0;
+
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Exception thrown setting uz: " + e);
+                                    }
+
+                                    double umx = 0;
+                                    double umy = 0;
+                                    double umz = 0;
+                                    double[] calMag;
+
+                                    try {
+                                        byte value1 = (byte) Integer.parseInt(string_all_bore_shot[11], 16);
+                                        byte value2 = (byte) Integer.parseInt(string_all_bore_shot[12], 16);
+                                        byte value3 = (byte) Integer.parseInt(string_all_bore_shot[13], 16);
+                                        int shotMagX = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
+                                        umx = ((double)shotMagX *0.001);
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Exception thrown setting umx");
+                                    }
+
+                                    try {
+                                        byte value1 = (byte) Integer.parseInt(string_all_bore_shot[14], 16);
+                                        byte value2 = (byte) Integer.parseInt(string_all_bore_shot[15], 16);
+                                        byte value3 = (byte) Integer.parseInt(string_all_bore_shot[16], 16);
+                                        int shotMagY = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
+                                        umy = ((double)shotMagY *0.001);
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Exception thrown setting umx");
+                                    }
+
+                                    try {
+                                        byte value1 = (byte) Integer.parseInt(string_all_bore_shot[17], 16);
+                                        byte value2 = (byte) Integer.parseInt(string_all_bore_shot[18], 16);
+                                        byte value3 = (byte) Integer.parseInt(string_all_bore_shot[19], 16);
+                                        int shotMagZ = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
+                                        umz = ((double)shotMagZ *0.001);
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Exception thrown setting umx");
+                                    }
+
+                                    calAcc = CalibrationHelper.CalibrationHelp(CalibrationHelper.accelerationCalibration, ux, uy, uz);
+                                    calMag = CalibrationHelper.CalibrationHelp(CalibrationHelper.magnetometerCalibration, umx, umy, umz);
+
+                                    //Set the display values for x, y and z calibrated values
+                                    double cx = calAcc[0];
+                                    double cy = calAcc[1];
+                                    double cz = calAcc[2];
+
+                                    double cmx = calMag[0];
+                                    double cmy = calMag[1];
+                                    double cmz = calMag[2];
+
+                                    //Set roll and dip values
+                                    double cal_roll_radian = Math.atan2(cy, cz);
+                                    if (cal_roll_radian > Math.PI) { cal_roll_radian -= (2 * Math.PI); }
+                                    if (cal_roll_radian < -Math.PI) { cal_roll_radian += (2*Math.PI); }
+                                    double cal_dip_radian = Math.atan2(-cx, Math.sqrt((cy*cy)+(cz*cz)));
+
+                                    double den = (cmx * Math.cos(cal_dip_radian)) + (cmy * Math.sin(cal_dip_radian) * Math.sin(cal_roll_radian)) + (cmz * Math.sin(cal_dip_radian) * Math.cos(cal_roll_radian));
+                                    double num = (cmy * Math.cos(cal_roll_radian)) - (cmz * Math.sin(cal_roll_radian));
+                                    double cal_az_radian = Math.atan2(-num, den);
+                                    if (cal_az_radian > Math.PI) { cal_az_radian -= (2*Math.PI); }
+                                    if (cal_az_radian < -Math.PI) { cal_az_radian += (2*Math.PI); }
+                                    if (cal_az_radian < 0) { cal_az_radian += (2*Math.PI); }
+
+                                    //convert to degrees :(
+                                    double cal_roll_degree = cal_roll_radian*180/Math.PI;
+                                    double cal_dip_degree = cal_dip_radian*180/Math.PI;
+                                    double cal_az_degree = cal_az_radian*180/Math.PI;
+
+                                    //display orientation data
+                                    orientation_roll_data.setText(numberFormat.format(cal_roll_degree));
+                                    orientation_dip_data.setText(numberFormat.format(cal_dip_degree));
+                                    orientation_azimuth_data.setText(numberFormat.format(cal_az_degree));
+
+                                    accelerometer_x_data.setText(numberFormat.format(cx));
+                                    accelerometer_y_data.setText(numberFormat.format(cy));
+                                    accelerometer_z_data.setText(numberFormat.format(cz));
+
+                                    magnetometer_x_data.setText(numberFormat.format(cmx));
+                                    magnetometer_y_data.setText(numberFormat.format(cmy));
+                                    magnetometer_z_data.setText(numberFormat.format(cmz));
 
                                     break;
                                 default:
                                     Log.e(TAG, "ERROR: Shot format not valid: " + shot_format);
                                     break;
                             }
-                        }
+//                        }
                     } else if (intent.getStringExtra(BluetoothLeService.PROBE_MODE) != null) {
                         Log.d(TAG, "Probe Mode is: " + intent.getStringExtra(BluetoothLeService.PROBE_MODE));
                         if (intent.getStringExtra(BluetoothLeService.PROBE_MODE).equals("2")) {
@@ -1306,9 +1064,17 @@ public class SensorActivity extends AppCompatActivity {
         }
     };
 
-    private void clearUI() {
-
+    public static short toInt16(byte[] bytes, int index) {
+        return (short) ((bytes[index + 1] << 8) | (bytes[index] & 0xFF));
     }
+
+    private double twoBytesToValue(byte value1, byte value2) {
+        byte[] dataArray = new byte[] {value1, value2};
+        int i1 = toInt16(dataArray, 0);
+        return i1;
+    }
+
+    private void clearUI() { }
 
     private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
@@ -2069,103 +1835,103 @@ public class SensorActivity extends AppCompatActivity {
         maxDev_accZ_data.setText(Double.toString(meanMaxValue));
     }
 
-    public void setUncalibratedMagX(String mag_x_value) {
-        double uncalibratedMagX = 0;
-        uncalibratedMagX = ((double)Integer.valueOf(mag_x_value) / (double)0x7FFF);
-        DecimalFormat numberFormat = new DecimalFormat("0.00000");
-        try {
-            magnetometer_x_data.setText(uncalibratedMagX + " µT");
-            magX = Double.parseDouble(Double.toString(uncalibratedMagX));
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting uncalibrated mag x: " + e);
-        }
-        mag_x = Double.toString(uncalibratedMagX);
-        magXData.add(Double.parseDouble(mag_x));
-    }
+//    public void setUncalibratedMagX(String mag_x_value) {
+//        double uncalibratedMagX = 0;
+//        uncalibratedMagX = ((double)Integer.valueOf(mag_x_value) / (double)0x7FFF);
+//        DecimalFormat numberFormat = new DecimalFormat("0.00000");
+//        try {
+//            magnetometer_x_data.setText(uncalibratedMagX + " µT");
+//            magX = Double.parseDouble(Double.toString(uncalibratedMagX));
+//        } catch (Exception e) {
+//            Log.e(TAG, "Error setting uncalibrated mag x: " + e);
+//        }
+//        mag_x = Double.toString(uncalibratedMagX);
+//        magXData.add(Double.parseDouble(mag_x));
+//    }
+//
+//    public void calculateMeanMaxMagX() {
+//        double meanMaxValue = 0;
+//        double maxValue = 0;
+//
+//        for (int i = 0; i < magXData.size(); i++ ) {
+//            meanMaxValue = meanMaxValue + magXData.get(i);
+//            if (magXData.get(i) > maxValue) {
+//                maxValue = magXData.get(i);
+//            }
+//        }
+//        meanMaxValue = meanMaxValue / magXData.size();
+//
+//        if (maxDev_mean_check.isChecked()) {
+//            meanMaxValue = maxValue - meanMaxValue;
+//        }
+//        maxDev_magX_data.setText(Double.toString(meanMaxValue));
+//    }
+//
+//    public void setUncalibratedMagY(String mag_y_value) {
+//        double uncalibratedMagY = 0;
+//        uncalibratedMagY = ((double)Integer.valueOf(mag_y_value) / (double)0x7FFF);
+//        DecimalFormat numberFormat = new DecimalFormat("0.00000");
+//        try {
+//            magnetometer_y_data.setText(uncalibratedMagY + " µT");
+//            magY = Double.parseDouble(Double.toString(uncalibratedMagY));
+//        } catch (Exception e) {
+//            Log.e(TAG, "Error setting uncalibrated mag y: " + e);
+//        }
+//        mag_y = Double.toString(uncalibratedMagY);
+//        magYData.add(Double.parseDouble(mag_y));
+//    }
 
-    public void calculateMeanMaxMagX() {
-        double meanMaxValue = 0;
-        double maxValue = 0;
+//    public void calculateMeanMaxMagY() {
+//        double meanMaxValue = 0;
+//        double maxValue = 0;
+//
+//        for (int i = 0; i < magYData.size(); i++ ) {
+//            meanMaxValue = meanMaxValue + magYData.get(i);
+//            if (magYData.get(i) > maxValue) {
+//                maxValue = magYData.get(i);
+//            }
+//        }
+//        meanMaxValue = meanMaxValue / magYData.size();
+//
+//        if (maxDev_mean_check.isChecked()) {
+//            meanMaxValue = maxValue - meanMaxValue;
+//        }
+//        maxDev_magY_data.setText(Double.toString(meanMaxValue));
+//    }
 
-        for (int i = 0; i < magXData.size(); i++ ) {
-            meanMaxValue = meanMaxValue + magXData.get(i);
-            if (magXData.get(i) > maxValue) {
-                maxValue = magXData.get(i);
-            }
-        }
-        meanMaxValue = meanMaxValue / magXData.size();
+//    private void setUncalibratedMagZ(String mag_z_value) {
+//        Log.e(TAG, "YASSSS");
+//        double uncalibratedMagZ = 0;
+//        uncalibratedMagZ = ((double)Integer.valueOf(mag_z_value) / (double)0x7FFF);
+//        DecimalFormat numberFormat = new DecimalFormat("0.00000");
+//        Log.e(TAG, "YESSSS");
+//
+//        try {
+//            Log.e(TAG, "SETTING Z VELU");
+//            magnetometer_z_data.setText(uncalibratedMagZ + " µT");
+//            magZ = Double.parseDouble(Double.toString(uncalibratedMagZ));
+//        } catch (Exception e) {
+//            Log.e(TAG, "Error setting uncalibrated mag z: " + e);
+//        }
+//        mag_z = Double.toString(uncalibratedMagZ);
+//        magZData.add(Double.parseDouble(mag_z));
+//    }
 
-        if (maxDev_mean_check.isChecked()) {
-            meanMaxValue = maxValue - meanMaxValue;
-        }
-        maxDev_magX_data.setText(Double.toString(meanMaxValue));
-    }
-
-    public void setUncalibratedMagY(String mag_y_value) {
-        double uncalibratedMagY = 0;
-        uncalibratedMagY = ((double)Integer.valueOf(mag_y_value) / (double)0x7FFF);
-        DecimalFormat numberFormat = new DecimalFormat("0.00000");
-        try {
-            magnetometer_y_data.setText(uncalibratedMagY + " µT");
-            magY = Double.parseDouble(Double.toString(uncalibratedMagY));
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting uncalibrated mag y: " + e);
-        }
-        mag_y = Double.toString(uncalibratedMagY);
-        magYData.add(Double.parseDouble(mag_y));
-    }
-
-    public void calculateMeanMaxMagY() {
-        double meanMaxValue = 0;
-        double maxValue = 0;
-
-        for (int i = 0; i < magYData.size(); i++ ) {
-            meanMaxValue = meanMaxValue + magYData.get(i);
-            if (magYData.get(i) > maxValue) {
-                maxValue = magYData.get(i);
-            }
-        }
-        meanMaxValue = meanMaxValue / magYData.size();
-
-        if (maxDev_mean_check.isChecked()) {
-            meanMaxValue = maxValue - meanMaxValue;
-        }
-        maxDev_magY_data.setText(Double.toString(meanMaxValue));
-    }
-
-    private void setUncalibratedMagZ(String mag_z_value) {
-        Log.e(TAG, "YASSSS");
-        double uncalibratedMagZ = 0;
-        uncalibratedMagZ = ((double)Integer.valueOf(mag_z_value) / (double)0x7FFF);
-        DecimalFormat numberFormat = new DecimalFormat("0.00000");
-        Log.e(TAG, "YESSSS");
-
-        try {
-            Log.e(TAG, "SETTING Z VELU");
-            magnetometer_z_data.setText(uncalibratedMagZ + " µT");
-            magZ = Double.parseDouble(Double.toString(uncalibratedMagZ));
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting uncalibrated mag z: " + e);
-        }
-        mag_z = Double.toString(uncalibratedMagZ);
-        magZData.add(Double.parseDouble(mag_z));
-    }
-
-    private void calculateMeanMaxMagZ() {
-        double meanMaxValue = 0;
-        double maxValue = 0;
-
-        for (int i = 0; i < magZData.size(); i++ ) {
-            meanMaxValue = meanMaxValue + magZData.get(i);
-            if (magZData.get(i) > maxValue) {
-                maxValue = magZData.get(i);
-            }
-        }
-        meanMaxValue = meanMaxValue / magZData.size();
-
-        if (maxDev_mean_check.isChecked()) {
-            meanMaxValue = maxValue - meanMaxValue;
-        }
-        maxDev_magZ_data.setText(Double.toString(meanMaxValue));
-    }
+//    private void calculateMeanMaxMagZ() {
+//        double meanMaxValue = 0;
+//        double maxValue = 0;
+//
+//        for (int i = 0; i < magZData.size(); i++ ) {
+//            meanMaxValue = meanMaxValue + magZData.get(i);
+//            if (magZData.get(i) > maxValue) {
+//                maxValue = magZData.get(i);
+//            }
+//        }
+//        meanMaxValue = meanMaxValue / magZData.size();
+//
+//        if (maxDev_mean_check.isChecked()) {
+//            meanMaxValue = maxValue - meanMaxValue;
+//        }
+//        maxDev_magZ_data.setText(Double.toString(meanMaxValue));
+//    }
 }

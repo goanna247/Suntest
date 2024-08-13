@@ -18,8 +18,10 @@ import android.widget.TextView;
 import com.work.libtest.databinding.ActivityMainBinding;
 
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
+import static com.work.libtest.CalibrationHelper.binCalData;
 import static com.work.libtest.Operation.OPERATION_WRITE;
 import static com.work.libtest.Operation.OPERATION_READ;
 import static com.work.libtest.Operation.OPERATION_NOTIFY;
@@ -66,13 +68,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -101,12 +104,34 @@ public class MainActivity extends AppCompatActivity {
     private Menu menu;
 
     public int calibrationIndexNum = 00;
+    boolean calibrated = false;
+    boolean toBeCalibrated = true; //do we even want to gather the calibration matrix
 
     private String mDeviceName;
     private String mDeviceAddress;
     private String mDeviceConnectionStatus;
 
     private String mMode;
+
+    private boolean isCalibrated = false;
+    final int NUM_CAL_PARAMS_EXPECTED_DURING_PARSING = 38;
+    private int binCalData_size = 0;
+    private String  modifiedDateString   = "No calibration data";
+    private String  calibratedDateString = "No calibration data";
+    private double acc_A[]   = new double[3];    // offsets
+    private double acc_B[][] = new double[3][3]; // first order terms
+    private double acc_C[]   = new double[3];    // cubic terms
+
+    private double mag_A[]   = new double[3];
+    private double mag_B[][] = new double[3][3];
+    private double mag_C[]   = new double[3];
+
+    private double temp_param[]   = new double[2];   // offset, scale
+
+    private double accManualZeroOffset = 0;  // used in zero roll offset feature of corecams to align drill head
+    private int offset_of_accManualZeroOffset = 0;  // where accManualZeroOffset is located in the the current cal binary
+
+    private double magManualZeroOffset = 0;  // don't think this is used
 
 
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics = new ArrayList<>();
@@ -435,30 +460,30 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-                Message writtenMsg = handler.obtainMessage(
-                        MessageConstants.MESSAGE_WRITE, -1, -1, mmBuffer
-                );
-                writtenMsg.sendToTarget();
-            } catch (IOException e) {
-                Log.e(TAG, "Error occured in sending data", e);
-                Message writeErrorMsg = handler.obtainMessage(MessageConstants.MESSAGE_TOAST);
-                Bundle bundle = new Bundle();
-                bundle.putString("toast", "couldnt send data to the other device");
-                writeErrorMsg.setData(bundle);
-                handler.sendMessage(writeErrorMsg);
-            }
-        }
+//        public void write(byte[] bytes) {
+//            try {
+//                mmOutStream.write(bytes);
+//                Message writtenMsg = handler.obtainMessage(
+//                        MessageConstants.MESSAGE_WRITE, -1, -1, mmBuffer
+//                );
+//                writtenMsg.sendToTarget();
+//            } catch (IOException e) {
+//                Log.e(TAG, "Error occured in sending data", e);
+//                Message writeErrorMsg = handler.obtainMessage(MessageConstants.MESSAGE_TOAST);
+//                Bundle bundle = new Bundle();
+//                bundle.putString("toast", "couldnt send data to the other device");
+//                writeErrorMsg.setData(bundle);
+//                handler.sendMessage(writeErrorMsg);
+//            }
+//        }
 
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Could not close the connect socket");
-            }
-        }
+//        public void cancel() {
+//            try {
+//                mmSocket.close();
+//            } catch (IOException e) {
+//                Log.e(TAG, "Could not close the connect socket");
+//            }
+//        }
     }
 
     /**
@@ -567,16 +592,463 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        byte calibrationData[] = {1, 16, 4, -81, 2, 111, 89, 32, -100, -84, 1, 63, -16, 53, 96, -100, 84, 90, -27, -65, 62, 5, -72, 27, 29, 27, -124, -65, -110, 20, 103, -84, 67, -29, -38, -65, -115, 90, -116, 62, -95, 103, 109, 63, 98, 11, -21, 119, 119, -19, -20, 63, 31, -18, 81, 16, -65, 81, -86, 63, -16, 59, -5, -91, -10, 23, -61, 2, 63, -120, 114, -125, 0, 24, 122, 62, 0, 0, 0, 0, 0, 0, 0, 0, 63, -118, 103, -57, -56, -9, -85, -61, 0, 0, 0, 0, 0, 0, 0, 0, -65, 105, -121, 26, -31, 74, -1, -12, 0, 0, 0, 0, 0, 0, 0,0, 0, 1, 64, 0, 59, 93, -12, -67, 70, 61, -65, 109, -65, 44, 117, 26, 26, 123, -65, 18, -99, -80, 100, -102, 26, -8, -65, 93, 54, -43, 78, -103, -61, 89, 48, -100, -84, 1, 63, -16, -126, -20, 71, -16, 68, 6, 63, 126, 97, -84, -10, -17, 98, -69, -65, -123, 112, 66, -59, -117, 40, -46, -65,96, 15, 10, 98, -2, -98, -54, -65, -107, 60, -98, -124, 20, -96, 98, 63, 81, -66, -66, -80, -77, 111, -22, 63, -15, 25, -25, -3, -55, -44, -84, 2, 64, 20, -115, -20, -73, -81, 12, -40, 0, 0, 0, 0, 0, 0, 0, 0, 64, 14, -92, -119, -95, -43, 100, 96, 0, 0, 0, 0, 0, 0, 0, 0, 63, -38, -46, -59, -39, 19, -67, 84, 0, 0, 0, 0, 0, 0, 0, 0, 1, 64, 0, 59, 93, -12, -67, 70, 61, 62, -105, 95, -84, 112, 51, -106, -59, 62, -104, -83, -71, -79, 77, 57, 1, 62, -120, 5, -45, 11, 86, 103};
+//        byte calibrationData[] = {1, 16, 4, -81, 2, 111, 89, 32, -100, -84, 1, 63, -16, 53, 96, -100, 84, 90, -27, -65, 62, 5, -72, 27, 29, 27, -124, -65, -110, 20, 103, -84, 67, -29, -38, -65, -115, 90, -116, 62, -95, 103, 109, 63, 98, 11, -21, 119, 119, -19, -20, 63, 31, -18, 81, 16, -65, 81, -86, 63, -16, 59, -5, -91, -10, 23, -61, 2, 63, -120, 114, -125, 0, 24, 122, 62, 0, 0, 0, 0, 0, 0, 0, 0, 63, -118, 103, -57, -56, -9, -85, -61, 0, 0, 0, 0, 0, 0, 0, 0, -65, 105, -121, 26, -31, 74, -1, -12, 0, 0, 0, 0, 0, 0, 0,0, 0, 1, 64, 0, 59, 93, -12, -67, 70, 61, -65, 109, -65, 44, 117, 26, 26, 123, -65, 18, -99, -80, 100, -102, 26, -8, -65, 93, 54, -43, 78, -103, -61, 89, 48, -100, -84, 1, 63, -16, -126, -20, 71, -16, 68, 6, 63, 126, 97, -84, -10, -17, 98, -69, -65, -123, 112, 66, -59, -117, 40, -46, -65,96, 15, 10, 98, -2, -98, -54, -65, -107, 60, -98, -124, 20, -96, 98, 63, 81, -66, -66, -80, -77, 111, -22, 63, -15, 25, -25, -3, -55, -44, -84, 2, 64, 20, -115, -20, -73, -81, 12, -40, 0, 0, 0, 0, 0, 0, 0, 0, 64, 14, -92, -119, -95, -43, 100, 96, 0, 0, 0, 0, 0, 0, 0, 0, 63, -38, -46, -59, -39, 19, -67, 84, 0, 0, 0, 0, 0, 0, 0, 0, 1, 64, 0, 59, 93, -12, -67, 70, 61, 62, -105, 95, -84, 112, 51, -106, -59, 62, -104, -83, -71, -79, 77, 57, 1, 62, -120, 5, -45, 11, 86, 103};
+//
+//        String calibrationDataInput = "";
+//        for (int i = 0; i < 290; i++) {
+//            calibrationDataInput = calibrationDataInput + "." + calibrationData[i];
+//        }
+//        Log.e(TAG, calibrateAllData("1,100000,3,4,5,6,7,384," + calibrationDataInput));
 
-        String calibrationDataInput = "";
-        for (int i = 0; i < 290; i++) {
-            calibrationDataInput = calibrationDataInput + "." + calibrationData[i];
-        }
-        Log.e(TAG, calibrateAllData("1,100000,3,4,5,6,7,384," + calibrationDataInput));
+
+
+
+        //TURN RAW CALIBRATION VALUES INTO A CALIBRATION ARRAY
+        parseBinaryCalibration();
+        Log.e(TAG, "BINARY CAL CHECK NUMBER: " + String.valueOf(mag_A[0]));
+
+        CalibrationHelper.mag_A = mag_A;
+        CalibrationHelper.mag_B = mag_B;
+        CalibrationHelper.mag_C = mag_C;
+
+        CalibrationHelper.acc_A = acc_A;
+        CalibrationHelper.acc_B = acc_B;
+        CalibrationHelper.acc_C = acc_C;
+
+        CalibrationHelper.temp_param = temp_param;
+
+
     }
 
-    public native String calibrateAllData(String input_data);
+    //CALLBACK
+    private double getDouble(int offset) {
+        // concatenate the bytes to an 8 byte long (assume the endianness is correct)
+        double dValue = 0;
+        try {
+            long lValue = 0;
+            for (int i = 0; i < 8; i++) {
+                //for (int i = 7; i >= 0; i--) {
+                lValue = (lValue << 8) + (((long) binCalData[offset + i]) & 0xFF);
+            }
+            dValue = Double.longBitsToDouble(lValue);
+            //Log.i(TAG, String.format("PJH - getDouble: lValue=0x%08X dValue=%f", lValue, dValue));
+
+        } catch (Exception e) {
+            Log.e(TAG, "Exception caught in " + e);
+        }
+        return(dValue);
+    }
+
+    public boolean parseBinaryCalibration() {
+        boolean result = false;
+        int coeffs_found = 0; // should be NUM_CAL_PARAMS_EXPECTED_DURING_PARSING (38) when finished
+
+        Log.w(TAG, "Beginning parse calibration protocol");
+        try {
+            isCalibrated = false;
+            int p = 0; //base 0, pointer into cal binary
+
+            // dump the header for debugging
+            Log.i(TAG, String.format("- calPacket: %02X %02X %02X %02X %02X %02X %02X %02X", binCalData[0], binCalData[1], binCalData[2], binCalData[3], binCalData[4], binCalData[5], binCalData[6], binCalData[7]));
+            Log.i(TAG, String.format("-            %02X %02X %02X %02X %02X %02X %02X %02X", binCalData[8], binCalData[9], binCalData[10], binCalData[11], binCalData[12], binCalData[13], binCalData[14], binCalData[15]));
+
+            //CALLBACK
+            // first check if the header (of the header) is valid (first byte is 0x01 and high byte of length is 0x00)
+            if (((((int) binCalData[0]) & 0xFF) == 0x01) && ((((int) binCalData[1]) & 0xFF) == 0x00)) {
+                // use low byte of header length to determine the offset of the 8bit CRC
+                // (header length includes CRC, but not blk id or length)
+                // plus 3 to give total length of header, less 1 to convert nth byte to base 0 offset
+                int crc_offset = (((int) binCalData[2]) & 0xFF) + 3 - 1;   // this is also the number of bytes preceeding the crc byte
+
+                // the 8bit header CRC spans all bytes in this block, excluding the CRC itself
+                int crc8 = cal_crc8_gen(binCalData, 0, crc_offset-1);     // (data[], start, end)
+
+                if (crc8 == (((int) binCalData[crc_offset]) & 0xFF)) {   // beware sign extension
+                    // ok, the crc of the header is correct, so we can proceed
+
+                    // get the 'modified' date out of the header block (it is in a fixed location)
+                    int m_date_len = ((int)binCalData[5]) & 0xFF;   // should be 8 for current calibrations, or maybe 4 for archaic probes
+                    if ((m_date_len == 4) || (m_date_len==8)) {
+                        long unix_tick = 0;
+                        for (int i = (6 + m_date_len - 1); i >= 6; i--) {  // little endian
+                            unix_tick = (unix_tick << 8) + (((int)binCalData[i]) & 0xFF);
+                        }
+
+                        Date date = new Date(unix_tick * 1000L);
+                        SimpleDateFormat jdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+                        jdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+                        modifiedDateString = jdf.format(date);
+
+                        coeffs_found += 1;
+                        Log.i(TAG, String.format("PJH - parse - modified date = %s", modifiedDateString));
+                    }
+                    else
+                    {
+                        modifiedDateString = "not initialised";
+                    }
+
+                    // the calibrated date string will be retrieved later, from the main data block
+
+
+                    // now we want to check the crc of the actual calibration data
+                    //int start = (((int) binCalData[2]) & 0xFF) + 3 + 3;   // first byte after the block size
+                    //int total_len = ((((int) binCalData[3]) & 0xFF) << 8) + (((int) binCalData[4]) & 0xFF);
+                    //int end_plus_one = total_len - 2;
+                    //Log.i(TAG, String.format("PJH - start: %06X end+1: %06X", start, end_plus_one));
+                    //System.arraycopy(binCalData, start, buffer, 0, end_plus_one - start);    // (src,dst,len)
+                    //
+                    //int crc16 = cal_crc16_gen(buffer, end_plus_one - start);
+
+                    // the 16 bit CRC of the main data block starts AFTER the blk_id and blk_len
+                    // and includes the last byte before the actual CRC16
+                    // (so the main blk_id and blk_len are NOT covered by the CRC16 - this is a BUG,
+                    // but can't change it as we need to maintain compatibility with the ipod,
+                    // so will need to manually check those separately)
+                    int start = (((int) binCalData[2]) & 0xFF) + 3 + 3;   // offset of header byte of main data block
+                    int total_len = ((((int) binCalData[3]) & 0xFF) << 8) + (((int) binCalData[4]) & 0xFF);  // big endian
+                    binCalData_size = total_len;   // save the number of valid byte entries in binCalData
+                    coeffs_found += 1;
+                    int end = total_len - 2 - 1;   //  total len - 2 byte crc - 1 to convert len to offset
+                    Log.i(TAG, String.format("PJH - start: %06X end: %06X", start, end));
+                    int crc16 = cal_crc16_gen(binCalData, start, end);   // (data[], start, end)
+
+                    // get the crc16 from the binary cal data (from the last two bytes)
+                    int binCrc16 = ((((int) binCalData[total_len - 2]) & 0xFF) << 8) + (((int) binCalData[total_len - 1]) & 0xFF);  // big endian
+
+                    if (crc16 == binCrc16) {
+                        // both CRCs are good, so extract calibration coefficients
+                        Log.i(TAG, "PJH - parse - both calibration CRCs are good");
+                        p = crc_offset + 1;   // first byte of the main body
+
+                        // the following log entry shows the allocated size of binCalData which is not useful
+                        //Log.i(TAG, String.format("PJH - parse - binCalData length: 0x%04X", binCalData.length));
+
+                        if (((((int) binCalData[p]) & 0xFF) == 0x10)) {   // this blk_id is not covered by CRC so check it here
+                            // the subsequent 2 byte blk_len is not used in this parsing, so ignore it for now
+                            // TODO - we really should check it though, as don't know how ipod would react if it was corrupted
+                            p += 3;  // point to cal record type
+                            int cal_record_type = (((int) binCalData[p]) & 0xFF);
+                            // cal_record_type is always 0x01 for the calibration parameters we are using
+                            // TODO - should check it is 0x01, just to be sure
+                            Log.i(TAG, String.format("PJH - parse @ 0x%04X - cal record type: 0x%02X", p, cal_record_type));
+                            p += 1;  // and advance to the first block of calibration parameters
+
+                            // Now we can finally start reading in the calibration parameters that we need
+                            // Each set of related parameters and in a separate block
+                            int hdr_id, blk_len, pTmp, flags;
+                            while (p < total_len) {
+                                // first two bytes of the block contain the hdr_id in the highest nibble, and blk_len in remaining three nibbles
+                                hdr_id = (((int) binCalData[p]) & 0xF0) >> 4;
+                                blk_len = (((((int) binCalData[p]) & 0x0F) << 8) + (((int) binCalData[p + 1]) & 0xFF)) & 0x0FFF;
+                                p += 2;
+                                Log.i(TAG, String.format("PJH - parse @ 0x%04X - hdr_id: 0x%02X, length: 0x%04X", p, hdr_id, blk_len));
+
+                                // p is pointing to the first byte of content in this calibration parameter block
+                                if (hdr_id == 0x00) {    // CRC block - ignore =============================================
+                                    // the CRC16 block is ALWAYS the last block in the calibration file,
+                                    // so that the CRC16 is the last two bytes of the calibration file
+
+                                    // we have already checked this CRC, so ignore it
+                                    p += blk_len;
+                                }
+                                else if (hdr_id == 0x01) {    // timestamp block =============================================
+                                    // extract the Calibrated Date
+
+                                    int c_date_len = blk_len;  // should be 8 for current calibrations, or maybe 4 for archaic probes
+                                    if ((c_date_len == 4) || (c_date_len == 8)) {
+                                        long unix_tick = 0;
+                                        for (int i = (p + c_date_len - 1); i >= (p); i--) {  // timestamp is little endian
+                                            unix_tick = (unix_tick << 8) + (((int)binCalData[i]) & 0xFF);
+                                        }
+
+                                        Date date = new Date(unix_tick * 1000L);
+                                        SimpleDateFormat jdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+                                        jdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+                                        calibratedDateString = jdf.format(date);
+
+                                        coeffs_found += 1;
+                                        Log.i(TAG, String.format("PJH - parse - calibrated date = %s", calibratedDateString));
+
+                                    }
+                                    else
+                                    {
+                                        calibratedDateString = "not initialised";
+                                    }
+
+                                    p += blk_len;
+                                }
+                                else if (hdr_id == 0x02) {    // accel block =============================================
+                                    pTmp = p;  // we don't want to mess up 'p'
+                                    // flags tells up what sub field exist in this block
+                                    flags = (((((int) binCalData[pTmp + 1]) & 0xFF) << 8) + (((int) binCalData[pTmp]) & 0xFF));  // little endian
+                                    pTmp += 2;  // skip over flags
+
+                                    if ((flags & 0x0001) != 0) {
+                                        // temperature data - skip it   TODO
+                                        // PJH - this relates to probes that are calibrated a two different temperatures
+                                        // none of the probes have calibration data that is temperature dependent
+                                        pTmp += 8;
+                                    }
+                                    if ((flags & 0x0004) != 0) {
+                                        // bit 2 is set, so first order terms are present - 3x3
+                                        // each of the 9 parameters are double precision floats
+                                        for (int r = 0; r < 3; r++) {
+                                            for (int c = 0; c < 3; c++) {
+                                                acc_B[r][c] = getDouble(pTmp);
+                                                Log.i(TAG, String.format("PJH - parse - acc_B[%d][%d] = %15.12f", r, c, acc_B[r][c]));
+                                                coeffs_found += 1;
+                                                pTmp += 8;
+                                            }
+                                        }
+                                    }
+                                    if ((flags & 0x0008) != 0) {
+                                        // bit 3 is set, so zero order terms are present
+
+                                        // HACK - the next byte tells us the depth of this 3 wide matrix
+                                        // Don't understand why this is here, but it is
+                                        // ASSUME it will be 2 and skip over it - YUK
+                                        pTmp+=1; // just assume this count is for the 3x2 matrix  TODO
+                                        // zero order terms - 3x2 - don't know why there are extra co-efficients
+                                        for (int r = 0; r < 3; r++) {
+                                            for (int c = 0; c < 2; c++) {
+                                                if (c==0) {  // the first column is what we want (other column is zeros)
+                                                    acc_A[r] = getDouble(pTmp);
+                                                    Log.i(TAG, String.format("PJH - parse - acc_A[%d] = %15.12f", r, acc_A[r]));
+                                                    coeffs_found += 1;
+                                                }
+                                                pTmp += 8;
+                                            }
+                                        }
+                                    }
+                                    //
+                                    // manual zero offset
+                                    //
+                                    // next byte tells us how many zero offset terms there are
+                                    pTmp+=1; // just assume the count is 1 and skip over it - YUK   TODO
+                                    // PJH - don't know exactly how this field is used in the ipod, so need to reverse engineer that
+                                    // to ensure the android behaves the same (is this value +ve or -ve? is it added or subtracted?)
+                                    offset_of_accManualZeroOffset = pTmp;   // remember the location of this parameter, so we can change it later
+                                    accManualZeroOffset = getDouble(pTmp);
+                                    coeffs_found += 2;
+                                    Log.i(TAG, String.format("PJH - parse - acc Manual Zero offset = %15.12f", accManualZeroOffset));
+                                    Log.i(TAG, String.format("PJH - parse - acc Manual Zero offset is located at offset = %6d", offset_of_accManualZeroOffset));
+                                    pTmp += 8;
+
+                                    if ((flags & 0x0100) != 0) {
+                                        // bit 8 is set, so cubic order terms are present - 1x3
+                                        for (int c = 0; c < 3; c++) {
+                                            acc_C[c] = getDouble(pTmp);
+                                            Log.i(TAG, String.format("PJH - parse - acc_C[%d] = %15.12f", c, acc_C[c]));
+                                            coeffs_found += 1;
+                                            pTmp += 8;
+                                        }
+                                    }
+                                    p += blk_len;   // advance pointer to next block
+                                }
+                                else if (hdr_id == 0x03) {    // mag block =============================================
+                                    if (blk_len <= 10) {
+                                        // ignore this malformed magnetometer block - effects Ezycore (maybe Corecam)
+
+                                        // assume we are talking to a corecam and clear all mag variables
+                                        // and update parameter count, for compatibility
+                                        mag_A[0] = 0;
+                                        mag_A[1] = 0;
+                                        mag_A[2] = 0;
+                                        mag_B[0][0] = 0;
+                                        mag_B[0][1] = 0;
+                                        mag_B[0][2] = 0;
+                                        mag_B[1][0] = 0;
+                                        mag_B[1][1] = 0;
+                                        mag_B[1][2] = 0;
+                                        mag_B[2][0] = 0;
+                                        mag_B[2][1] = 0;
+                                        mag_B[2][2] = 0;
+                                        mag_C[0] = 0;
+                                        mag_C[1] = 0;
+                                        mag_C[2] = 0;
+                                        magManualZeroOffset = 0;
+                                        coeffs_found += 16;
+                                    }
+                                    else {
+                                        pTmp = p;  // we don't want to mess up 'p'
+                                        // flags tells up what sub field exist in this block
+                                        flags = (((((int) binCalData[pTmp + 1]) & 0xFF) << 8) + (((int) binCalData[pTmp]) & 0xFF));
+                                        pTmp += 2;  // skip over flags
+
+                                        if ((flags & 0x0001) != 0) {
+                                            // temperature data - skip it
+                                            pTmp += 8;
+                                        }
+                                        if ((flags & 0x0004) != 0) {
+                                            // first order terms - 3x3
+                                            for (int r = 0; r < 3; r++) {
+                                                for (int c = 0; c < 3; c++) {
+                                                    mag_B[r][c] = getDouble(pTmp);
+                                                    Log.i(TAG, String.format("PJH - parse - mag_B[%d][%d] = %15.12f", r, c, mag_B[r][c]));
+                                                    coeffs_found += 1;
+                                                    pTmp += 8;
+                                                }
+                                            }
+                                        }
+                                        if ((flags & 0x0008) != 0) {
+                                            pTmp+=1; // just assume this count is for the 3.2 matrix - TODO
+                                            // zero order terms - 3x2 - don't know why there are extra co-efficients
+                                            for (int r = 0; r < 3; r++) {
+                                                for (int c = 0; c < 2; c++) {
+                                                    if (c==0) {  // the first column is what we want (other column is zeros)
+                                                        mag_A[r] = getDouble(pTmp);
+                                                        Log.i(TAG, String.format("PJH - parse - mag_A[%d] = %15.12f", r, mag_A[r]));
+                                                        coeffs_found += 1;
+                                                    }
+                                                    pTmp += 8;
+                                                }
+                                            }
+                                        }
+                                        // manual zero offset - I don't believe this is used anywhere
+                                        pTmp+=1; // just assume the count is 1  TODO
+                                        magManualZeroOffset = getDouble(pTmp);
+                                        coeffs_found += 1;
+                                        Log.i(TAG, String.format("PJH - parse - mag Manual Zero offset = %15.12f", magManualZeroOffset));
+                                        pTmp += 8;
+
+                                        if ((flags & 0x0100) != 0) {
+                                            // cubic order terms - 1x3
+                                            for (int c = 0; c < 3; c++) {
+                                                mag_C[c] = getDouble(pTmp);
+                                                Log.i(TAG, String.format("PJH - parse - mag_C[%d] = %15.12f", c, mag_C[c]));
+                                                coeffs_found += 1;
+                                                pTmp += 8;
+                                            }
+                                        }
+
+                                    }
+
+                                    p += blk_len;   // advance pointer to next block
+                                }
+                                else if (hdr_id == 0x04) {    // temperature block =============================================
+                                    // these parameters are used to calibrate the main temperature sensor
+                                    pTmp = p;  // we don't want to mess up 'p'
+                                    // flags tells up what sub field exist in this block
+                                    flags = ((int) binCalData[pTmp]) & 0xFF;
+                                    int count = ((int) binCalData[pTmp + 1]) & 0xFF;   // YUK - just assuming this is 2
+                                    pTmp += 2;  // skip over flags and parameter count
+
+                                    if ((flags & 0x01) != 0) {
+                                        // temperature data - just assume 2 parameters??? - YUK - TODO
+                                        temp_param[0] = getDouble(pTmp);  //offset
+                                        pTmp += 8;
+                                        temp_param[1] = getDouble(pTmp);  // scale
+                                        pTmp += 8;
+                                        coeffs_found += 2;
+                                        Log.i(TAG, String.format("PJH - parse - temp[0] = %15.12f (offset)", temp_param[0]));
+                                        Log.i(TAG, String.format("PJH - parse - temp[1] = %15.12f (scale)",  temp_param[1]));
+                                    }
+                                    p += blk_len;   // advance pointer to next block
+                                }
+                                else {             // =============================================
+                                    p += blk_len;  // just skip any unknown blocks (shouldn't be any)
+                                }
+                            }
+
+                            // do a final sanity check to ensure we got all the parameters we expected
+                            if (coeffs_found == NUM_CAL_PARAMS_EXPECTED_DURING_PARSING) {
+                                isCalibrated = true;
+                                Log.i(TAG, String.format("PJH - parse - found %d calibration parameters", coeffs_found));
+                                Log.w(TAG, "PJH - successfully parsed binary calibration data  =======================");
+                            }
+                        }
+
+
+                    } else {
+                        // oops, calibration data is not valid
+                        Log.w(TAG, "PJH - CRC of the body of the binary cal data is incorrect - aborting");
+                    }
+                } else {
+                    // oops, calibration data is not valid
+                    Log.w(TAG, "PJH - CRC of the header of the binary cal data is incorrect - aborting");
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "PJH - parse - Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
+
+        if (isCalibrated != true) {
+            Log.w(TAG, "PJH - parsing binary calibration data FAILED =======================");
+            Log.i(TAG, String.format("PJH - parse - only found %d calibration parameters (expected %d)", coeffs_found, NUM_CAL_PARAMS_EXPECTED_DURING_PARSING));
+        }
+
+        return result;
+    }
+
+    public boolean isCalibrated() {
+        return isCalibrated;
+    }
+
+    public String getCalibratedDateString() {
+        return calibratedDateString;
+    }
+
+    private int cal_crc16_gen(byte[] buffer, int start, int end) {
+        // CRC parameters for calibration body
+        int CRC16_POLY_CCITT = 0x1021;
+        int CRC16_INIT_VALUE = 0x0000;
+        int CRC16_FINAL_XOR  = 0x0000;
+
+        int crc = CRC16_INIT_VALUE;
+
+        for (int i=start; i<=end; i++) {
+            int buff = buffer[i];   // get the next byte, nad let it sign extend
+            buff &= 0xFF;    // remove any sign extension
+            crc = crc ^ (buff << 8);
+            for (int bit=0; bit<8; bit++) {
+                if ((crc & 0x8000) != 0) {
+                    crc = (crc << 1) ^ CRC16_POLY_CCITT;
+                }
+                else {
+                    crc = (crc << 1);
+                }
+                crc &= 0xFFFF;    // ensure CRC is limited to 16 bit
+            }
+        }
+        crc = crc ^ CRC16_FINAL_XOR;
+        crc &= 0xFFFF;   // just to be sure (shouldn't be necessary)
+        //print("Resulting CRC = 0x{:04X}".format(crc))
+        Log.i(TAG, String.format("PJH - cal_crc16_gen: %04X", crc));
+
+        return (crc);
+    }
+
+    private int cal_crc8_gen(byte[] buffer, int start, int end) {
+        // CRC parameters for main calibration data header
+        int CRC8_POLY_CCITT = 0x8D;
+        int CRC8_INIT_VALUE = 0x00;
+        int CRC8_FINAL_XOR  = 0x00;
+        //print("Generating 8bit CRC of", len(buffer), "bytes of data")
+        int crc = CRC8_INIT_VALUE;
+
+        for (int i=start; i<=end; i++) {
+            int buff = buffer[i];   // get the next byte, nad let it sign extend
+            buff &= 0xFF;    // remove any sign extension
+            crc = crc ^ buff;
+            for (int bit=0; bit<8; bit++) {
+                if ((crc & 0x80) != 0) {
+                    crc = (crc << 1) ^ CRC8_POLY_CCITT;
+                }
+                else {
+                    crc = (crc << 1);
+                }
+                crc &= 0xFF;   // ensure CRC is limited to 8 bit
+            }
+        }
+        crc = crc ^ CRC8_FINAL_XOR;
+        crc &= 0xFF;   // just to be sure (shouldn't be necessary)
+        //print("Resulting CRC = 0x{:02X}".format(crc))
+        Log.i(TAG, String.format("PJH - cal_crc8_gen: %02X", crc));
+
+        return (crc);
+    }
+
+//    public native String calibrateAllData(String input_data);
 
     /**
      * Go through all gatt services avaliable

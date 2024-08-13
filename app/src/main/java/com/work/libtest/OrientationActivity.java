@@ -8,6 +8,7 @@
  */
 package com.work.libtest;
 
+import static com.work.libtest.CalibrationHelper.binCalData;
 import static com.work.libtest.Operation.OPERATION_NOTIFY;
 import static com.work.libtest.Operation.OPERATION_READ;
 import static com.work.libtest.Operation.OPERATION_WRITE;
@@ -41,11 +42,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.TimeZone;
+
+import com.work.libtest.CalibrationHelper;
 
 public class OrientationActivity extends AppCompatActivity {
 
@@ -74,6 +80,7 @@ public class OrientationActivity extends AppCompatActivity {
     String measurementData;
 //    measurementData
 
+    private boolean isCalibrated = false;
     int _probeMode = 0;
     int _calibrationIndex = 0;
     String _calibrationData = "";
@@ -85,6 +92,9 @@ public class OrientationActivity extends AppCompatActivity {
     private String mDeviceName;
     private String mDeviceAddress;
     private String mConnectionStatus;
+
+
+
 
     private Menu menu;
 
@@ -982,6 +992,9 @@ public class OrientationActivity extends AppCompatActivity {
         }
 
     }
+
+
+
 
     /**
      * unregister the bluetooth receiver when the app is paused
