@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import static com.work.libtest.CalibrationHelper.binCalData;
+import static com.work.libtest.Globals.caliDataCollected;
 import static com.work.libtest.Operation.OPERATION_WRITE;
 import static com.work.libtest.Operation.OPERATION_READ;
 import static com.work.libtest.Operation.OPERATION_NOTIFY;
@@ -133,6 +134,11 @@ public class MainActivity extends AppCompatActivity {
 
     private double magManualZeroOffset = 0;  // don't think this is used
 
+    int writeCollectValue = 1;
+    int calibrationFirstValue = 0;
+    int calibrationSecondValue = 0;
+    int calibrationThirdValue = 0;
+
 
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics = new ArrayList<>();
     private boolean mConnected = false;
@@ -169,8 +175,11 @@ public class MainActivity extends AppCompatActivity {
     private long startTime = 0; //for timer
     public int seconds;
     private int starttime = 0;
+    boolean calibration_status = false;
 
     public static int surveyNum = 0;
+
+    private boolean CalibrationMatrixCreated = false;
 
     Button operatorNameBtn;
     Button holeIDBtn;
@@ -194,6 +203,71 @@ public class MainActivity extends AppCompatActivity {
                 updateConnectionState("Disconnected");
             }
             timerHandler.postDelayed(this, 5000);
+
+            if (caliDataCollected && !CalibrationMatrixCreated) {
+                //Get all calibration data, parse into a static byte[] binCalData in CalibrationHelper
+
+                //it is in the incorrect order but worry about that later
+
+                ArrayList<String> newCaliData = new ArrayList<>();
+                String buffer = "";
+
+                newCaliData.add(caliData.get(0));
+                for (int i = 1; i < caliData.size(); i++) {
+                    if (i % 2 != 0) {
+                        buffer = caliData.get(i);
+                    } else {
+                        newCaliData.add(caliData.get(i));
+                        newCaliData.add(buffer);
+                        buffer = "";
+                    }
+                }
+
+                StringBuffer sb = new StringBuffer();
+                for(int i = 0; i < newCaliData.size(); i++) {
+                    sb.append(newCaliData.get(i));
+                }
+                String str = sb.toString();
+
+                Log.e(TAG, "RAW STRING: " + str);
+
+                String[] stringNumbers = str.split(":");
+                byte[] byteArray = new byte[stringNumbers.length]; // Create a byte array of the same length as the string array
+
+                // Convert each string number to a byte and store in the byte array
+                for (int i = 0; i < stringNumbers.length; i++) {
+                    byteArray[i] = Byte.parseByte(stringNumbers[i]);
+                }
+
+//              Print the byte array to verify
+                for (byte b : byteArray) {
+                    Log.e(TAG, String.valueOf(b));
+                }
+
+                binCalData = byteArray;
+
+//                do{
+                    calibration_status = parseBinaryCalibration();
+//                    if (!calibration_status) {
+//                        Log.e(TAG, "RETRYING CALIBRATION");
+//                    }
+//                } while (!calibration_status);
+
+                Log.e(TAG, "BINARY CAL CHECK NUMBER: " + String.valueOf(mag_A[0]));
+
+                CalibrationHelper.mag_A = mag_A;
+                CalibrationHelper.mag_B = mag_B;
+                CalibrationHelper.mag_C = mag_C;
+
+                CalibrationHelper.acc_A = acc_A;
+                CalibrationHelper.acc_B = acc_B;
+                CalibrationHelper.acc_C = acc_C;
+
+                CalibrationHelper.temp_param = temp_param;
+                CalibrationMatrixCreated = true;
+                Log.e(TAG, "Updating connection state to connected");
+                updateConnectionState("Connected");
+            }
         }
     };
 
@@ -231,24 +305,17 @@ public class MainActivity extends AppCompatActivity {
             performOperation();
         } else {
 //            Log.d(TAG, "Queue empty");
-            if (!Globals.caliDataCollected) {
+            if (!caliDataCollected) {
 
                 try {
                     if (!caliData.get(caliData.size()-1).equals("-1:-1:-1:-1:-1:-1:-1:-1:-1:-1:-1:-1:-1:-1:-1:-1:")) {
                         calibrationIndexNum++;
                         indexNext();
                     } else {
-                        //print original
+//                        print original
                         Log.e(TAG, "All Calibration Data: ");
                         for (int i = 0; i < caliData.size(); i++) {
                             Log.e(TAG, caliData.get(i));
-                        }
-
-                        //delete duplicates
-                        for (int i = 0; i < caliData.size(); i++) {
-                            if (i % 2 == 0) {
-                                caliData.remove(i);
-                            }
                         }
 
                         Set<String> s = new LinkedHashSet<String>(caliData);
@@ -260,8 +327,11 @@ public class MainActivity extends AppCompatActivity {
                         Log.e(TAG, "All Calibration Data: ");
                         for (int i = 0; i < list.size(); i++) {
                             Log.e(TAG, list.get(i));
+//                            CalibrationHelper.
+//                            list.get(i);
                         }
-                        Globals.caliDataCollected = true;
+                        caliData = (ArrayList<String>) list;
+                        caliDataCollected = true;
                         updateConnectionState("Connected");
                         blackProbeStatusImg.setImageResource(R.drawable.ready);
                         blackProbeStatusTxt.setText("Connected");
@@ -292,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
                         mBluetoothLeService.readCharacteristic(currentOp.getCharacteristic());
                     case OPERATION_NOTIFY:
                         try {
-                            mBluetoothLeService.setCharacteristicNotification(currentOp.getCharacteristic(), true);
+//                            mBluetoothLeService.setCharacteristicNotification(currentOp.getCharacteristic(), true);
                         } catch (Exception e) {
 //                            Log.e(TAG, "Cant set characterisitc to notiy");
                         }
@@ -508,6 +578,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.e(TAG, "CALIBRATION STATUS: " + caliDataCollected);
+
         startTime = System.currentTimeMillis();
         timerHandler.postDelayed(timerRunnable, 0);
 
@@ -575,7 +647,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "Probe mode is invalid?!");
         }
 
-        if (!Globals.caliDataCollected && Globals.enableCalibration) {
+        if (!caliDataCollected && Globals.enableCalibration) {
             updateConnectionState("Disconnected");
             Log.e(TAG, "Calibration data not aquired: hence disconnected");
         } else {
@@ -603,21 +675,22 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+        //TODO - Change this to be a caller on
         //TURN RAW CALIBRATION VALUES INTO A CALIBRATION ARRAY
-        parseBinaryCalibration();
-        Log.e(TAG, "BINARY CAL CHECK NUMBER: " + String.valueOf(mag_A[0]));
-
-        CalibrationHelper.mag_A = mag_A;
-        CalibrationHelper.mag_B = mag_B;
-        CalibrationHelper.mag_C = mag_C;
-
-        CalibrationHelper.acc_A = acc_A;
-        CalibrationHelper.acc_B = acc_B;
-        CalibrationHelper.acc_C = acc_C;
-
-        CalibrationHelper.temp_param = temp_param;
-
-
+//        if (caliDataCollected) {
+//            parseBinaryCalibration();
+//            Log.e(TAG, "BINARY CAL CHECK NUMBER: " + String.valueOf(mag_A[0]));
+//
+//            CalibrationHelper.mag_A = mag_A;
+//            CalibrationHelper.mag_B = mag_B;
+//            CalibrationHelper.mag_C = mag_C;
+//
+//            CalibrationHelper.acc_A = acc_A;
+//            CalibrationHelper.acc_B = acc_B;
+//            CalibrationHelper.acc_C = acc_C;
+//
+//            CalibrationHelper.temp_param = temp_param;
+//        }
     }
 
     //CALLBACK
@@ -977,7 +1050,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, String.format("PJH - parse - only found %d calibration parameters (expected %d)", coeffs_found, NUM_CAL_PARAMS_EXPECTED_DURING_PARSING));
         }
 
-        return result;
+        return isCalibrated;
     }
 
     public boolean isCalibrated() {
@@ -1055,6 +1128,7 @@ public class MainActivity extends AppCompatActivity {
      * @param gattServices
      *
      * TODO - currently highly inefficient, can improve speed of app by fixing this
+     * TODO - Fix Calibration speed here
      */
     private void displayGattServices(List<BluetoothGattService> gattServices) {
         if (gattServices == null) return;
@@ -1110,13 +1184,16 @@ public class MainActivity extends AppCompatActivity {
                         }
                     } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.DEVICE_ADDRESS)) {
 //                                Log.e(TAG, "Reading device address");
+//                        if (caliDataCollected) {
+//
                         Operation getAddressData = new Operation(gattService, gattCharacteristic, OPERATION_READ);
                         try {
                             request(getAddressData);
                         } catch (Exception e) {
                             Log.e(TAG, "Exception thrown for requesting operation");
                         }
-                    }
+                        }
+//                    }
                 } else {
 //                            Log.e(TAG, "gatt characteristic uuid is null");
                 }
@@ -1181,7 +1258,7 @@ public class MainActivity extends AppCompatActivity {
 //        if (mDeviceConnectionStatus != null) {
 //            updateConnectionState(mDeviceConnectionStatus);
 //        }
-        if (!Globals.caliDataCollected && Globals.enableCalibration) { //if we interrupted the calibration process before it was finished
+        if (!caliDataCollected && Globals.enableCalibration) { //if we interrupted the calibration process before it was finished
             resetQueue();
             calibrationIndexNum = 0;
             updateConnectionState("Disconnected");
@@ -1225,7 +1302,8 @@ public class MainActivity extends AppCompatActivity {
                 if (resourceId.equals("Connected")) {
                     blackProbeStatusImg.setImageResource(R.drawable.ready);
                     mDeviceConnectionStatus = "Connected";
-                    if (!Globals.caliDataCollected && Globals.enableCalibration) {
+                    //if we want to collect calibration data, and havent done so yet
+                    if (Globals.enableCalibration && !caliDataCollected) {
                         indexNext();
                     }
                 } else if (resourceId.equals("Disconnected")) {
@@ -1537,66 +1615,80 @@ public class MainActivity extends AppCompatActivity {
 
     public void indexNext() {
         if (Globals.enableCalibration) {
-            if (Globals.enableCalibration) {
-                blackProbeStatusImg.setImageResource(R.drawable.calibrating);
-                blackProbeStatusTxt.setText("Calibrating");
-                boolean status = false;
-                do {
-                    status = mBluetoothLeService.writeToCalibrationIndex((byte) calibrationIndexNum); //TODO make this a variable input
-//            Log.e(TAG, "Status of write: " + status);
-                    try {
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-                        Log.e(TAG, "Could not sleep" + e);
-                    }
-                    if (status) {
-//                dataToBeRead = 0;
-                        displayGattServices(mBluetoothLeService.getSupportedGattServices());
+            //Set the status indicator to calibrating
+            blackProbeStatusImg.setImageResource(R.drawable.calibrating);
+            blackProbeStatusTxt.setText("Calibrating");
 
-                        //                if (currentOp == null) {
-                        //                    Log.e(TAG, "2nd");
+            boolean status = false; //default the status to false
+            do {
+                status = mBluetoothLeService.writeToCalibrationIndex((byte) calibrationIndexNum); //TODO make this a variable input
+                Log.e(TAG, "Status of writing: " + calibrationIndexNum + ": " + status);
+
+                if (writeCollectValue == 1) {
+                    calibrationFirstValue = calibrationIndexNum;
+                } else if (writeCollectValue == 2) {
+                    calibrationSecondValue = calibrationIndexNum;
+                } else if (writeCollectValue == 3) {
+                    calibrationThirdValue = calibrationIndexNum;
+                }
+                writeCollectValue++;
+                if (writeCollectValue >= 3) {
+                    writeCollectValue = 0;
+                }
+
+                if (((calibrationFirstValue + calibrationSecondValue + calibrationThirdValue) / 3) - calibrationIndexNum > 2) {
+                    Log.e(TAG, "------------------ANNA-----------------");
+                    Log.e(TAG, "Restarting calibration as data was invalid");
+                    caliData.clear();
+                    calibrationIndexNum = 0;
+                    calibrationFirstValue = 0;
+                    calibrationSecondValue = 0;
+                    calibrationThirdValue = 3;
+                }
+
+                try {
+                    Thread.sleep(500);
+                } catch (Exception e) {
+                    Log.e(TAG, "Could not sleep" + e);
+                }
+                if (status) {
+                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
+                } else {
+                    try {
+                        if (mDeviceConnectionStatus.equals("Connected")) {
+                            updateConnectionState("Connected");
+                        } else {
+                            Log.e(TAG, "Device disconnected");
+                            updateConnectionState("Disconnected");
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error setting connection state: " + e);
+                    }
+                }
+                new CountDownTimer(700, 1) { //definetly inefficicent, but if it works dont touch it lol
+
+                    public void onTick(long millisUntilFinished) {
+                        //                mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
+                    }
+
+                    public void onFinish() {
                         //                    dataToBeRead = 0;
                         //                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                        //                }
-                    } else {
-                        try {
-                            if (mDeviceConnectionStatus.equals("Connected")) {
-                                updateConnectionState("Connected");
-                            } else {
-                                Log.e(TAG, "Device disconnected");
-                                updateConnectionState("Disconnected");
-                            }
-                        } catch (Exception e) {
-                            Log.e(TAG, "Error setting connection state: " + e);
-                        }
                     }
-                    new CountDownTimer(700, 1) { //definetly inefficicent, but if it works dont touch it lol
+                }.start();
 
-                        public void onTick(long millisUntilFinished) {
-                            //                mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-                        }
+                new CountDownTimer(3000, 1) { //definetly inefficicent, but if it works dont touch it lol
 
-                        public void onFinish() {
-                            //                    dataToBeRead = 0;
-                            //                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                        }
-                    }.start();
+                    public void onTick(long millisUntilFinished) {
+                        //                mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
+                    }
 
-                    new CountDownTimer(3000, 1) { //definetly inefficicent, but if it works dont touch it lol
-
-                        public void onTick(long millisUntilFinished) {
-                            //                mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-                        }
-
-                        public void onFinish() {
-                            //                    dataToBeRead = 0;
-                            //                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                        }
-                    }.start();
-
-                } while (!status);
-            }
+                    public void onFinish() {
+                        //                    dataToBeRead = 0;
+                        //                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
+                    }
+                }.start();
+            } while (!status);
         }
-
     }
 }

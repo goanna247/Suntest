@@ -248,10 +248,15 @@ public class ViewMeasurements extends AppCompatActivity {
     }
 
     private void removeAll() {
-
+        probeData = null;
+        listView.setAdapter(null);
     }
 
     private void fetch() {
+        for (int i = 0; i < probeData.size(); i++) {
+            Log.e(TAG, "PROBE DATA BEING PASSED: " + probeData.get(i).returnData());
+        }
+
         Intent saveIntent = new Intent(this, SaveData.class);
         saveIntent.putExtra(SaveData.EXTRA_DEVICE_NAME, mDeviceName);
         saveIntent.putExtra(SaveData.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
@@ -272,7 +277,6 @@ public class ViewMeasurements extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Could not save correct data: " + e);
         }
-        //->then pass an array in a weird manner which probably is a headache
         startActivity(saveIntent);
     }
 

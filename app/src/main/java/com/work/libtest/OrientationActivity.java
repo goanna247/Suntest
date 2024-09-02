@@ -93,9 +93,6 @@ public class OrientationActivity extends AppCompatActivity {
     private String mDeviceAddress;
     private String mConnectionStatus;
 
-
-
-
     private Menu menu;
 
     private String TAG = "Orientation Activity";
@@ -119,6 +116,8 @@ public class OrientationActivity extends AppCompatActivity {
     private TextView measurementRollValue;
     private TextView measurementDipValue;
     private TextView measurementAzimuthValue;
+
+    private int dRecordNumber = 0;
 
     private TextView connectionStatus;
     private ImageView connectionImg;
@@ -424,8 +423,8 @@ public class OrientationActivity extends AppCompatActivity {
 
                 } else if (intent.getStringExtra(BluetoothLeService.BORE_SHOT) != null) {
                     String boreShotData = intent.getStringExtra(BluetoothLeService.BORE_SHOT);
-                    String[] shotData = boreShotData.split(":", 20);
-                    shotFormat = Integer.parseInt(shotData[0]);
+                    String[] bore_shot_data = boreShotData.split(":", 20);
+                    shotFormat = Integer.parseInt(bore_shot_data[0]);
 
                     switch (shotFormat) {
                         case 1:
@@ -437,302 +436,180 @@ public class OrientationActivity extends AppCompatActivity {
                         case 3:
                             //third format(20) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), MX(3), MY(3), MZ(3)
                            Log.e(TAG, "Bore shot format = 3");
-                            try {
-                                for (int i = 0; i < shotData.length; i++) {
-                                    if (i == 5) { //AX 1
-                                        coreAXBinary = "";
-                                        coreAX = Double.parseDouble(shotData[i]);
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        coreAXBinary = binaryOutput;
-                                        Log.e(TAG, "CoreAX 1: " + binaryOutput);
-                                    } else if (i == 6) { //AX 2
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        coreAXBinary = coreAXBinary + binaryOutput;
-                                        Log.e(TAG, "CoreAX 2: " + binaryOutput);
+                           //REHAUL
 
-                                        if (coreAXBinary.length() > 16) {
-                                            //TODO ERROR
-                                        } else {
-                                            if (coreAXBinary.charAt(0) == '1') {
-                                                coreAXBinary = coreAXBinary.substring(1);
-                                                coreAX = Integer.parseInt(coreAXBinary, 2);
-                                                coreAX = coreAX * -1;
-                                            } else {
-                                                coreAX = Integer.parseInt(coreAXBinary, 2);
-                                            }
-                                        }
-                                    } else if (i == 7) { //AY 1
-                                        coreAYBinary = "";
-                                        coreAY = Double.parseDouble(shotData[i]);
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        coreAYBinary = binaryOutput;
-                                        Log.e(TAG, "CoreAY 1: " + binaryOutput);
-                                    } else if (i == 8) { //AY 2
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        coreAYBinary = coreAYBinary + binaryOutput;
-                                        Log.e(TAG, "CoreAY 2: " + binaryOutput);
-                                        if (coreAYBinary.length() > 16) {
-                                            //TODO ERROR
-                                        } else {
-                                            if (coreAYBinary.charAt(0) == '1') {
-                                                coreAYBinary = coreAYBinary.substring(1);
-                                                coreAY = Integer.parseInt(coreAYBinary, 2);
-                                                coreAY = coreAY * -1;
-                                            } else {
-                                                coreAY = Integer.parseInt(coreAYBinary, 2);
-                                            }
-                                        }
-                                    } else if (i == 9) { //AZ 1
-                                        coreAZBinary = "";
-                                        coreAZ = Double.parseDouble(shotData[i]);
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        coreAZBinary = binaryOutput;
-                                        Log.e(TAG, "CoreAZ 1: " + binaryOutput);
-                                    } else if (i == 10) { //AZ 2
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        coreAZBinary = coreAZBinary + binaryOutput;
-                                        Log.e(TAG, "CoreAZ 2: " + binaryOutput);
-                                        if (coreAZBinary.length() > 16) {
-                                            //TODO ERROR
-                                        } else {
-                                            if (coreAZBinary.charAt(0) == '1') {
-                                                coreAZBinary = coreAZBinary.substring(1);
-                                                coreAZ = Integer.parseInt(coreAZBinary, 2);
-                                                coreAZ = coreAZ * -1;
-                                            } else {
-                                                coreAZ = Integer.parseInt(coreAZBinary, 2);
-                                            }
-                                        }
-                                        try {
-                                            calculateRoll(Double.valueOf(coreAY), Double.valueOf(coreAZ));
-                                            calculateDip(Double.valueOf(coreAX), Double.valueOf(coreAY), Double.valueOf(coreAZ));
-                                        } catch (Exception e) {
-                                            Log.e(TAG, "Error calling calculate roll and dip functions: " + e);
-                                        }
-
-                                    } else if (i == 11) { //MX1
-                                        magX = Double.parseDouble(shotData[i]);
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        magXBinary = binaryOutput;
-                                    } else if (i == 12) { //MX 2
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num  = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        magXBinary = magXBinary + binaryOutput;
-                                    } else if (i == 13) { //MX 3
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num  = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        magXBinary = magXBinary + binaryOutput;
-                                        if (magXBinary.length() != 24) {
-                                            //TODO ERROR
-                                        } else {
-                                            if (magXBinary.charAt(0) == '1') {
-                                                magXBinary = magXBinary.substring(1);
-                                                magX = Integer.parseInt(magXBinary, 2);
-                                                magX = magX * -1;
-                                            } else {
-                                                magX = Integer.parseInt(magXBinary, 2);
-                                            }
-                                        }
-                                    } else if (i == 14) { //MY 1
-                                        magY = Double.parseDouble(shotData[i]);
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        magYBinary = binaryOutput;
-                                    } else if (i == 15) { //MY 2
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num  = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        magYBinary = magYBinary + binaryOutput;
-                                    } else if (i == 16) { //MY 3
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num  = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        magYBinary = magYBinary + binaryOutput;
-                                        if (magYBinary.length() != 24) {
-                                            //TODO ERROR
-                                        } else {
-                                            if (magYBinary.charAt(0) == '1') {
-                                                magYBinary = magYBinary.substring(1);
-                                                magY = Integer.parseInt(magYBinary, 2);
-                                                magY = magY * -1;
-                                            } else {
-                                                magY = Integer.parseInt(magYBinary, 2);
-                                            }
-                                        }
-
-                                    } else if (i == 17) { //MZ 1
-                                        magZ = Double.parseDouble(shotData[i]);
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        magZBinary = binaryOutput;
-                                    } else if (i == 18) { //MZ 2
-                                        int num = Integer.parseInt(shotData[i]);
-                                        if (num < 0) {
-                                            num  = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        magZBinary = magZBinary + binaryOutput;
-                                    } else if (i == 19) { //MZ 3
-                                        int num = 0;
-                                        try {
-                                            Log.e(TAG, "OLD SHOT DATA: " + shotData[i]);
-                                            String newShotData = removeLastChar(shotData[i]);
-                                            Log.e(TAG, "New shot data: " + newShotData);
-                                            num = Integer.parseInt(newShotData);
-                                        } catch (Exception e) {
-                                            Log.e(TAG, "EXCEPTION Thrown getting MZ3 DATA: " + e);
-                                        }
-                                        if (num < 0) {
-                                            num  = 128 + (128 + num);
-                                        }
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        magZBinary = magZBinary + binaryOutput;
-                                        if (magZBinary.length() != 24) {
-                                            //TODO Error
-                                            Log.e(TAG, "LENGTH ERROR");
-                                        } else {
-                                            if (magZBinary.charAt(0) == '1') {
-                                                magZBinary = magZBinary.substring(1);
-                                                magZ = Integer.parseInt(magZBinary, 2);
-                                                magZ = magZ * -1;
-                                                try {
-                                                    calculateAzimuth(magX, magY, magZ, mRoll, mDip);
-                                                } catch (Exception e) {
-                                                    Log.e(TAG, "Exception thrown whilst attempting to calculate azimuth: " + e);
-                                                }
-                                            } else {
-                                                magZ = Integer.parseInt(magZBinary, 2);
-                                                try {
-                                                    calculateAzimuth(magX, magY, magZ, mRoll, mDip);
-                                                } catch (Exception e) {
-                                                    Log.e(TAG, "Exception thrown whilst attempting to calculate azimuth: " + e);
-                                                }
-                                            }
-                                        }
-                                    }
+//
+                            Log.e(TAG, "ANNA ----------------------------------");
+                            byte[] char_all_bore_shot = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                            String[] string_all_bore_shot = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
+                            for (int i = 0; i < bore_shot_data.length; i++) {
+////                                        Log.e(TAG, "Shot " + i + ": " + bore_shot_data[i]);
+                                int bore_value;
+                                try {
+                                    bore_value = Integer.valueOf(bore_shot_data[i]);
+                                } catch (Exception e) {
+                                    bore_value = -2;
                                 }
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown getting the bore shot data: " + e);
+                                try {
+//                                            char_all_bore_shot[i] = Byte.parseByte(Integer.toHexString(bore_value));
+                                    if (bore_value < 0) {
+                                        String unsignedHex = String.format("%02X", bore_value & 0xff);
+                                        string_all_bore_shot[i] = unsignedHex;
+//                                                char_all_bore_shot[i] = (byte) Integer.parseInt(string_all_bore_shot[i], 16);//Byte.parseByte();
+//                                                char_all_bore_shot[i] = (byte) (Integer.parseInt(string_all_bore_shot[i], 16) & 0xFF);
+                                    } else {
+                                        string_all_bore_shot[i] = Integer.toHexString(bore_value);
+                                    }
+                                } catch (Exception e) {
+                                    string_all_bore_shot[i] = "-1";
+                                }
                             }
+
+                            //Format all the displayed numbers so they arent incredibly long
+                            DecimalFormat numberFormat = new DecimalFormat("0.0000000");
+
+//                                  //first 2 bytes after shot type is the record number
+                            try {
+                                byte value1 = (byte) Integer.parseInt(string_all_bore_shot[1], 16);
+                                byte value2 = (byte) Integer.parseInt(string_all_bore_shot[2], 16);
+                                dRecordNumber = (int) twoBytesToValue(value2, value1);
+                                numberFormat.format(dRecordNumber);
+//                                dev_record_number.setText(String.valueOf(dRecordNumber));
+                            } catch (Exception e) {
+                                Log.e(TAG, "EXCEPTION thrown in record number: " + e);
+                            }
+
+//                                  next 2 bytes after probe temperature
+                            try {
+                                byte value1 = (byte) Integer.parseInt(string_all_bore_shot[3], 16);
+                                byte value2 = (byte) Integer.parseInt(string_all_bore_shot[4], 16);
+                                int shotProbeTempRaw = ((int)value1 << 8) + (((int)value2) & 0x00FF);
+                                double probeTempU = (double)shotProbeTempRaw/256.0;
+                                double probeTemp = CalibrationHelper.temp_param[0] + (CalibrationHelper.temp_param[1] * probeTempU);
+
+//                                orientation_temperature_data.setText(numberFormat.format(probeTemp));
+                                //TODO make so if the accelerometer or magnetometer are actually passing temp data it displays the corresponding value
+//                                accelerometer_temp_data.setText(numberFormat.format(probeTemp));
+//                                magnetometer_temp_data.setText(numberFormat.format(probeTemp));
+                            } catch (Exception e) {
+                                Log.e(TAG, "Exception thrown in probe temperature: " + e);
+                            }
+
+                            double ux = 0;
+                            double uy = 0;
+                            double uz = 0;
+                            double[] calAcc;
+
+                            //TODO could probably turn this into a function for better code functionality
+                            try {
+                                byte value1 = (byte) Integer.parseInt(string_all_bore_shot[5], 16);
+                                byte value2 = (byte) Integer.parseInt(string_all_bore_shot[6], 16);
+                                int shotAccX = ((int)value1 << 8) + (((int)value2) & 0x00FF);
+                                ux = ((double)shotAccX)/32.0/512.0;
+                            } catch (Exception e) {
+                                Log.e(TAG, "Exception thrown setting ux: " + e);
+                            }
+
+                            try {
+                                byte value1 = (byte) Integer.parseInt(string_all_bore_shot[7], 16);
+                                byte value2 = (byte) Integer.parseInt(string_all_bore_shot[8], 16);
+                                int shotAccY = ((int)value1 << 8) + (((int)value2) & 0x00FF);
+                                uy = ((double)shotAccY)/32.0/512.0;
+                            } catch (Exception e) {
+                                Log.e(TAG, "Exception thrown setting uy: " + e);
+                            }
+
+                            try {
+                                byte value1 = (byte) Integer.parseInt(string_all_bore_shot[9], 16);
+                                byte value2 = (byte) Integer.parseInt(string_all_bore_shot[10], 16);
+                                int shotAccZ = ((int)value1 << 8) + (((int)value2) & 0x00FF);
+                                uz = ((double)shotAccZ)/32.0/512.0;
+
+                            } catch (Exception e) {
+                                Log.e(TAG, "Exception thrown setting uz: " + e);
+                            }
+
+                            double umx = 0;
+                            double umy = 0;
+                            double umz = 0;
+                            double[] calMag;
+
+                            try {
+                                byte value1 = (byte) Integer.parseInt(string_all_bore_shot[11], 16);
+                                byte value2 = (byte) Integer.parseInt(string_all_bore_shot[12], 16);
+                                byte value3 = (byte) Integer.parseInt(string_all_bore_shot[13], 16);
+                                int shotMagX = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
+                                umx = ((double)shotMagX *0.001);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Exception thrown setting umx");
+                            }
+
+                            try {
+                                byte value1 = (byte) Integer.parseInt(string_all_bore_shot[14], 16);
+                                byte value2 = (byte) Integer.parseInt(string_all_bore_shot[15], 16);
+                                byte value3 = (byte) Integer.parseInt(string_all_bore_shot[16], 16);
+                                int shotMagY = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
+                                umy = ((double)shotMagY *0.001);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Exception thrown setting umx");
+                            }
+
+                            try {
+                                byte value1 = (byte) Integer.parseInt(string_all_bore_shot[17], 16);
+                                byte value2 = (byte) Integer.parseInt(string_all_bore_shot[18], 16);
+                                byte value3 = (byte) Integer.parseInt(string_all_bore_shot[19], 16);
+                                int shotMagZ = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
+                                umz = ((double)shotMagZ *0.001);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Exception thrown setting umx");
+                            }
+
+                            calAcc = CalibrationHelper.CalibrationHelp(CalibrationHelper.accelerationCalibration, ux, uy, uz);
+                            calMag = CalibrationHelper.CalibrationHelp(CalibrationHelper.magnetometerCalibration, umx, umy, umz);
+
+                            //Set the display values for x, y and z calibrated values
+                            double cx = calAcc[0];
+                            double cy = calAcc[1];
+                            double cz = calAcc[2];
+
+                            double cmx = calMag[0];
+                            double cmy = calMag[1];
+                            double cmz = calMag[2];
+
+                            //Set roll and dip values
+                            double cal_roll_radian = Math.atan2(cy, cz);
+                            if (cal_roll_radian > Math.PI) { cal_roll_radian -= (2 * Math.PI); }
+                            if (cal_roll_radian < -Math.PI) { cal_roll_radian += (2*Math.PI); }
+                            double cal_dip_radian = Math.atan2(-cx, Math.sqrt((cy*cy)+(cz*cz)));
+
+                            double den = (cmx * Math.cos(cal_dip_radian)) + (cmy * Math.sin(cal_dip_radian) * Math.sin(cal_roll_radian)) + (cmz * Math.sin(cal_dip_radian) * Math.cos(cal_roll_radian));
+                            double num = (cmy * Math.cos(cal_roll_radian)) - (cmz * Math.sin(cal_roll_radian));
+                            double cal_az_radian = Math.atan2(-num, den);
+                            if (cal_az_radian > Math.PI) { cal_az_radian -= (2*Math.PI); }
+                            if (cal_az_radian < -Math.PI) { cal_az_radian += (2*Math.PI); }
+                            if (cal_az_radian < 0) { cal_az_radian += (2*Math.PI); }
+
+                            //convert to degrees :(
+                            double cal_roll_degree = cal_roll_radian*180/Math.PI;
+                            double cal_dip_degree = cal_dip_radian*180/Math.PI;
+                            double cal_az_degree = cal_az_radian*180/Math.PI;
+
+                            Log.e(TAG, "---------------AJP---------------");
+                            Log.e(TAG, "roll" + cal_roll_radian + ",dip" + cal_dip_radian + "azimuth" + cal_az_radian);
+
+                            //display orientation data
+                            rollValue.setText(String.valueOf(Double.parseDouble(numberFormat.format(cal_roll_degree))));
+                            dipValue.setText(numberFormat.format(cal_dip_degree));
+                            azimuthValue.setText(numberFormat.format(cal_az_degree));
+
+//                            accelerometer_x_data.setText(numberFormat.format(cx));
+//                            accelerometer_y_data.setText(numberFormat.format(cy));
+//                            accelerometer_z_data.setText(numberFormat.format(cz));
+//
+//                            magnetometer_x_data.setText(numberFormat.format(cmx));
+//                            magnetometer_y_data.setText(numberFormat.format(cmy));
+//                            magnetometer_z_data.setText(numberFormat.format(cmz));
+
                             break;
                         default:
                             Log.e(TAG, "Bore shot format not recognised");
@@ -761,6 +638,16 @@ public class OrientationActivity extends AppCompatActivity {
             }
         }
     };
+
+    public static short toInt16(byte[] bytes, int index) {
+        return (short) ((bytes[index + 1] << 8) | (bytes[index] & 0xFF));
+    }
+
+    private double twoBytesToValue(byte value1, byte value2) {
+        byte[] dataArray = new byte[] {value1, value2};
+        int i1 = toInt16(dataArray, 0);
+        return i1;
+    }
 
     private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;

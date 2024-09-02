@@ -20,7 +20,7 @@
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-        <item name="android:itemBackground">#FFFFFF</item>
+        <item name="android:itemBackground">#aecaf2</item>
         <item name="android:actionMenuTextColor">#000000</item>
 
     </style>

@@ -1,3 +1,13 @@
+/**
+ * \file SaveData.java
+ * \brief Activity for saving probe shots into a csv file to be saved on the device
+ * \author Anna Pedersen
+ * \date Updated: 31/08/2024
+ *
+ * Currently needs to be updated to actually write data to file after the calibration
+ * changes.
+ */
+
 package com.work.libtest;
 
 import android.Manifest;
@@ -6,11 +16,13 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -31,6 +43,8 @@ import java.util.Calendar;
 public class SaveData extends AppCompatActivity {
     private String TAG = "Save Data";
 
+    public static File dir = new File(new File(Environment.getExternalStorageDirectory(), "bleh"), "bleh");
+
     public static final String EXTRA_DEVICE_NAME = "Device_name";
     public static final String EXTRA_DEVICE_ADDRESS = "Device_address";
     public static final String EXTRA_DEVICE_CONNECTION_STATUS = "Connection_status";
@@ -48,7 +62,7 @@ public class SaveData extends AppCompatActivity {
 
     private Menu menu;
 
-    private String parentActivity;
+    private String parentActivity = "View";
 
     private CheckBox exportAllData;
     private TextView errorMessage;
@@ -74,30 +88,27 @@ public class SaveData extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        /**
+         * Link the layout view to the java class and set the toolbar as the basic toolbar
+         */
         setContentView(R.layout.activity_save_data);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        /**
+         * Get all data being passed in from the location the activity is called
+         * needs the name, address, status and parent activity in order to function
+         */
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
         mDeviceConnectionStatus = intent.getStringExtra(EXTRA_DEVICE_CONNECTION_STATUS);
         parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
-//        lSerialNumber = intent.getStringExtra(EXTRA_DEVICE_SERIAL_NUMBER);
-//        lFirmwareVersion = intent.getStringExtra(EXTRA_DEVICE_VERSION);
-//        lDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_DEVICE_ADDRESS);
 
-        probeData = getIntent().getParcelableArrayListExtra(EXTRA_SAVED_DATA);
-        if (probeData != null) {
-            if (probeData.size() != 0) {
-                Log.d(TAG, probeData.get(0).returnData());
-            } else {
-                Log.e(TAG, "Probe Data size is 0");
-            }
-        } else {
-            Log.e(TAG, "Probe data is null");
-        }
-
+        /**
+         * Link items on the view to objects in the java class so they are usable
+         */
         exportAllData = (CheckBox) findViewById(R.id.export_data_check);
         errorMessage = (TextView) findViewById(R.id.save_error_msg);
         fileNameEdit = (EditText) findViewById(R.id.file_name_edit);
@@ -109,22 +120,18 @@ public class SaveData extends AppCompatActivity {
         saveNumberTitle = (TextView) findViewById(R.id.save_number_title);
 
         errorMessage.setText("");
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
-        }
-
-        if (parentActivity.equals("View")) {
-            exportAllData.setVisibility(View.INVISIBLE);
-            saveNumberEdit.setVisibility(View.INVISIBLE);
-            exportTitles.setVisibility(View.INVISIBLE);
-            exportTitlesTitle.setVisibility(View.INVISIBLE);
-            exportAllDataTitle.setVisibility(View.INVISIBLE);
-            saveNumberTitle.setVisibility(View.INVISIBLE);
-        }
     }
 
+    /**
+     *
+     * @param requestCode The request code passed in {@link #requestPermissions(
+     * android.app.Activity, String[], int)}
+     * @param permissions The requested permissions. Never null.
+     * @param grantResults The grant results for the corresponding permissions
+     *     which is either {@link android.content.pm.PackageManager#PERMISSION_GRANTED}
+     *     or {@link android.content.pm.PackageManager#PERMISSION_DENIED}. Never null.
+     *
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -138,12 +145,37 @@ public class SaveData extends AppCompatActivity {
         }
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
-        ArrayList<ProbeData> probeData = (ArrayList<ProbeData>) getIntent().getSerializableExtra(EXTRA_SAVED_DATA);
+        /**
+         * Make sure that the app has processed which activity it came from to ensure the right options
+         * are presented to the user
+         */
         final Intent intent = getIntent();
         parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
+
+        /**
+         * get all the probe data passed into the activity and log for backend checks
+         */
+        probeData = (ArrayList<ProbeData>) getIntent().getSerializableExtra(EXTRA_SAVED_DATA);
+        for (int i = 0; i < probeData.size(); i++) {
+            Log.e(TAG, "Probe Data " + i + " : " + probeData.get(i).returnData() + probeData.get(i).returnTitles());
+        }
+
+        /**
+         * If there is no data log this to a debugger
+         */
+        if (probeData.size() == 0) {
+            Log.e(TAG, "EMPTY DATA");
+        }
+
+        /**
+         * If the activity came from is a survey, ensure only the file name option
+         * is visible as we dont want them to just pick a single measurement and we always want to
+         * display the titles.
+         */
         if (parentActivity.equals("View")) {
             exportAllData.setVisibility(View.INVISIBLE);
             saveNumberEdit.setVisibility(View.INVISIBLE);
@@ -154,6 +186,9 @@ public class SaveData extends AppCompatActivity {
         }
     }
 
+    /**
+     * Create activity menu on page
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -162,6 +197,9 @@ public class SaveData extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * deals with menu items being selected
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.sensor_back_button) {
@@ -169,19 +207,19 @@ public class SaveData extends AppCompatActivity {
             back();
             return true;
         }
-//        switch (item.getItemId()) {
-//            case R.id.sensor_back_button:
-//                Log.d(TAG, "exit save data activity to go back to sensor activity");
-//                back();
-//                return true;
-//        }
         return true;
     }
 
+    /**
+     * When the user presses the Save Data button on the page, save the data
+     */
     public void saveDataPressed(View view) {
-        String content = "";
+        String content = ""; //initialise content to be saved as empty
         int recordToBeSaved;
 
+        /**
+         * Check data that is being saved is correct
+         */
         if (probeData != null) {
             for (int i = 0; i < probeData.size(); i++) {
                 Log.d(TAG, probeData.get(i).returnData());
@@ -190,11 +228,15 @@ public class SaveData extends AppCompatActivity {
             Log.e(TAG, "ERROR PROBE DATA NULL");
         }
 
+        /**
+         * If we have come from taking a survey measurement then return titles
+         * by default, if not check whether the checkbox is ticked.
+         */
         if (parentActivity.equals("View")) {
             try {
                 content = probeData.get(0).returnTitles();
             } catch (Exception e) {
-                Log.e(TAG, "Exception thrown attempting to return titles: " + e);
+                Log.e(TAG, "Probe data length: " + probeData.size() + "Exception thrown attempting to return titles: " + e);
             }
         } else {
             if (exportTitles.isChecked()) {
@@ -206,10 +248,13 @@ public class SaveData extends AppCompatActivity {
             }
         }
 
+        /**
+         * If we are coming from a survey then take all the data points, dont leave as an option for the user
+         */
         if (parentActivity.equals("View")) {
-            //export all of the files
+            //export all of the data points saved by adding them to the content string seperated by a new line
             if (probeData != null) {
-                for (int i = 0; i < probeData.size(); i++) { //pass these values in seperately lol
+                for (int i = 0; i < probeData.size(); i++) {
                     content = content + "\n" + probeData.get(i).returnData();
                 }
             } else {
@@ -217,7 +262,7 @@ public class SaveData extends AppCompatActivity {
             }
 
             try {
-                saveTextAsFile(content);
+                saveTextAsFile(content); //save all content collected
             } catch (Exception e) {
                 Log.e(TAG, "failed to save: " + e);
             }
@@ -253,6 +298,9 @@ public class SaveData extends AppCompatActivity {
 
     public void saveTextAsFile(String content) {
         String filename;
+        Log.e(TAG, "SAVING TEXT AS FILE");
+
+        Log.e(TAG, "CONTENT: " + content);
 
         try {
             if (fileNameEdit.getText().equals("")) {
@@ -286,6 +334,7 @@ public class SaveData extends AppCompatActivity {
             intent.putExtra(ViewMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, mDeviceConnectionStatus);
 
             ProbeDataStorage.arrayListNum++;
+            probeData = null;
             startActivity(intent);
         } else {
             Intent intent = new Intent(this, MainActivity.class);
@@ -294,6 +343,7 @@ public class SaveData extends AppCompatActivity {
             intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
 
             ProbeDataStorage.arrayListNum++;
+            probeData = null;
             startActivity(intent);
         }
 //        Intent intent = new Intent(this, SensorActivity.class);
@@ -307,8 +357,6 @@ public class SaveData extends AppCompatActivity {
 //        intent.putExtra(SensorActivity.EXTRA_SAVED_NUM, "8");
 //        ProbeDataStorage.arrayListNum++;
 //        startActivity(intent);
-
-
     }
 }
 

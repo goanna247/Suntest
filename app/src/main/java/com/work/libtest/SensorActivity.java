@@ -204,7 +204,7 @@ public class SensorActivity extends AppCompatActivity {
     private Menu menu;
     int _probeMode = 0;
     public static ArrayList<Survey> surveys = new ArrayList<Survey>();
-    public static ArrayList<ProbeData> probeData = new ArrayList<ProbeData>();
+    private static ArrayList<ProbeData> probeData = new ArrayList<ProbeData>();
 
     private static ArrayList<Double> accXData = new ArrayList<>();
     private static ArrayList<Double> accYData = new ArrayList<>();
@@ -1025,17 +1025,26 @@ public class SensorActivity extends AppCompatActivity {
                                     double cal_az_degree = cal_az_radian*180/Math.PI;
 
                                     //display orientation data
-                                    orientation_roll_data.setText(numberFormat.format(cal_roll_degree));
-                                    orientation_dip_data.setText(numberFormat.format(cal_dip_degree));
-                                    orientation_azimuth_data.setText(numberFormat.format(cal_az_degree));
+                                    oRoll = Double.parseDouble(numberFormat.format(cal_roll_degree));
+                                    orientation_roll_data.setText(String.valueOf(oRoll));
+                                    oDip = Double.parseDouble(numberFormat.format(cal_dip_degree));
+                                    orientation_dip_data.setText(String.valueOf(oDip));
+                                    oAzimuth = Double.parseDouble(numberFormat.format(cal_az_degree));
+                                    orientation_azimuth_data.setText(String.valueOf(oAzimuth));
 
-                                    accelerometer_x_data.setText(numberFormat.format(cx));
-                                    accelerometer_y_data.setText(numberFormat.format(cy));
-                                    accelerometer_z_data.setText(numberFormat.format(cz));
+                                    accX = Double.parseDouble(numberFormat.format(cx));
+                                    accelerometer_x_data.setText(String.valueOf(accX));
+                                    accY = Double.parseDouble(numberFormat.format(cy));
+                                    accelerometer_y_data.setText(String.valueOf(accY));
+                                    accZ = Double.parseDouble(numberFormat.format(cz));
+                                    accelerometer_z_data.setText(String.valueOf(accZ));
 
-                                    magnetometer_x_data.setText(numberFormat.format(cmx));
-                                    magnetometer_y_data.setText(numberFormat.format(cmy));
-                                    magnetometer_z_data.setText(numberFormat.format(cmz));
+                                    magX = Double.parseDouble(numberFormat.format(cmx));
+                                    magnetometer_x_data.setText(String.valueOf(magX));
+                                    magY = Double.parseDouble(numberFormat.format(cmy));
+                                    magnetometer_y_data.setText(String.valueOf(magY));
+                                    magZ = Double.parseDouble(numberFormat.format(cmz));
+                                    magnetometer_z_data.setText(String.valueOf(magZ));
 
                                     break;
                                 default:
@@ -1468,6 +1477,7 @@ public class SensorActivity extends AppCompatActivity {
                 intentSaveData.putExtra(SaveData.EXTRA_DEVICE_DEVICE_ADDRESS, lDeviceAddress);
                 intentSaveData.putExtra(SaveData.EXTRA_DEVICE_VERSION, lFirmwareVersion);
                 intentSaveData.putExtra(SaveData.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
+                intentSaveData.putExtra(SaveData.EXTRA_PARENT_ACTIVITY, "Sensor");
 
                 try {
                     if (probeData != null) {
@@ -1757,6 +1767,14 @@ public class SensorActivity extends AppCompatActivity {
                     break;
                 case "3":
 //                    newData = new ProbeData(0, "11:30,11-12-23",)
+                    /**
+                     * TODO
+                     * Change time and date to get current date and time
+                     *
+                     */
+                    newData = new ProbeData(0, "11:30,11-12-23" , 3, dRecordNumber, oRoll, oDip, oAzimuth, oTemp, accX, accY,
+                            accZ, accMagError, magX, magY, magZ, oTemp, oTemp, mdMeanChecked,
+                            -1, -1, -1, -1, 0, -1, -1, fastMagChecked);
                     break;
                 case "4":
                     break;
