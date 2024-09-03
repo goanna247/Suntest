@@ -129,7 +129,12 @@ public class TakeMeasurements extends AppCompatActivity {
     private static boolean operationOngoing = false;
 
     int _probeMode = 0;
-    private static ArrayList<ProbeData> probeData = new ArrayList<>();
+    private volatile static ArrayList<ProbeData> probeDataa = new ArrayList<ProbeData>();
+
+    public static ArrayList<ProbeData> getProbeDataFromTakeMeasurement() {
+        return probeDataa;
+    }
+
     private static ArrayList<ProbeData> subProbeData = new ArrayList<>();
 
     private static final ArrayList<Double> accXData = new ArrayList<>();
@@ -845,7 +850,7 @@ public class TakeMeasurements extends AppCompatActivity {
                     shot_format = bore_shot_data[0];
                     Log.e(TAG, "SHOT FORMAT: " + shot_format);
                     if (!shot_format.equals("0")) {
-                        rawData.add(intent.getStringExtra(BluetoothLeService.BORE_SHOT));
+                        rawData.add(intent.getStringExtra(BluetoothLeService.BORE_SHOT)); //we just add the entire thingo?
                         Log.e(TAG, "Adding: " + nextDepth.getText().toString() + " to depth data");
                         depthData.add(prevDepth.getText().toString().replace("PREV DEPTH: ", ""));
                     }
@@ -1040,11 +1045,14 @@ public class TakeMeasurements extends AppCompatActivity {
 //                                magnetometer_z_data.setText(numberFormat.format(cmz));
                                 mag_z = numberFormat.format(cmz);
 
+                                ArrayList<ProbeData> newProbeData = new ArrayList<ProbeData>();
+
                                 try { //TODO CHANGE ALL -1
                                     ProbeData newData = new ProbeData(ProbeDataStorage.arrayListNum, companyName, operatorName,"-1", holeID, (measurementNum + 1), "-1", dateData.get(0), 6, recordNumber, roll, dip, azimuth,
                                             accTemp, Double.parseDouble(core_ax), Double.parseDouble(core_ay), Double.parseDouble(core_az), Double.parseDouble(mag_x), Double.parseDouble(mag_y), Double.parseDouble(mag_z), false, -1, -1, -1, -1, -1, -1); //TODO only some of this data is correct
                                     Log.e(TAG, "ADDED SOME NEW DATA: " + newData.returnData());
-                                    probeData.add(newData);
+                                    probeDataa.add(new ProbeData(ProbeDataStorage.arrayListNum, companyName, operatorName,"-1", holeID, (measurementNum + 1), "-1", dateData.get(0), 6, recordNumber, roll, dip, azimuth,
+                                            accTemp, Double.parseDouble(core_ax), Double.parseDouble(core_ay), Double.parseDouble(core_az), Double.parseDouble(mag_x), Double.parseDouble(mag_y), Double.parseDouble(mag_z), false, -1, -1, -1, -1, -1, -1));
     //                                depthData.add(String.valueOf(nextDepthNum));
                                 } catch (Exception e) {
                                     Log.e(TAG, "Exception thrown adding a new piece of data: " + e + e.getStackTrace());
@@ -1187,8 +1195,16 @@ public class TakeMeasurements extends AppCompatActivity {
 
 //        shotWriteType = 2;
 
-        probeData.clear();
-        rawData.clear();
+        try {
+            probeDataa.clear();
+        } catch (Exception e) {
+            Log.e(TAG, "exception thrown: " + e);
+        }
+        try {
+            rawData.clear();
+        } catch (Exception e) {
+            Log.e(TAG, "exception thrown: " + e);
+        }
 //        rawData = new ArrayList<>();
         dataToBeRead = 0;
 
@@ -1309,7 +1325,7 @@ public class TakeMeasurements extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        probeData = null;
+        probeDataa = null;
 
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
