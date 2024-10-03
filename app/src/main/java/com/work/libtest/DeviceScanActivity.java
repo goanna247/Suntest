@@ -201,6 +201,10 @@ public class DeviceScanActivity extends ListActivity {
     protected void onResume() {
         super.onResume();
 
+        Globals.caliDataCollected = false;
+//        MainActivity.CalibrationMatrixCreated = false;
+//        MainActivity.calibrationIndexNum = 0;
+
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
         if (!mBluetoothAdapter.isEnabled()) {
@@ -266,6 +270,8 @@ public class DeviceScanActivity extends ListActivity {
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
             mScanning = false;
         }
+//        Globals.caliDataCollected = false;
+//        MainActivity.CalibrationMatrixCreated = false;
         startActivity(intent);
     }
 
@@ -298,7 +304,6 @@ public class DeviceScanActivity extends ListActivity {
     private class LeDeviceListAdapter extends BaseAdapter {
         private ArrayList<BluetoothDevice> mLeDevices;
         private LayoutInflater mInflator;
-
 
         public LeDeviceListAdapter() {
             super();

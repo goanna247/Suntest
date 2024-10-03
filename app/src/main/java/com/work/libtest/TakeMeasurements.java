@@ -1,11 +1,5 @@
 package com.work.libtest;
 
-/*
-NEXT TIME ON THE BACHELOR
-Anna finishes being able to select a single record then uses that to record offline!
-She also finally gets the fucking calibration working, returning ALL the calibration data and adding it to a variable 
- */
-
 import static com.work.libtest.Operation.OPERATION_NOTIFY;
 import static com.work.libtest.Operation.OPERATION_READ;
 import static com.work.libtest.Operation.OPERATION_WRITE;
@@ -45,6 +39,7 @@ import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -53,7 +48,7 @@ import java.util.List;
 import java.util.Queue;
 
 public class TakeMeasurements extends AppCompatActivity {
-    public String TAG = "Take Measurements";
+    public static String TAG = "Take Measurements";
     public Menu menu;
 
     public static int shotWriteType = 00;
@@ -149,14 +144,12 @@ public class TakeMeasurements extends AppCompatActivity {
 
     private static final ArrayList<Integer> shotsToCollect = new ArrayList<>();
 
-
     public static ArrayList<String> dateData = new ArrayList<String>();
     public static ArrayList<String> timeData = new ArrayList<String>();
     public static ArrayList<String> depthData = new ArrayList<String>();
     public static ArrayList<String> tempData = new ArrayList<>();
 
     public static ArrayList<ProbeData> exportProbeData = new ArrayList<>();
-
 
     private BluetoothGattCharacteristic CORE_SHOT_CHARACTERISTIC;
     private BluetoothGattCharacteristic BORE_SHOT_CHARACTERISTIC;
@@ -222,6 +215,10 @@ public class TakeMeasurements extends AppCompatActivity {
                 updateConnectionState("Disconnected");
             }
 
+            /**
+             * @ITEM - Loading Bar
+             * Creates a timer bar to show loading status
+             */
             if (collectingData && (seconds - starttime <= 15)) {
                 int timePassed = seconds - starttime;
                 switch (timePassed) {
@@ -269,6 +266,9 @@ public class TakeMeasurements extends AppCompatActivity {
                         break;
                     case 14:
                         collectionNumImg.setImageResource(R.drawable.s14);
+                        /**
+                         * Update  next depth after taking the current value
+                         */
                         measurementNum++;
                         takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
                         Log.e(TAG, "MEASUREMENT TAKEN");
@@ -289,12 +289,10 @@ public class TakeMeasurements extends AppCompatActivity {
                         break;
                     case 15:
                         collectionNumImg.setImageResource(R.drawable.s15);
-
                         break;
                 }
             } else {
                 collectingData = false;
-//                Log.e(TAG, "Collected data");
             }
 
             timerHandler.postDelayed(this, 1000);
@@ -843,6 +841,9 @@ public class TakeMeasurements extends AppCompatActivity {
                     }
 
                 } else if (intent.getStringExtra(BluetoothLeService.BORE_SHOT) != null) {
+                    /**
+                     * Returning incorrect data some of the time
+                     */
                     String currentRawBoreMeasurement = intent.getStringExtra(BluetoothLeService.BORE_SHOT);
                     Log.d(TAG, "Bore shot raw data is: " + intent.getStringExtra(BluetoothLeService.BORE_SHOT));
                     String boreShotData = intent.getStringExtra(BluetoothLeService.BORE_SHOT);
@@ -885,12 +886,9 @@ public class TakeMeasurements extends AppCompatActivity {
                                         bore_value = -2;
                                     }
                                     try {
-//                                            char_all_bore_shot[i] = Byte.parseByte(Integer.toHexString(bore_value));
                                         if (bore_value < 0) {
                                             String unsignedHex = String.format("%02X", bore_value & 0xff);
                                             string_all_bore_shot[i] = unsignedHex;
-//                                                char_all_bore_shot[i] = (byte) Integer.parseInt(string_all_bore_shot[i], 16);//Byte.parseByte();
-//                                                char_all_bore_shot[i] = (byte) (Integer.parseInt(string_all_bore_shot[i], 16) & 0xFF);
                                         } else {
                                             string_all_bore_shot[i] = Integer.toHexString(bore_value);
                                         }
@@ -898,11 +896,11 @@ public class TakeMeasurements extends AppCompatActivity {
                                         string_all_bore_shot[i] = "-1";
                                     }
                                 }
+                                Log.e(TAG, "ALl string data: " + Arrays.toString(string_all_bore_shot));
 
                                 //Format all the displayed numbers so they arent incredibly long
                                 DecimalFormat numberFormat = new DecimalFormat("0.0000000");
 
-//                                  //first 2 bytes after shot type is the record number
                                 try {
                                     byte value1 = (byte) Integer.parseInt(string_all_bore_shot[1], 16);
                                     byte value2 = (byte) Integer.parseInt(string_all_bore_shot[2], 16);
@@ -1180,11 +1178,23 @@ public class TakeMeasurements extends AppCompatActivity {
         }
     }
 
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//        updateConnectionState("Disconnected");
-//    }
+    public static void setShotsNull() {
+        Log.e(TAG, "-----------------------ANNA------------------------");
+        Log.e(TAG, "Removing data");
+        probeDataa = new ArrayList<ProbeData>();
+        exportProbeData = new ArrayList<ProbeData>();
+        rawData = new ArrayList<String>();
+        shotsToCollect.clear();
+        timeData.clear();
+        dateData.clear();
+
+
+        try {
+            Log.e(TAG, probeDataa.get(0).returnData());
+        } catch (Exception e) {
+            Log.e(TAG, "Nope!");
+        }
+    }
 
     //CALLBACK
     @Override
@@ -1289,8 +1299,6 @@ public class TakeMeasurements extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Error setting connection state: " + e);
         }
-
-
             if (resumePosition != 128) {
                 try {
                     holeID = MainActivity.surveys.get(resumePosition).getSurveyOptions().getHoleID();
@@ -1312,11 +1320,8 @@ public class TakeMeasurements extends AppCompatActivity {
                     Log.e(TAG, "Exception thrown in on create 2: " + e);
                 }
             }
-
-
         takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
         nextDepth.setText("NEXT DEPTH: " + (initialDepth + depthInterval * measurementNum));
-
 
         setSupportActionBar(toolbar);
     }
@@ -1429,13 +1434,11 @@ public class TakeMeasurements extends AppCompatActivity {
                             if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.PROBE_MODE) && _probeMode != 1) {
                                 Log.e(TAG, "In probe mode, current mode: " + _probeMode);
                                 Operation getProbeModeOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-
                                 try {
                                     request(getProbeModeOperation);
                                 } catch (Exception e) {
                                     Log.e(TAG, "Exception thrown for requesting operation");
                                 }
-
                             }
                         } else {
                             Log.e(TAG, "gatt characteristic uuid is null");
@@ -1471,7 +1474,7 @@ public class TakeMeasurements extends AppCompatActivity {
                         }
 
                     }
-                } else {
+                } else { //not setting the current probe mode
                     charas.add(gattCharacteristic);
                     HashMap<String, String> currentCharaData = new HashMap<>();
                     uuid = gattCharacteristic.getUuid().toString();
@@ -1777,53 +1780,56 @@ public class TakeMeasurements extends AppCompatActivity {
                         int recordsCollected = shotsToCollect.size();
                         Log.e(TAG, "Shots collected size: " + recordsCollected);
                         for (int i = 0; i < recordsCollected; i++) {
-                            finished = false;
-                            returning = true;
-                            if (!finished) {
-                                int firstByte = 0, secondByte = 0;
-                                int record = shotsToCollect.get(i);
-                                Log.e(TAG, "Record collected: " + record);
-    //                        shotsToCollect.remove(0); //PROBLEM: we dont actually need to remove it bc we are getting the value using i
-                                record = record / 10;
-                                if (record <= 255) {
-                                    firstByte = record;
-                                    secondByte = 00;
-                                } else if (record > 255 && record >= 510) {
-                                    firstByte = -(255 - (record - 255));
-                                    secondByte = 00;
-                                } else {
-                                    secondByte = record / 255;
-                                    record = record - (255 * secondByte);
+                            int j = 0;
+                            while (j < 2) {
+                                finished = false;
+                                returning = true;
+                                if (!finished) {
+                                    int firstByte = 0, secondByte = 0;
+                                    int record = shotsToCollect.get(i);
+                                    Log.e(TAG, "Record collected: " + record);
+                                    record = record / 10;
                                     if (record <= 255) {
                                         firstByte = record;
+                                        secondByte = 00;
                                     } else if (record > 255 && record >= 510) {
                                         firstByte = -(255 - (record - 255));
+                                        secondByte = 00;
+                                    } else {
+                                        secondByte = record / 255;
+                                        record = record - (255 * secondByte);
+                                        if (record <= 255) {
+                                            firstByte = record;
+                                        } else if (record > 255 && record >= 510) {
+                                            firstByte = -(255 - (record - 255));
+                                        }
                                     }
-                                }
-                                resetQueue();
-                                Log.e(TAG, "Attempting to collect shot information by writing to shot request and reading a bore/core notification");
+                                    resetQueue();
+                                    Log.e(TAG, "Attempting to collect shot information by writing to shot request and reading a bore/core notification");
 
-                                boolean status = false;
-                                do {
-                                    status = mBluetoothLeService.writeToShotRequest(firstByte, secondByte);
-                                    Log.e(TAG, "STATUS OF WRITE: " + status);
-                                    try {
-                                        Thread.sleep(1000);
-                                    } catch (Exception e) {
-                                        Log.e(TAG, "Could not sleep");
-                                    }
-
-                                    new CountDownTimer(700, 1) { //efficiency? never heard of her
-                                        public void onTick(long millisUntilFinished) {
-                                            //                      mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
+                                    boolean status = false;
+                                    do {
+                                        status = mBluetoothLeService.writeToShotRequest(firstByte, secondByte);
+                                        Log.e(TAG, "STATUS OF WRITE: " + status);
+                                        try {
+                                            Thread.sleep(1000);
+                                        } catch (Exception e) {
+                                            Log.e(TAG, "Could not sleep");
                                         }
 
-                                        public void onFinish() {
-                                            //                          dataToBeRead = 0;
+                                        new CountDownTimer(700, 1) { //efficiency? never heard of her
+                                            public void onTick(long millisUntilFinished) {
+                                                //                      mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
+                                            }
+
+                                            public void onFinish() {
+                                                //                          dataToBeRead = 0;
 //                                                                      displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                                        }
-                                    }.start();
-                                } while (!status);
+                                            }
+                                        }.start();
+                                    } while (!status);
+                                }
+                                j++;
                             }
                         }
                         //EXPORT DATA - change the text to View Measurements and display how many measurements taken

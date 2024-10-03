@@ -46,25 +46,6 @@ import java.util.Queue;
 
 import com.work.libtest.CalibrationHelper;
 
-/*
-NEXT TIME ON THE BACHELOR
-
-Anna finally figures out how to read the calibration data after a successful fling with calibration index
-But she will need to make it write to get ALL of calibration data.
-
-She also needs to figure out how to record shots when the probe isnt connected to the phone. DIFFICULT!
-
-THATS ALL FOR NOW!
-
-THIS TIME ON THE BACHELOR
-Anna struggles to read the calibration data for each changing calibration index, but at least we can read a few values!
-Will she ever return any actual proper data>! Who knows???
-
-For now all she can do is go figure out how to actually make the main function of the app work.
- */
-
-
-
 public class SensorActivity extends AppCompatActivity {
 
     public static final String EXTRA_DEVICE_NAME = "Device_name";
@@ -203,7 +184,7 @@ public class SensorActivity extends AppCompatActivity {
 
     private Menu menu;
     int _probeMode = 0;
-    public static ArrayList<Survey> surveys = new ArrayList<Survey>();
+    private static ArrayList<Survey> surveys = new ArrayList<Survey>();
     private static ArrayList<ProbeData> probeData = new ArrayList<ProbeData>();
 
     private static ArrayList<Double> accXData = new ArrayList<>();
@@ -249,17 +230,7 @@ public class SensorActivity extends AppCompatActivity {
                 performOperation();
             } else {
                 Log.e(TAG, "current operation is null");
-//                if (operations.peek() != null) {
-//                    currentOp = operations.poll();
-//                    performOperation();
-//                }
             }
-//            try {
-//                currentOp = operations.poll();
-//                performOperation();
-//            } catch (Exception e) {
-//                Log.e(TAG, "Exeption thrown attemping to perform operation: " + e);
-//            }
         } catch (Exception e) {
             Log.e(TAG, "Error thrown while requesting an operation: " + e);
         }
@@ -359,8 +330,6 @@ public class SensorActivity extends AppCompatActivity {
                 //Task show information
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-//                Log.d(TAG, intent.getStringExtra())
-
                     if (intent.getStringExtra(BluetoothLeService.EXTRA_DATA) != null) {
                         Log.d(TAG, "OTHER DATA !?" + intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
                         //THIS is returning calibration data
@@ -399,6 +368,10 @@ public class SensorActivity extends AppCompatActivity {
                         }
                         readyToContinue = true;
 
+                        /**
+                         * CORE SHOT IS COMPLETELY BROKEN LOL!
+                         * TODO
+                         */
                     } else if (intent.getStringExtra(BluetoothLeService.CORE_SHOT) != null) {
                         String coreShotData = intent.getStringExtra(BluetoothLeService.CORE_SHOT);
                         Log.e(TAG, "CORE DATA: " + coreShotData);
@@ -646,6 +619,10 @@ public class SensorActivity extends AppCompatActivity {
                         Log.e(TAG, "SHOT FORMAT: " + shot_format);
 
 //                        if (!hold) {
+                        /**
+                         * EVERYTHING EXCEPT SHOT FORMAT 3 IS BROKEN LOL!
+                         * TODO
+                         */
                             switch (shot_format) {
 //                                case "1":
 ////                                {
@@ -1469,7 +1446,6 @@ public class SensorActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.sensor_tools_saveData) {
             if (Integer.valueOf(number) != 0) {
                 Intent intentSaveData = new Intent(this, SaveData.class);
-//                intentSaveData.putExtra("PROBE DATA", probeData);
 
                 intentSaveData.putExtra(SaveData.EXTRA_DEVICE_NAME, mDeviceName);
                 intentSaveData.putExtra(SaveData.EXTRA_DEVICE_ADDRESS, mDeviceAddress);

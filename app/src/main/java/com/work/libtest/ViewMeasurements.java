@@ -270,7 +270,8 @@ public class ViewMeasurements extends AppCompatActivity {
     }
 
     private void removeAll() {
-        probeData = null;
+        probeData = new ArrayList<>();
+        TakeMeasurements.setShotsNull();
         listView.setAdapter(null);
     }
 
@@ -313,6 +314,74 @@ public class ViewMeasurements extends AppCompatActivity {
         mNextDepth = intent.getStringExtra(EXTRA_NEXT_DEPTH);
         mPrevDepth = intent.getStringExtra(EXTRA_PREV_DEPTH);
         Log.d(TAG, "Device Name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
+
+        rawProbeDataOg = TakeMeasurements.rawData;
+        Set<String> set = new LinkedHashSet<>(rawProbeDataOg);
+        rawProbeData = new ArrayList<>(set);
+        Log.e(TAG, "Raw probe Data: " + rawProbeData);
+        TakeMeasurements.rawData = (ArrayList<String>) rawProbeData;
+
+        timeData = TakeMeasurements.timeData;
+//        Set<String> set2 = new LinkedHashSet<>(timeData2);
+//        timeData = new ArrayList<>(set2);
+//        TakeMeasurements.rawData = (ArrayList<String>)timeData;
+
+        dateData = TakeMeasurements.dateData;
+
+        try {
+            depthDataN = TakeMeasurements.depthData;
+            Log.e(TAG, "Depth data: " + depthDataN);
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting depth data array");
+        }
+
+        try {
+            tempData = TakeMeasurements.tempData;
+            Log.e(TAG, "Temp data: " + tempData);
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting full temp data array: " + e);
+        }
+
+        listView = (ListView) findViewById(R.id.listView);
+        measurementArrayAdapter = new MeasurementArrayAdapter(getApplicationContext(), R.layout.listview_row_layout);
+        listView.setAdapter(measurementArrayAdapter);
+
+        List<String[]> measurementList = readData();
+        for (String[] measurementDatas:measurementList) {
+            double[] displayData = new double[3];
+            displayData = formatData(measurementDatas[4]);
+
+            String measurementName = measurementDatas[0];
+            String date = measurementDatas[1];
+            String time = measurementDatas[2];
+            String temp = measurementDatas[3];
+            String nanotesla = measurementDatas[4];
+            String depth = measurementDatas[5];
+//            String dip = measurementDatas[6];
+            String dip = String.valueOf(displayData[0]);
+            dipData.add(dip);
+            String roll = String.valueOf(displayData[1]);
+            rollData.add(roll);
+//            String roll = measurementDatas[7];
+            String azimuth = String.valueOf(displayData[2]);
+            azimuthData.add(azimuth);
+//            String azimuth = measurementDatas[8];
+
+            Measurement measurement = new Measurement(measurementName, date, time, temp, nanotesla, depth, dip, roll, azimuth);
+            measurementArrayAdapter.add(measurement);
+        }
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                try {
+                    goToOrientation(position);
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception thrown: " + e);
+                }
+            }
+        });
+
     }
 
     public double[] formatData(String allData) { //return roll, dip, azimuth
@@ -349,176 +418,186 @@ public class ViewMeasurements extends AppCompatActivity {
             case "3":
                 //FORMAT EVERYTHING
 
-                Log.e(TAG, "-------------ANNA---------------");
-                Log.e(TAG, "All data: " + allData);
-                String[] string_all_bore_shot = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
-                for (int i = 0; i < shot_data.length; i++) {
-                    int bore_value;
-                    try {
-                        bore_value = Integer.valueOf(shot_data[i]);
-                    } catch (Exception e) {
-                        bore_value = -2;
-                    }
-                    try {
-                        if (bore_value < 0) {
-                            String unsignedHex = String.format("%02X", bore_value & 0xff);
-                            string_all_bore_shot[i] = unsignedHex;
-                        } else {
-                            string_all_bore_shot[i] = Integer.toHexString(bore_value);
+                do {
+
+                    Log.e(TAG, "-------------ANNA---------------");
+                    Log.e(TAG, "All data: " + allData);
+                    String[] string_all_bore_shot = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
+                    for (int i = 0; i < shot_data.length; i++) {
+                        int bore_value;
+                        try {
+                            bore_value = Integer.valueOf(shot_data[i]);
+                        } catch (Exception e) {
+                            bore_value = -2;
                         }
-                    } catch (Exception e) {
-                        string_all_bore_shot[i] = "-1";
+                        try {
+                            if (bore_value < 0) {
+                                String unsignedHex = String.format("%02X", bore_value & 0xff);
+                                string_all_bore_shot[i] = unsignedHex;
+                            } else {
+                                string_all_bore_shot[i] = Integer.toHexString(bore_value);
+                            }
+                        } catch (Exception e) {
+                            string_all_bore_shot[i] = "-1";
+                        }
                     }
-                }
+                    if (string_all_bore_shot.length <= 20) {
 
-                DecimalFormat numberFormat = new DecimalFormat("0.0000000");
 
-                try {
-                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[1], 16);
-                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[2], 16);
+                        DecimalFormat numberFormat = new DecimalFormat("0.0000000");
+
+                        try {
+                            byte value1 = (byte) Integer.parseInt(string_all_bore_shot[1], 16);
+                            byte value2 = (byte) Integer.parseInt(string_all_bore_shot[2], 16);
 //                    recordNumber = Integer.parseInt(numberFormat.format((int) twoBytesToValue(value2, value1)));
-                } catch (Exception e) {
-                    Log.e(TAG, "EXCEPTION thrown in record number: " + e);
-                }
+                        } catch (Exception e) {
+                            Log.e(TAG, "EXCEPTION thrown in record number: " + e);
+                        }
 //                                  next 2 bytes after probe temperature
-                try {
-                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[3], 16);
-                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[4], 16);
-                    int shotProbeTempRaw = ((int)value1 << 8) + (((int)value2) & 0x00FF);
-                    double probeTempU = (double)shotProbeTempRaw/256.0;
-                    double probeTemp = CalibrationHelper.temp_param[0] + (CalibrationHelper.temp_param[1] * probeTempU);
+                        try {
+                            byte value1 = (byte) Integer.parseInt(string_all_bore_shot[3], 16);
+                            byte value2 = (byte) Integer.parseInt(string_all_bore_shot[4], 16);
+                            int shotProbeTempRaw = ((int) value1 << 8) + (((int) value2) & 0x00FF);
+                            double probeTempU = (double) shotProbeTempRaw / 256.0;
+                            double probeTemp = CalibrationHelper.temp_param[0] + (CalibrationHelper.temp_param[1] * probeTempU);
 
 //                    tempData.add(numberFormat.format(probeTemp));
 //                    depthData.add("20m"); //TODO - FIX
-                    pOrientationTemp = probeTemp;
-                    pAccTemp = probeTemp;
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown in probe temperature: " + e);
-                }
+                            pOrientationTemp = probeTemp;
+                            pAccTemp = probeTemp;
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception thrown in probe temperature: " + e);
+                        }
 
-                double ux = 0;
-                double uy = 0;
-                double uz = 0;
-                double[] calAcc;
+                        double ux = 0;
+                        double uy = 0;
+                        double uz = 0;
+                        double[] calAcc;
 
-                //TODO could probably turn this into a function for better code functionality
-                try {
-                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[5], 16);
-                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[6], 16);
-                    int shotAccX = ((int)value1 << 8) + (((int)value2) & 0x00FF);
-                    ux = ((double)shotAccX)/32.0/512.0;
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown setting ux: " + e);
-                }
+                        //TODO could probably turn this into a function for better code functionality
+                        try {
+                            byte value1 = (byte) Integer.parseInt(string_all_bore_shot[5], 16);
+                            byte value2 = (byte) Integer.parseInt(string_all_bore_shot[6], 16);
+                            int shotAccX = ((int) value1 << 8) + (((int) value2) & 0x00FF);
+                            ux = ((double) shotAccX) / 32.0 / 512.0;
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception thrown setting ux: " + e);
+                        }
 
-                try {
-                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[7], 16);
-                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[8], 16);
-                    int shotAccY = ((int)value1 << 8) + (((int)value2) & 0x00FF);
-                    uy = ((double)shotAccY)/32.0/512.0;
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown setting uy: " + e);
-                }
+                        try {
+                            byte value1 = (byte) Integer.parseInt(string_all_bore_shot[7], 16);
+                            byte value2 = (byte) Integer.parseInt(string_all_bore_shot[8], 16);
+                            int shotAccY = ((int) value1 << 8) + (((int) value2) & 0x00FF);
+                            uy = ((double) shotAccY) / 32.0 / 512.0;
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception thrown setting uy: " + e);
+                        }
 
-                try {
-                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[9], 16);
-                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[10], 16);
-                    int shotAccZ = ((int)value1 << 8) + (((int)value2) & 0x00FF);
-                    uz = ((double)shotAccZ)/32.0/512.0;
+                        try {
+                            byte value1 = (byte) Integer.parseInt(string_all_bore_shot[9], 16);
+                            byte value2 = (byte) Integer.parseInt(string_all_bore_shot[10], 16);
+                            int shotAccZ = ((int) value1 << 8) + (((int) value2) & 0x00FF);
+                            uz = ((double) shotAccZ) / 32.0 / 512.0;
 
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown setting uz: " + e);
-                }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception thrown setting uz: " + e);
+                        }
 
-                double umx = 0;
-                double umy = 0;
-                double umz = 0;
-                double[] calMag;
+                        double umx = 0;
+                        double umy = 0;
+                        double umz = 0;
+                        double[] calMag;
 
-                try {
-                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[11], 16);
-                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[12], 16);
-                    byte value3 = (byte) Integer.parseInt(string_all_bore_shot[13], 16);
-                    int shotMagX = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
-                    umx = ((double)shotMagX *0.001);
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown setting umx");
-                }
+                        try {
+                            byte value1 = (byte) Integer.parseInt(string_all_bore_shot[11], 16);
+                            byte value2 = (byte) Integer.parseInt(string_all_bore_shot[12], 16);
+                            byte value3 = (byte) Integer.parseInt(string_all_bore_shot[13], 16);
+                            int shotMagX = ((((int) value1 << 8) + (((int) value2) & 0x00FF)) << 8) + (((int) value3) & 0x00FF);
+                            umx = ((double) shotMagX * 0.001);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception thrown setting umx");
+                        }
 
-                try {
-                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[14], 16);
-                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[15], 16);
-                    byte value3 = (byte) Integer.parseInt(string_all_bore_shot[16], 16);
-                    int shotMagY = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
-                    umy = ((double)shotMagY *0.001);
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown setting umx");
-                }
+                        try {
+                            byte value1 = (byte) Integer.parseInt(string_all_bore_shot[14], 16);
+                            byte value2 = (byte) Integer.parseInt(string_all_bore_shot[15], 16);
+                            byte value3 = (byte) Integer.parseInt(string_all_bore_shot[16], 16);
+                            int shotMagY = ((((int) value1 << 8) + (((int) value2) & 0x00FF)) << 8) + (((int) value3) & 0x00FF);
+                            umy = ((double) shotMagY * 0.001);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception thrown setting umx");
+                        }
 
-                try {
-                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[17], 16);
-                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[18], 16);
-                    byte value3 = (byte) Integer.parseInt(string_all_bore_shot[19], 16);
-                    int shotMagZ = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
-                    umz = ((double)shotMagZ *0.001);
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown setting umx");
-                }
+                        try {
+                            byte value1 = (byte) Integer.parseInt(string_all_bore_shot[17], 16);
+                            byte value2 = (byte) Integer.parseInt(string_all_bore_shot[18], 16);
+                            byte value3 = (byte) Integer.parseInt(string_all_bore_shot[19], 16);
+                            int shotMagZ = ((((int) value1 << 8) + (((int) value2) & 0x00FF)) << 8) + (((int) value3) & 0x00FF);
+                            umz = ((double) shotMagZ * 0.001);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception thrown setting umx");
+                        }
 
-                calAcc = CalibrationHelper.CalibrationHelp(CalibrationHelper.accelerationCalibration, ux, uy, uz);
-                calMag = CalibrationHelper.CalibrationHelp(CalibrationHelper.magnetometerCalibration, umx, umy, umz);
+                        calAcc = CalibrationHelper.CalibrationHelp(CalibrationHelper.accelerationCalibration, ux, uy, uz);
+                        calMag = CalibrationHelper.CalibrationHelp(CalibrationHelper.magnetometerCalibration, umx, umy, umz);
 
-                //Set the display values for x, y and z calibrated values
-                double cx = calAcc[0];
-                pAccX = cx;
-                double cy = calAcc[1];
-                pAccY = cy;
-                double cz = calAcc[2];
-                pAccZ = cz;
+                        //Set the display values for x, y and z calibrated values
+                        double cx = calAcc[0];
+                        pAccX = cx;
+                        double cy = calAcc[1];
+                        pAccY = cy;
+                        double cz = calAcc[2];
+                        pAccZ = cz;
 
-                double cmx = calMag[0];
-                pMagX = cmx;
-                double cmy = calMag[1];
-                pMagY = cmy;
-                double cmz = calMag[2];
-                pMagZ = cmz;
+                        double cmx = calMag[0];
+                        pMagX = cmx;
+                        double cmy = calMag[1];
+                        pMagY = cmy;
+                        double cmz = calMag[2];
+                        pMagZ = cmz;
 
-                //Set roll and dip values
-                double cal_roll_radian = Math.atan2(cy, cz);
-                if (cal_roll_radian > Math.PI) { cal_roll_radian -= (2 * Math.PI); }
-                if (cal_roll_radian < -Math.PI) { cal_roll_radian += (2*Math.PI); }
-                double cal_dip_radian = Math.atan2(-cx, Math.sqrt((cy*cy)+(cz*cz)));
+                        //Set roll and dip values
+                        double cal_roll_radian = Math.atan2(cy, cz);
+                        if (cal_roll_radian > Math.PI) {
+                            cal_roll_radian -= (2 * Math.PI);
+                        }
+                        if (cal_roll_radian < -Math.PI) {
+                            cal_roll_radian += (2 * Math.PI);
+                        }
+                        double cal_dip_radian = Math.atan2(-cx, Math.sqrt((cy * cy) + (cz * cz)));
 
-                double den = (cmx * Math.cos(cal_dip_radian)) + (cmy * Math.sin(cal_dip_radian) * Math.sin(cal_roll_radian)) + (cmz * Math.sin(cal_dip_radian) * Math.cos(cal_roll_radian));
-                double num = (cmy * Math.cos(cal_roll_radian)) - (cmz * Math.sin(cal_roll_radian));
-                double cal_az_radian = Math.atan2(-num, den);
-                if (cal_az_radian > Math.PI) { cal_az_radian -= (2*Math.PI); }
-                if (cal_az_radian < -Math.PI) { cal_az_radian += (2*Math.PI); }
-                if (cal_az_radian < 0) { cal_az_radian += (2*Math.PI); }
+                        double den = (cmx * Math.cos(cal_dip_radian)) + (cmy * Math.sin(cal_dip_radian) * Math.sin(cal_roll_radian)) + (cmz * Math.sin(cal_dip_radian) * Math.cos(cal_roll_radian));
+                        double num = (cmy * Math.cos(cal_roll_radian)) - (cmz * Math.sin(cal_roll_radian));
+                        double cal_az_radian = Math.atan2(-num, den);
+                        if (cal_az_radian > Math.PI) {
+                            cal_az_radian -= (2 * Math.PI);
+                        }
+                        if (cal_az_radian < -Math.PI) {
+                            cal_az_radian += (2 * Math.PI);
+                        }
+                        if (cal_az_radian < 0) {
+                            cal_az_radian += (2 * Math.PI);
+                        }
 
-                //convert to degrees :(
-                double cal_roll_degree = cal_roll_radian*180/Math.PI;
-                double cal_dip_degree = cal_dip_radian*180/Math.PI;
-                double cal_az_degree = cal_az_radian*180/Math.PI;
+                        //convert to degrees :(
+                        double cal_roll_degree = cal_roll_radian * 180 / Math.PI;
+                        double cal_dip_degree = cal_dip_radian * 180 / Math.PI;
+                        double cal_az_degree = cal_az_radian * 180 / Math.PI;
 
-                //display orientation data
+                        //display orientation data
 
-                oRoll = Double.parseDouble(numberFormat.format(cal_roll_degree));
-                pRoll = oRoll;
-                oDip = Double.parseDouble(numberFormat.format(cal_dip_degree));
-                pDip = oDip;
-                oAzimuth = Double.parseDouble(numberFormat.format(cal_az_degree));
-                pAzimuth = oAzimuth;
+                        oRoll = Double.parseDouble(numberFormat.format(cal_roll_degree));
+                        pRoll = oRoll;
+                        oDip = Double.parseDouble(numberFormat.format(cal_dip_degree));
+                        pDip = oDip;
+                        oAzimuth = Double.parseDouble(numberFormat.format(cal_az_degree));
+                        pAzimuth = oAzimuth;
+
+                    }
+
+                } while(pDip > 0);
 
                 Log.e(TAG, "Roll: " + oRoll + " Dip" + oDip + " Azimuth" + oAzimuth);
-//
-//                core_ax = numberFormat.format(cx);
-//                core_ay = numberFormat.format(cy);
-//                core_az = numberFormat.format(cz);
-//
-//                mag_x = numberFormat.format(cmx);
-//                mag_y = numberFormat.format(cmy);
-//                mag_z = numberFormat.format(cmz);
                 break;
         }
         double[] returnArray = new double[3];

@@ -86,6 +86,13 @@ public class SaveData extends AppCompatActivity {
     public static ArrayList<ProbeData> probeData = new ArrayList<ProbeData>();
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        probeData = new ArrayList<>();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 

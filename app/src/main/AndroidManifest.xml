@@ -4,291 +4,290 @@
     package="com.work.libtest"
     android:versionCode="1"
     android:versionName="1.0">
-<!-- <uses-feature android:name="android.hardware.bluetooth_le" />-->
-<!-- <uses-permission android:name="android.permission.BLUETOOTH" />-->
-<!-- <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />-->
-<!-- <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />-->
-<!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
+    <!-- <uses-feature android:name="android.hardware.bluetooth_le" /> -->
+    <!-- <uses-permission android:name="android.permission.BLUETOOTH" /> -->
+    <!-- <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> -->
+    <!-- <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> -->
+    <!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-<uses-permission
-    android:name="android.permission.BLUETOOTH"
-    android:maxSdkVersion="30" />
-<uses-permission
-    android:name="android.permission.BLUETOOTH_ADMIN"
-    android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
 
-<uses-feature
-    android:name="android.hardware.bluetooth_le"
-    android:required="true" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
 
-<uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
-<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<!--<uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS" />-->
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<!--<uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />-->
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS" /> -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" /> -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-<application
-    android:allowBackup="true"
-    android:icon="@mipmap/ic_launcher"
-    android:label="Suntech"
-    android:roundIcon="@mipmap/ic_launcher_round"
-    android:theme="@style/AppTheme"
-    android:dataExtractionRules="@xml/data_extraction_rules"
-    android:fullBackupContent="@xml/backup_rules"
-    android:supportsRtl="true"
-    tools:targetApi="31">
-    <activity
-        android:name=".ViewMeasurements"
-        android:exported="false"
-        android:label=""
-        android:parentActivityName=".TakeMeasurements"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.TakeMeasurements" />
-    </activity>
-    <activity
-        android:name=".listView"
-        android:exported="false" />
-    <activity
-        android:name=".PreviousSurvey"
-        android:exported="false" />
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Suntech"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        tools:targetApi="31">
+        <activity
+            android:name=".CalibrationActivity"
+            android:exported="false"
+            android:label="@string/title_activity_calibration"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name=".ViewMeasurements"
+            android:exported="false"
+            android:label=""
+            android:parentActivityName=".TakeMeasurements"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.TakeMeasurements" />
+        </activity>
+        <activity
+            android:name=".listView"
+            android:exported="false" />
+        <activity
+            android:name=".PreviousSurvey"
+            android:exported="false" /> <!-- <service -->
+        <!-- android:name=".BluetoothQueueService" -->
+        <!-- android:enabled="true" -->
+        <!-- android:exported="true" /> -->
+        <activity
+            android:name=".SaveData"
+            android:exported="false"
+            android:label=" "
+            android:parentActivityName=".SensorActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.SaveData" />
+        </activity>
+        <activity
+            android:name=".TakeMeasurements"
+            android:exported="false"
+            android:label=""
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".SensorActivity"
+            android:exported="false"
+            android:label=" "
+            android:parentActivityName=".ProbeDetails"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.ProbeDetails" />
+        </activity>
+        <activity
+            android:name=".OrientationActivity"
+            android:exported="false"
+            android:label="Orientation"
+            android:parentActivityName=".ProbeDetails"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ResetSurveyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProbeDetails"
+            android:exported="false"
+            android:label=" "
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".DeviceControlActivity"
+            android:theme="@android:style/Theme.Holo.Light" />
 
-<!--    <service-->
-<!--        android:name=".BluetoothQueueService"-->
-<!--        android:enabled="true"-->
-<!--        android:exported="true" />-->
+        <service
+            android:name=".BluetoothLeService"
+            android:enabled="true" />
 
-    <activity
-        android:name=".SaveData"
-        android:exported="false"
-        android:label=" "
-        android:parentActivityName=".SensorActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.SaveData" />
-    </activity>
-    <activity
-        android:name=".TakeMeasurements"
-        android:exported="false"
-        android:label=""
-        android:parentActivityName=".MainActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.MainActivity" />
-    </activity>
-    <activity
-        android:name=".SensorActivity"
-        android:exported="false"
-        android:label=" "
-        android:parentActivityName=".ProbeDetails"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.ProbeDetails" />
-    </activity>
-    <activity
-        android:name=".OrientationActivity"
-        android:exported="false"
-        android:label="Orientation"
-        android:parentActivityName=".ProbeDetails"
-        android:theme="@style/AppTheme.NoActionBar" />
-    <activity
-        android:name=".ResetSurveyActivity"
-        android:exported="false" />
-    <activity
-        android:name=".ProbeDetails"
-        android:exported="false"
-        android:label=" "
-        android:parentActivityName=".MainActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.MainActivity" />
-    </activity>
-    <activity
-        android:name=".DeviceControlActivity"
-        android:theme="@android:style/Theme.Holo.Light" />
+        <activity
+            android:name=".InitalisePopupActivity"
+            android:label="Initialise Popup Activity"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.emailFiles.emailFilesActivity"
+            android:label="@string/title_activity_email_files"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.deleteFiles.deleteFilesActivity"
+            android:label="@string/title_activity_delete_files"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.editRoll.editRollActivity"
+            android:label="@string/title_activity_edit_roll"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.editMaxMovementDeviation.editMaxMovementDeviationActivity"
+            android:label="@string/title_activity_edit_max_movement_deviation"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.editMagMagnitude.editMagMagnitudeActivity"
+            android:label="@string/title_activity_edit_mag_magnitude"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.editMagDeviation.editMagDeviationActivity"
+            android:label="@string/title_activity_edit_mag_deviation"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.editInitialDepth.editInitialDepthActivity"
+            android:label="Edit"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.editDip.editDipActivity"
+            android:label="Edit"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.editDepthInterval.editDepthIntervalActivity"
+            android:label="Edit"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.modeSelection.modeSelectionActivity"
+            android:label="Selection"
+            android:parentActivityName=".Preferences.PreferencesActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.Preferences.PreferencesActivity" />
+        </activity> <!-- <activity -->
+        <!-- android:name=".Preferences.PreferencesOperationsMode" -->
+        <!-- android:label="@string/title_activity_preferences_operations_mode" -->
+        <!-- android:parentActivityName=".Preferences.PreferencesActivity" -->
+        <!-- android:theme="@style/AppTheme.NoActionBar"> -->
+        <!-- <meta-data -->
+        <!-- android:name="android.support.PARENT_ACTIVITY" -->
+        <!-- android:value="com.work.libtest.Preferences.PreferencesActivity" /> -->
+        <!-- </activity> -->
+        <activity
+            android:name=".SurveyOptions.SurveyOptionsActivity"
+            android:label="Survey Options"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".SurveyOptions.AllSurveyOptionsActivity"
+            android:label="Survey Options"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".Preferences.PreferencesActivity"
+            android:label="Preferences"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".About.AboutActivity"
+            android:label="About"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".SelectProbe.SelectProbe"
+            android:label="Select Probe"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.work.libtest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+            <intent-filter>
+                <action
+                    android:name="android.intent.action.MAIN"
+                    android:launchMode="singleTop" />
 
-    <service
-        android:name=".BluetoothLeService"
-        android:enabled="true" />
-
-    <activity
-        android:name=".InitalisePopupActivity"
-        android:label="Initialise Popup Activity"
-        android:parentActivityName=".MainActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.MainActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.emailFiles.emailFilesActivity"
-        android:label="@string/title_activity_email_files"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.deleteFiles.deleteFilesActivity"
-        android:label="@string/title_activity_delete_files"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.editRoll.editRollActivity"
-        android:label="@string/title_activity_edit_roll"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.editMaxMovementDeviation.editMaxMovementDeviationActivity"
-        android:label="@string/title_activity_edit_max_movement_deviation"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.editMagMagnitude.editMagMagnitudeActivity"
-        android:label="@string/title_activity_edit_mag_magnitude"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.editMagDeviation.editMagDeviationActivity"
-        android:label="@string/title_activity_edit_mag_deviation"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.editInitialDepth.editInitialDepthActivity"
-        android:label="Edit"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.editDip.editDipActivity"
-        android:label="Edit"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.editDepthInterval.editDepthIntervalActivity"
-        android:label="Edit"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.modeSelection.modeSelectionActivity"
-        android:label="Selection"
-        android:parentActivityName=".Preferences.PreferencesActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.Preferences.PreferencesActivity" />
-    </activity>
-<!--    <activity-->
-<!--        android:name=".Preferences.PreferencesOperationsMode"-->
-<!--        android:label="@string/title_activity_preferences_operations_mode"-->
-<!--        android:parentActivityName=".Preferences.PreferencesActivity"-->
-<!--        android:theme="@style/AppTheme.NoActionBar">-->
-<!--        <meta-data-->
-<!--            android:name="android.support.PARENT_ACTIVITY"-->
-<!--            android:value="com.work.libtest.Preferences.PreferencesActivity" />-->
-<!--    </activity>-->
-    <activity
-        android:name=".SurveyOptions.SurveyOptionsActivity"
-        android:label="Survey Options"
-        android:parentActivityName=".MainActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.MainActivity" />
-    </activity>
-    <activity
-        android:name=".SurveyOptions.AllSurveyOptionsActivity"
-        android:label="Survey Options"
-        android:parentActivityName=".MainActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.MainActivity" />
-    </activity>
-    <activity
-        android:name=".Preferences.PreferencesActivity"
-        android:label="Preferences"
-        android:parentActivityName=".MainActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.MainActivity" />
-    </activity>
-    <activity
-        android:name=".About.AboutActivity"
-        android:label="About"
-        android:parentActivityName=".MainActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.MainActivity" />
-    </activity>
-    <activity
-        android:name=".SelectProbe.SelectProbe"
-        android:label="Select Probe"
-        android:parentActivityName=".MainActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-        <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.work.libtest.MainActivity" />
-    </activity>
-    <activity
-        android:name=".MainActivity"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
-        android:exported="true">
-        <intent-filter>
-            <action
-                android:name="android.intent.action.MAIN"
-                android:launchMode="singleTop" />
-
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
-    </activity>
-    <activity
-        android:name=".DeviceScanActivity"
-        android:label="Device Scan Activity"
-        android:theme="@android:style/Theme.Holo.Light" />
-</application>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".DeviceScanActivity"
+            android:label="Device Scan Activity"
+            android:theme="@android:style/Theme.Holo.Light" />
+    </application>
 
 </manifest>
