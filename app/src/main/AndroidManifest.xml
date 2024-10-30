@@ -43,7 +43,7 @@
             android:name=".CalibrationActivity"
             android:exported="false"
             android:label="@string/title_activity_calibration"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <activity
             android:name=".ViewMeasurements"
             android:exported="false"

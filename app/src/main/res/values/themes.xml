@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!--    &lt;!&ndash; Base application theme. &ndash;&gt;-->
-    <!--    <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">-->
-    <style name="Base.AppTheme" parent="Theme.AppCompat.Light">
-        <!--        &lt;!&ndash; Customize your light theme here. &ndash;&gt;-->
-        <!--         <item name="colorPrimary">@color/my_light_primary</item>-->
-        <item name="android:actionMenuTextColor">@color/colorPrimaryDark</item>
-    </style>
+<!--    &lt;!&ndash;    &lt;!&ndash; Base application theme. &ndash;&gt;&ndash;&gt;-->
+<!--    &lt;!&ndash;    <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">&ndash;&gt;-->
+<!--    <style name="Base.AppTheme" parent="Theme.AppCompat.Light">-->
+<!--        &lt;!&ndash;        &lt;!&ndash; Customize your light theme here. &ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;         <item name="colorPrimary">@color/my_light_primary</item>&ndash;&gt;-->
+<!--        <item name="android:actionMenuTextColor">@color/colorPrimaryDark</item>-->
+<!--    </style>-->
 
-    <style name="AppTheme" parent="Base.AppTheme" />
+<!--    <style name="AppTheme" parent="Base.AppTheme" />-->
 
-    <!--    <style name="AppTheme" parent="Base.AppTheme" />-->
+<!--    &lt;!&ndash;    <style name="AppTheme" parent="Base.AppTheme" />&ndash;&gt;-->
 
 
-    <!--    <style name="AppTheme" parent="Base.AppTheme" />-->
+<!--    &lt;!&ndash;    <style name="AppTheme" parent="Base.AppTheme" />&ndash;&gt;-->
 
-    <!--    <style name="AppTheme" parent="Base.AppTheme" />-->
+<!--    &lt;!&ndash;    <style name="AppTheme" parent="Base.AppTheme" />&ndash;&gt;-->
 </resources>
