@@ -120,6 +120,10 @@
             android:name=".BluetoothLeService"
             android:enabled="true" />
 
+        <service
+            android:name=".BleService"
+            android:enabled="true" />
+
         <activity
             android:name=".InitalisePopupActivity"
             android:label="Initialise Popup Activity"
