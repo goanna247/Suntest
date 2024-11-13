@@ -71,21 +71,21 @@ public class SurveyOptionsActivity extends AppCompatActivity {
                 || CompanyNameEditTxt != null || CompanyNameEditTxt.equals(" ") || Integer.valueOf(CompanyNameEditTxt.getText().toString()) != 0)
             {
                 SurveyOptions newSurveyOptions = new SurveyOptions(Integer.valueOf(HoleIDEditTxt.getText().toString()), OperatorNameEditTxt.getText().toString(), CompanyNameEditTxt.getText().toString());
-                if (MainActivity.surveySize == MainActivity.surveyNum) {
-                    //no survey options saved, create a new entire survey
-                    Survey newSurvey = new Survey(newSurveyOptions);
-                    MainActivity.surveys.add(newSurvey);
-                    MainActivity.surveySize++;
-                } else {
-                    //survey already created, overwrite options
-                    MainActivity.surveys.get(MainActivity.surveyNum).setSurveyOptions(newSurveyOptions);
-                }
-                Intent returnToMain = new Intent(this, MainActivity.class);
-                returnToMain.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-                returnToMain.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-                returnToMain.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
-                Log.e(TAG, "Name being passed back through are: " + returnToMain.toString());
-                startActivity(returnToMain);
+//                if (MainActivity.surveySize == MainActivity.surveyNum) {
+//                    //no survey options saved, create a new entire survey
+//                    Survey newSurvey = new Survey(newSurveyOptions);
+//                    MainActivity.surveys.add(newSurvey);
+//                    MainActivity.surveySize++;
+//                } else {
+//                    //survey already created, overwrite options
+//                    MainActivity.surveys.get(MainActivity.surveyNum).setSurveyOptions(newSurveyOptions);
+//                }
+//                Intent returnToMain = new Intent(this, MainActivity.class);
+//                returnToMain.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//                returnToMain.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//                returnToMain.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
+//                Log.e(TAG, "Name being passed back through are: " + returnToMain.toString());
+//                startActivity(returnToMain);
 
             } else {
                 Log.d(TAG, "Please ensure all values are valid");
@@ -97,10 +97,10 @@ public class SurveyOptionsActivity extends AppCompatActivity {
 
     public void backButtonClick(View view) {
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
-        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, "Connected");
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
+//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, "Connected");
         startActivity(intent);
     }
 }

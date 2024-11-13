@@ -345,9 +345,9 @@ public class SaveData extends AppCompatActivity {
             startActivity(intent);
         } else {
             Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-            intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
+//            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//            intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
 
             ProbeDataStorage.arrayListNum++;
             probeData = null;

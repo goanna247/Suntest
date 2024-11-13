@@ -108,9 +108,9 @@ public class InitalisePopupActivity extends AppCompatActivity {
     public void back() {
         Intent intent = new Intent(this, MainActivity.class);
         Log.d(TAG, "Device name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, "Connected");
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, "Connected");
         startActivity(intent);
     }
 

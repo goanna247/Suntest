@@ -391,8 +391,8 @@ public class ViewMeasurements extends AppCompatActivity {
         double pRoll = 0, pDip = 0, pAzimuth = 0, pOrientationTemp = 0, pAccX = 0, pAccY = 0, pAccZ = 0, pAccMagError = 0, pMagX = 0, pMagY = 0, pMagZ = 0, pMagTemp = 0, pAccTemp = 0, pAccelerometer = 0, pMaxMeanAccX = 0, pMaxMeanAccY = 0, pMaxMeanAccZ = 0, pMaxMeanMagX = 0, pMaxMeanMagY = 0, pMaxMeanMagZ = 0;
         String pDate = "", pCompanyName = "", pOperatorName = "", pTime = "", pDepth = "", pProbeID = "";
 
-        pCompanyName = MainActivity.surveys.get(0).getSurveyOptions().getCompanyName(); //the 0 needs to be updated to the survey number later
-        pOperatorName = MainActivity.surveys.get(0).getSurveyOptions().getOperatorName();
+//        pCompanyName = MainActivity.surveys.get(0).getSurveyOptions().getCompanyName(); //the 0 needs to be updated to the survey number later
+//        pOperatorName = MainActivity.surveys.get(0).getSurveyOptions().getOperatorName();
         if (mDeviceName != null) {
             pProbeID = mDeviceName;
         }

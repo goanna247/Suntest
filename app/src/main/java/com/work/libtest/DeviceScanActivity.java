@@ -169,9 +169,9 @@ public class DeviceScanActivity extends ListActivity {
         } else if (item.getItemId() == 0) {
             Log.e(TAG, "ATTEMPT TO EXIT");
             Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-            intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
+//            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//            intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
             startActivity(intent);
         }
 //        switch (item.getItemId()) {
@@ -264,8 +264,8 @@ public class DeviceScanActivity extends ListActivity {
         final Intent intent = new Intent(this, MainActivity.class);
 //        intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
 //        intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, device.getName());
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, device.getAddress());
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, device.getName());
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, device.getAddress());
         if (mScanning) {
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
             mScanning = false;

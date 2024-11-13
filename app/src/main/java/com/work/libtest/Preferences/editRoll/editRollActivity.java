@@ -23,14 +23,14 @@ public class editRollActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
 
         rollEdit = findViewById(R.id.magneticDeviationEdit);
-        rollEdit.setText(Double.toString(MainActivity.preferences.getRoll()));
+//        rollEdit.setText(Double.toString(MainActivity.preferences.getRoll()));
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     public void rollSubmit(View v) {
-        MainActivity.preferences.setRoll(Double.parseDouble(rollEdit.getText().toString()));
+//        MainActivity.preferences.setRoll(Double.parseDouble(rollEdit.getText().toString()));
         Intent intent = new Intent(this, PreferencesActivity.class);
         startActivity(intent);
     }

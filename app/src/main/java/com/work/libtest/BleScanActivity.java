@@ -313,14 +313,14 @@ public class BleScanActivity extends AppCompatActivity {
 
     // ----------------------------------------------------------------------------------------------------------------
     // Device has been selected in the list adapter
-    // Return name and address of BLE device to the BleMainActivity that started this activity
+    // Return name and address of BLE device to the MainActivity that started this activity
     private AdapterView.OnItemClickListener deviceListClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
             final BluetoothDevice device = deviceListAdapter.getItem(i);		                    //Get the device from the list adapter
             stopScanHandler.removeCallbacks(stopScanRunnable);                                      //Stop the scan timeout handler from calling the runnable to stop the scan
             stopScan();                                                                             //Stop a scan that might still be running
-            final Intent intent = new Intent();                                                     //Create Intent to return information to the BleMainActivity that started this activity
+            final Intent intent = new Intent();                                                     //Create Intent to return information to the MainActivity that started this activity
             if (device != null) {                                                                   //Check that a valid device was received
                 intent.putExtra(EXTRA_SCAN_NAME, device.getName());                                 //Add BLE device name to the Intent
                 intent.putExtra(EXTRA_SCAN_ADDRESS, device.getAddress());                           //Add BLE device address to the Intent

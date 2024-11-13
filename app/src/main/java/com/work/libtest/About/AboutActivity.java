@@ -21,7 +21,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.work.libtest.MainActivity;
+//import com.work.libtest.MainActivity;
 import com.work.libtest.R;
 
 public class AboutActivity extends AppCompatActivity {
@@ -55,7 +55,7 @@ public class AboutActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
 
         versionTxt = findViewById(R.id.versionTxt);
-        versionTxt.setText("Version " + MainActivity.preferences.getCurrentVersion());
+//        versionTxt.setText("Version " + MainActivity.preferences.getCurrentVersion());
 
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
@@ -105,10 +105,10 @@ public class AboutActivity extends AppCompatActivity {
      * return to Main activity and pass back through the saved probe data
      */
     private void back() {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
-        startActivity(intent);
+//        Intent intent = new Intent(this, MainActivity.class);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
+//        startActivity(intent);
     }
 }

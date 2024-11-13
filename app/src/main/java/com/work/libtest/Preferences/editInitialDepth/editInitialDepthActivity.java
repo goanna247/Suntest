@@ -23,7 +23,7 @@ public class editInitialDepthActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
 
         initialDepthEdit = findViewById(R.id.magneticDeviationEdit);
-        initialDepthEdit.setText(Double.toString(MainActivity.preferences.getInitialDepth()));
+//        initialDepthEdit.setText(Double.toString(MainActivity.preferences.getInitialDepth()));
 
 
         setSupportActionBar(toolbar);
@@ -32,7 +32,7 @@ public class editInitialDepthActivity extends AppCompatActivity {
     //TODO input verification
 
     public void initalDepthSubmit(View v) {
-        MainActivity.preferences.setInitialDepth(Double.parseDouble(initialDepthEdit.getText().toString()));
+//        MainActivity.preferences.setInitialDepth(Double.parseDouble(initialDepthEdit.getText().toString()));
         Intent intent = new Intent(this, PreferencesActivity.class);
         startActivity(intent);
     }

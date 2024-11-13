@@ -6,7 +6,7 @@
     <string name="discovering">Discovering</string>
     <string name="disconnecting">Disconnecting</string>
 
-    <!-- Menu items for BleMainActivity and BleScanActivity -->
+    <!-- Menu items for MainActivity and BleScanActivity -->
 <!--    <string name="menu_scan">Scan</string>-->
 <!--    <string name="menu_connect">Connect</string>-->
 <!--    <string name="menu_disconnect">Disconnect</string>-->
@@ -138,4 +138,5 @@
     <string name="title_activity_save_data">SaveData</string>
     <string name="title_activity_main2">MainActivity2</string>
     <string name="title_activity_calibration">CalibrationActivity</string>
+
 </resources>

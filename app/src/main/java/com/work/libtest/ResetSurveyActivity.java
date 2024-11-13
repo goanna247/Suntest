@@ -82,8 +82,8 @@ public class ResetSurveyActivity extends AppCompatActivity {
 
     public void backReset(View view) {
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
         startActivity(intent);
     }
 

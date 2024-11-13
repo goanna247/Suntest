@@ -24,14 +24,14 @@ public class editDepthIntervalActivity extends AppCompatActivity {
 
         depthIntervalEdit = findViewById(R.id.magneticDeviationEdit);
 
-        depthIntervalEdit.setText(Double.toString(MainActivity.preferences.getDepthInterval()));
+//        depthIntervalEdit.setText(Double.toString(MainActivity.preferences.getDepthInterval()));
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     public void depthIntervalSubmit(View v) {
-        MainActivity.preferences.setDepthInterval(Double.parseDouble(depthIntervalEdit.getText().toString()));
+//        MainActivity.preferences.setDepthInterval(Double.parseDouble(depthIntervalEdit.getText().toString()));
         Intent intent = new Intent(this, PreferencesActivity.class);
         startActivity(intent);
     }

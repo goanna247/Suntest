@@ -23,7 +23,7 @@ public class editDipActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
 
         dipEdit = findViewById(R.id.magneticDeviationEdit);
-        dipEdit.setText(Double.toString(MainActivity.preferences.getDip()));
+//        dipEdit.setText(Double.toString(MainActivity.preferences.getDip()));
 
 
         setSupportActionBar(toolbar);
@@ -31,7 +31,7 @@ public class editDipActivity extends AppCompatActivity {
     }
 
     public void dipSubmit(View v) {
-        MainActivity.preferences.setDip(Double.parseDouble(dipEdit.getText().toString()));
+//        MainActivity.preferences.setDip(Double.parseDouble(dipEdit.getText().toString()));
         Intent intent = new Intent(this, PreferencesActivity.class);
         startActivity(intent);
     }

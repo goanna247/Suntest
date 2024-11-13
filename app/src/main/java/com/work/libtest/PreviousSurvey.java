@@ -111,8 +111,8 @@ public class PreviousSurvey extends ListActivity {
 
     public void back() {
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
         startActivity(intent);
     }
 

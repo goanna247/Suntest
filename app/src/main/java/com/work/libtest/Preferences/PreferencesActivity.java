@@ -110,8 +110,8 @@ public class PreferencesActivity extends AppCompatActivity {
         maxDevEdit = (EditText) findViewById(R.id.maxDevEdit);
         moveMaxDevEdit = (EditText) findViewById(R.id.moveMaxDevEdit);
 
-        preferences_operations_modeOptions.setText(MainActivity.preferences.getMode());
-        Log.d(TAG, MainActivity.preferences.getMode());
+//        preferences_operations_modeOptions.setText(MainActivity.preferences.getMode());
+//        Log.d(TAG, MainActivity.preferences.getMode());
 
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
@@ -141,7 +141,7 @@ public class PreferencesActivity extends AppCompatActivity {
      * @param v The view associated with the click event.
      */
     public void preferences_operations_advanced_click(View v) {
-        MainActivity.preferences.setAdvancedMode(preferences_operations_advancedOptions.isChecked());
+//        MainActivity.preferences.setAdvancedMode(preferences_operations_advancedOptions.isChecked());
     }
 
     /**
@@ -149,7 +149,7 @@ public class PreferencesActivity extends AppCompatActivity {
      * @param v The view associated with the click event.
      */
     public void preferences_operations_multiShot_click(View v) {
-        MainActivity.preferences.setMultiShotMode(preferences_operations_multiShotOptions.isChecked());
+//        MainActivity.preferences.setMultiShotMode(preferences_operations_multiShotOptions.isChecked());
     }
 
     /**
@@ -157,7 +157,7 @@ public class PreferencesActivity extends AppCompatActivity {
      * @param v The view associated with the click event.
      */
     public void preferences_operations_depthTracking_click(View v) {
-        MainActivity.preferences.setDepthTracking(preferences_operations_depthTrackingOptions.isChecked());
+//        MainActivity.preferences.setDepthTracking(preferences_operations_depthTrackingOptions.isChecked());
     }
 
 //    public void preferences_operations_initialDepth_click(View v) {
@@ -186,7 +186,7 @@ public class PreferencesActivity extends AppCompatActivity {
      * @param v The view associated with the click event.
      */
     public void preferences_movement_enable_click(View v) {
-        MainActivity.preferences.setMovementAlarmEnable(preferences_movement_enableOptions.isChecked());
+//        MainActivity.preferences.setMovementAlarmEnable(preferences_movement_enableOptions.isChecked());
     }
 
 //    public void preferences_movement_deviation_click(View v) {
@@ -195,7 +195,7 @@ public class PreferencesActivity extends AppCompatActivity {
 //    }
 
     public void preferences_magnetic_enable_click(View v) {
-        MainActivity.preferences.setMagneticFieldAlarmEnable(preferences_magnetic_enableOptions.isChecked());
+//        MainActivity.preferences.setMagneticFieldAlarmEnable(preferences_magnetic_enableOptions.isChecked());
     }
 //
 //    public void preferences_magnetic_magnitude_click(View v) {
@@ -213,7 +213,7 @@ public class PreferencesActivity extends AppCompatActivity {
      * @param v The view associated with the click event.
      */
     public void preferences_presentation_showDip_click(View v) {
-        MainActivity.preferences.setShowDip(preferences_presentation_showDipOptions.isChecked());
+//        MainActivity.preferences.setShowDip(preferences_presentation_showDipOptions.isChecked());
     }
 
     /**
@@ -221,7 +221,7 @@ public class PreferencesActivity extends AppCompatActivity {
      * @param v The view associated with the click event.
      */
     public void preferences_presentation_showRoll_click(View v) {
-        MainActivity.preferences.setShowRoll(preferences_presentation_showRollOptions.isChecked());
+//        MainActivity.preferences.setShowRoll(preferences_presentation_showRollOptions.isChecked());
     }
 
     /**
@@ -229,7 +229,7 @@ public class PreferencesActivity extends AppCompatActivity {
      * @param v The view associated with the click event.
      */
     public void preferences_presentation_audio_click(View v) {
-        MainActivity.preferences.setAudioAlerts(preferences_presentation_audioOptions.isChecked());
+//        MainActivity.preferences.setAudioAlerts(preferences_presentation_audioOptions.isChecked());
     }
 
 //    public void preferences_files_email_click(View v) {
@@ -252,28 +252,28 @@ public class PreferencesActivity extends AppCompatActivity {
      * Method to load saved preferences.
      */
     public void LoadSavedPreferences() {
-        preferences_operations_modeOptions.setText(MainActivity.preferences.getMode());
-        preferences_operations_advancedOptions.setChecked(MainActivity.preferences.getAdvancedMode());
-        preferences_operations_multiShotOptions.setChecked(MainActivity.preferences.getmultiShotMode());
-        preferences_operations_depthTrackingOptions.setChecked(MainActivity.preferences.getDepthTracking());
-        initialDepthEdit.setText(Double.toString(MainActivity.preferences.getInitialDepth()));
-        depthIntervalEdit.setText(Double.toString(MainActivity.preferences.getDepthInterval()));
-
-        rollEdit.setText(Double.toString(MainActivity.preferences.getRoll()));
-        dipEdit.setText(Double.toString(MainActivity.preferences.getDip()));
-
-        preferences_movement_enableOptions.setChecked(MainActivity.preferences.getMagneticEnable());
-        moveMaxDevEdit.setText(Double.toString(MainActivity.preferences.getMovementMaximumDeviation()));
-
-        preferences_magnetic_enableOptions.setChecked(MainActivity.preferences.getMagneticEnable());
-        normalMagEdit.setText(Double.toString(MainActivity.preferences.getNominalMagnitude()));
-        maxDevEdit.setText(Double.toString(MainActivity.preferences.getMagneticMaximumDeviation()));
-
-        preferences_presentation_showDipOptions.setChecked(MainActivity.preferences.getShowDip());
-        preferences_presentation_showRollOptions.setChecked(MainActivity.preferences.getShowRoll());
-        preferences_presentation_audioOptions.setChecked(MainActivity.preferences.getAudioAlerts());
-
-        preferences_about_versionOptions.setText(Double.toString(MainActivity.preferences.getCurrentVersion()));
+//        preferences_operations_modeOptions.setText(MainActivity.preferences.getMode());
+//        preferences_operations_advancedOptions.setChecked(MainActivity.preferences.getAdvancedMode());
+//        preferences_operations_multiShotOptions.setChecked(MainActivity.preferences.getmultiShotMode());
+//        preferences_operations_depthTrackingOptions.setChecked(MainActivity.preferences.getDepthTracking());
+//        initialDepthEdit.setText(Double.toString(MainActivity.preferences.getInitialDepth()));
+//        depthIntervalEdit.setText(Double.toString(MainActivity.preferences.getDepthInterval()));
+//
+//        rollEdit.setText(Double.toString(MainActivity.preferences.getRoll()));
+//        dipEdit.setText(Double.toString(MainActivity.preferences.getDip()));
+//
+//        preferences_movement_enableOptions.setChecked(MainActivity.preferences.getMagneticEnable());
+//        moveMaxDevEdit.setText(Double.toString(MainActivity.preferences.getMovementMaximumDeviation()));
+//
+//        preferences_magnetic_enableOptions.setChecked(MainActivity.preferences.getMagneticEnable());
+//        normalMagEdit.setText(Double.toString(MainActivity.preferences.getNominalMagnitude()));
+//        maxDevEdit.setText(Double.toString(MainActivity.preferences.getMagneticMaximumDeviation()));
+//
+//        preferences_presentation_showDipOptions.setChecked(MainActivity.preferences.getShowDip());
+//        preferences_presentation_showRollOptions.setChecked(MainActivity.preferences.getShowRoll());
+//        preferences_presentation_audioOptions.setChecked(MainActivity.preferences.getAudioAlerts());
+//
+//        preferences_about_versionOptions.setText(Double.toString(MainActivity.preferences.getCurrentVersion()));
     }
 
     /**
@@ -316,27 +316,27 @@ public class PreferencesActivity extends AppCompatActivity {
     private void back() {
         //save all the current data
 
-        MainActivity.preferences.setAdvancedMode(preferences_operations_advancedOptions.isChecked());
-        MainActivity.preferences.setMultiShotMode(preferences_operations_multiShotOptions.isChecked());
-        MainActivity.preferences.setDepthTracking(preferences_operations_depthTrackingOptions.isChecked());
-        MainActivity.preferences.setMovementAlarmEnable(preferences_movement_enableOptions.isChecked());
-        MainActivity.preferences.setMagneticFieldAlarmEnable(preferences_magnetic_enableOptions.isChecked());
-        MainActivity.preferences.setShowDip(preferences_presentation_showDipOptions.isChecked());
-        MainActivity.preferences.setShowRoll(preferences_presentation_showRollOptions.isChecked());
-        MainActivity.preferences.setAudioAlerts(preferences_presentation_audioOptions.isChecked());
-
-        MainActivity.preferences.setDip(Double.parseDouble(dipEdit.getText().toString()));
-        MainActivity.preferences.setRoll(Double.parseDouble(rollEdit.getText().toString()));
-        MainActivity.preferences.setDepthInterval(Double.parseDouble(depthIntervalEdit.getText().toString()));
-        MainActivity.preferences.setInitialDepth(Double.parseDouble(initialDepthEdit.getText().toString()));
-        MainActivity.preferences.setNominalMagnitude(Double.parseDouble(normalMagEdit.getText().toString()));
-        MainActivity.preferences.setMagneticMaximumDeviation(Double.parseDouble(maxDevEdit.getText().toString()));
-        MainActivity.preferences.setMovementMaximumDeviation(Double.parseDouble(moveMaxDevEdit.getText().toString()));
-
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
-        startActivity(intent);
+//        MainActivity.preferences.setAdvancedMode(preferences_operations_advancedOptions.isChecked());
+//        MainActivity.preferences.setMultiShotMode(preferences_operations_multiShotOptions.isChecked());
+//        MainActivity.preferences.setDepthTracking(preferences_operations_depthTrackingOptions.isChecked());
+//        MainActivity.preferences.setMovementAlarmEnable(preferences_movement_enableOptions.isChecked());
+//        MainActivity.preferences.setMagneticFieldAlarmEnable(preferences_magnetic_enableOptions.isChecked());
+//        MainActivity.preferences.setShowDip(preferences_presentation_showDipOptions.isChecked());
+//        MainActivity.preferences.setShowRoll(preferences_presentation_showRollOptions.isChecked());
+//        MainActivity.preferences.setAudioAlerts(preferences_presentation_audioOptions.isChecked());
+//
+//        MainActivity.preferences.setDip(Double.parseDouble(dipEdit.getText().toString()));
+//        MainActivity.preferences.setRoll(Double.parseDouble(rollEdit.getText().toString()));
+//        MainActivity.preferences.setDepthInterval(Double.parseDouble(depthIntervalEdit.getText().toString()));
+//        MainActivity.preferences.setInitialDepth(Double.parseDouble(initialDepthEdit.getText().toString()));
+//        MainActivity.preferences.setNominalMagnitude(Double.parseDouble(normalMagEdit.getText().toString()));
+//        MainActivity.preferences.setMagneticMaximumDeviation(Double.parseDouble(maxDevEdit.getText().toString()));
+//        MainActivity.preferences.setMovementMaximumDeviation(Double.parseDouble(moveMaxDevEdit.getText().toString()));
+//
+//        Intent intent = new Intent(this, MainActivity.class);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
+//        startActivity(intent);
     }
 }

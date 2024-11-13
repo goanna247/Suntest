@@ -717,7 +717,7 @@ public class TakeMeasurements extends AppCompatActivity {
                                     }
                                 }
 
-                                Log.e(TAG, "Company Name: " + MainActivity.surveys.get(0).getSurveyOptions().getCompanyName());
+//                                Log.e(TAG, "Company Name: " + MainActivity.surveys.get(0).getSurveyOptions().getCompanyName());
                                 if (collect) {
                                     Log.e(TAG, "DATA COLLECTED: " + dataCollected);
                                     if (dataCollected <= 3) {
@@ -1301,21 +1301,21 @@ public class TakeMeasurements extends AppCompatActivity {
         }
             if (resumePosition != 128) {
                 try {
-                    holeID = MainActivity.surveys.get(resumePosition).getSurveyOptions().getHoleID();
-                    operatorName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getOperatorName();
-                    companyName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getCompanyName();
-                    initialDepth = MainActivity.surveys.get(resumePosition).getSurveyOptions().getInitialDepth();
-                    depthInterval = MainActivity.surveys.get(resumePosition).getSurveyOptions().getDepthInterval();
+//                    holeID = MainActivity.surveys.get(resumePosition).getSurveyOptions().getHoleID();
+//                    operatorName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getOperatorName();
+//                    companyName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getCompanyName();
+//                    initialDepth = MainActivity.surveys.get(resumePosition).getSurveyOptions().getInitialDepth();
+//                    depthInterval = MainActivity.surveys.get(resumePosition).getSurveyOptions().getDepthInterval();
                 } catch (Exception e) {
                     Log.e(TAG, "Exception thrown in on create 1: " + e);
                 }
             } else {
                 try {
-                    holeID = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getHoleID();
-                    operatorName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getOperatorName();
-                    companyName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getCompanyName();
-                    initialDepth = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth();
-                    depthInterval = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getDepthInterval();
+//                    holeID = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getHoleID();
+//                    operatorName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getOperatorName();
+//                    companyName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getCompanyName();
+//                    initialDepth = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth();
+//                    depthInterval = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getDepthInterval();
                 } catch (Exception e) {
                     Log.e(TAG, "Exception thrown in on create 2: " + e);
                 }
@@ -1355,21 +1355,21 @@ public class TakeMeasurements extends AppCompatActivity {
 
         if (resumePosition != 128) {
             try {
-                holeID = MainActivity.surveys.get(resumePosition).getSurveyOptions().getHoleID();
-                operatorName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getOperatorName();
-                companyName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getCompanyName();
-                initialDepth = MainActivity.surveys.get(resumePosition).getSurveyOptions().getInitialDepth();
-                depthInterval = MainActivity.surveys.get(resumePosition).getSurveyOptions().getDepthInterval();
+//                holeID = MainActivity.surveys.get(resumePosition).getSurveyOptions().getHoleID();
+//                operatorName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getOperatorName();
+//                companyName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getCompanyName();
+//                initialDepth = MainActivity.surveys.get(resumePosition).getSurveyOptions().getInitialDepth();
+//                depthInterval = MainActivity.surveys.get(resumePosition).getSurveyOptions().getDepthInterval();
             } catch (Exception e) {
                 Log.e(TAG, "Exception thrown in on resume 1: " + e);
             }
         } else {
             try {
-                holeID = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getHoleID();
-                operatorName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getOperatorName();
-                companyName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getCompanyName();
-                initialDepth = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth();
-                depthInterval = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getDepthInterval();
+//                holeID = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getHoleID();
+//                operatorName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getOperatorName();
+//                companyName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getCompanyName();
+//                initialDepth = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth();
+//                depthInterval = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getDepthInterval();
             } catch (Exception e) {
                 Log.e(TAG, "Exception thrown in on resume 2: " + e);
             }
@@ -1675,8 +1675,8 @@ public class TakeMeasurements extends AppCompatActivity {
 //        if (!collectingData) {
             Intent intent = new Intent(this, MainActivity.class);
             Log.d(TAG, "Device name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
-            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+//            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
             startActivity(intent);
 //        }
     }

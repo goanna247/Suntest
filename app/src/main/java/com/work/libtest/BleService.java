@@ -1,3 +1,5 @@
+
+
 package com.work.libtest;
 
 import android.app.Service;
@@ -13,14 +15,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-
-import androidx.core.app.ActivityCompat;
-
 import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 import java.util.ArrayList;
@@ -38,14 +36,14 @@ public class BleService extends Service {
     private final static String TAG = BleService.class.getSimpleName();                             //Service name for logging messages on the ADB
 
     private final static String ACTION_ADAPTER_STATE_CHANGED = "android.bluetooth.adapter.action.STATE_CHANGED";           //Identifier for Intent that announces a change in the state of the Bluetooth radio
-    private final static String EXTRA_ADAPTER_STATE = "android.bluetooth.adapter.extra.STATE";                    //Identifier for Bluetooth connection state attached to state changed Intent
-    public final static String ACTION_BLE_CONNECTED = "com.example.javatest.ACTION_BLE_CONNECTED";         //Identifier for Intent to announce that a BLE device connected
-    public final static String ACTION_BLE_DISCONNECTED = "com.example.javatest.ACTION_BLE_DISCONNECTED";      //Identifier for Intent to announce that a BLE device disconnected
-    public final static String ACTION_BLE_DISCOVERY_DONE = "com.example.javatest.ACTION_BLE_DISCOVERY_DONE";    //Identifier for Intent to announce that service discovery is complete
-    public final static String ACTION_BLE_DISCOVERY_FAILED = "com.example.javatest.ACTION_BLE_DISCOVERY_FAILED";  //Identifier for Intent to announce that service discovery failed to find the service and characteristics
-    public final static String ACTION_BLE_CONFIG_READY = "com.example.javatest.ACTION_BLE_CONFIG_READY"; //Identifier for Intent to announce a new characteristic notification
-    public final static String ACTION_BLE_NEW_DATA_RECEIVED = "com.example.javatest.ACTION_BLE_NEW_DATA_RECEIVED"; //Identifier for Intent to announce a new characteristic notification
-    public final static String ACTION_BLE_FETCH_CAL = "com.example.javatest.ACTION_BLE_FETCH_CAL"; //Identifier for Intent to announce a new characteristic notification
+    private final static String EXTRA_ADAPTER_STATE =          "android.bluetooth.adapter.extra.STATE";                    //Identifier for Bluetooth connection state attached to state changed Intent
+    public final static String ACTION_BLE_CONNECTED =          "com.example.javatest.ACTION_BLE_CONNECTED";         //Identifier for Intent to announce that a BLE device connected
+    public final static String ACTION_BLE_DISCONNECTED =       "com.example.javatest.ACTION_BLE_DISCONNECTED";      //Identifier for Intent to announce that a BLE device disconnected
+    public final static String ACTION_BLE_DISCOVERY_DONE =     "com.example.javatest.ACTION_BLE_DISCOVERY_DONE";    //Identifier for Intent to announce that service discovery is complete
+    public final static String ACTION_BLE_DISCOVERY_FAILED =   "com.example.javatest.ACTION_BLE_DISCOVERY_FAILED";  //Identifier for Intent to announce that service discovery failed to find the service and characteristics
+    public final static String ACTION_BLE_CONFIG_READY =       "com.example.javatest.ACTION_BLE_CONFIG_READY"; //Identifier for Intent to announce a new characteristic notification
+    public final static String ACTION_BLE_NEW_DATA_RECEIVED =  "com.example.javatest.ACTION_BLE_NEW_DATA_RECEIVED"; //Identifier for Intent to announce a new characteristic notification
+    public final static String ACTION_BLE_FETCH_CAL =  "com.example.javatest.ACTION_BLE_FETCH_CAL"; //Identifier for Intent to announce a new characteristic notification
 
     //public final static String ACTION_BLE_CHARACTERISTIC_READ =  "com.example.javatest.ACTION_BLE_CHARACTERISTIC_READ"; //Identifier for Intent to announce a new characteristic notification
 
@@ -55,38 +53,40 @@ public class BleService extends Service {
     //private final static UUID UUID_TRANSPARENT_RECEIVE_CHAR =    UUID.fromString("49535343-1e4d-4bd9-ba61-23c647249616"); //Characteristic for Transparent UART to receive from RN or BM module, properties - notify, write, write no response
 
     // PJH - don't know where this magic number comes from - initially assume it is a generic constant - CORRECT LightBlue lists this value for BoreShot
-    private final static UUID UUID_CCCD = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"); //Descriptor to enable notification for a characteristic
+    private final static UUID UUID_CCCD =                        UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"); //Descriptor to enable notification for a characteristic
 
 
     //
     // BLE API for Borecam, Corecam and Ezy products
     //
-    private final static UUID UUID_CAMERA_SERVICE = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb"); //Private service for Camera
+    private final static UUID UUID_CAMERA_SERVICE =              UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb"); //Private service for Camera
 
-    private final static UUID UUID_DEVICE_ID_CHAR = UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
-    private final static UUID UUID_PROBE_MODE_CHAR = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
-    private final static UUID UUID_SHOT_INTERVAL_CHAR = UUID.fromString("0000fff3-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
-    private final static UUID UUID_RECORD_COUNT_CHAR = UUID.fromString("0000fff4-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
-    private final static UUID UUID_SHOT_REQUEST_CHAR = UUID.fromString("0000fff5-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
-    private final static UUID UUID_SURVEY_MAX_SHOTS_CHAR = UUID.fromString("0000fff6-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_DEVICE_ID_CHAR =              UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_PROBE_MODE_CHAR =             UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_SHOT_INTERVAL_CHAR =          UUID.fromString("0000fff3-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_RECORD_COUNT_CHAR =           UUID.fromString("0000fff4-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_SHOT_REQUEST_CHAR =           UUID.fromString("0000fff5-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_SURVEY_MAX_SHOTS_CHAR =       UUID.fromString("0000fff6-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
     // probe type (0xFFF7) is not used (it always returns 'Borecam')
-    private final static UUID UUID_BORE_SHOT_CHAR = UUID.fromString("0000fff8-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
-    private final static UUID UUID_CORE_SHOT_CHAR = UUID.fromString("0000fff9-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_BORE_SHOT_CHAR =              UUID.fromString("0000fff8-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_CORE_SHOT_CHAR =              UUID.fromString("0000fff9-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
     // there is no 0xFFFA
-    private final static UUID UUID_DEVICE_ADDRESS_CHAR = UUID.fromString("0000fffb-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
-    private final static UUID UUID_MAJOR_VERSION_NUMBER_CHAR = UUID.fromString("0000fffc-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read
-    private final static UUID UUID_MINOR_VERSION_NUMBER_CHAR = UUID.fromString("0000fffd-0000-1000-8000-00805f9b34fb"); //Characteristic for Minor Version Number, properties - read
-    private final static UUID UUID_ROLLING_SHOT_INTERVAL_CHAR = UUID.fromString("0000fffe-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_DEVICE_ADDRESS_CHAR =         UUID.fromString("0000fffb-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_MAJOR_VERSION_NUMBER_CHAR =   UUID.fromString("0000fffc-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read
+    private final static UUID UUID_MINOR_VERSION_NUMBER_CHAR =   UUID.fromString("0000fffd-0000-1000-8000-00805f9b34fb"); //Characteristic for Minor Version Number, properties - read
+    private final static UUID UUID_ROLLING_SHOT_INTERVAL_CHAR =  UUID.fromString("0000fffe-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
     // 0xFFE3 and 0xFFE4 are not used
-    private final static UUID UUID_DEBUG_CHAR = UUID.fromString("0000ffe2-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
-    private final static UUID UUID_PROBE_NAME_CHAR = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
-    private final static UUID UUID_DEBUG2_CHAR = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_DEBUG_CHAR =                  UUID.fromString("0000ffe2-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_PROBE_NAME_CHAR =             UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
+    private final static UUID UUID_DEBUG2_CHAR =                 UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb"); //Characteristic for Major Version Number, properties - read, write
 
 
-    private final static UUID UUID_CALIBRATION_SERVICE = UUID.fromString("0000ff00-0000-1000-8000-00805f9b34fb"); //Private service for Calibration
+    private final static UUID UUID_CALIBRATION_SERVICE =         UUID.fromString("0000ff00-0000-1000-8000-00805f9b34fb"); //Private service for Calibration
 
-    private final static UUID UUID_CALIBRATION_ADDRESS_CHAR = UUID.fromString("0000ff01-0000-1000-8000-00805f9b34fb"); //Characteristic for Calibration Address, properties - write
-    private final static UUID UUID_CALIBRATION_DATA_CHAR = UUID.fromString("0000ff02-0000-1000-8000-00805f9b34fb"); //Characteristic for Calibration Data, properties - read, write
+    private final static UUID UUID_CALIBRATION_ADDRESS_CHAR =    UUID.fromString("0000ff01-0000-1000-8000-00805f9b34fb"); //Characteristic for Calibration Address, properties - write
+    private final static UUID UUID_CALIBRATION_DATA_CHAR =       UUID.fromString("0000ff02-0000-1000-8000-00805f9b34fb"); //Characteristic for Calibration Data, properties - read, write
+
+
 
 
     //private final Queue<byte[]> characteristicWriteQueue = new LinkedList<>();                      //Queue to buffer multiple writes since the radio does one at a time
@@ -110,7 +110,7 @@ public class BleService extends Service {
     private BluetoothGattCharacteristic coreShotCharacteristic = null;                              //Characteristic used to send data from the Android device to the BM7x or RN487x module
 
     private BluetoothGattCharacteristic calibrationAddressCharacteristic = null;                              //Characteristic used to send data from the Android device to the BM7x or RN487x module
-    private BluetoothGattCharacteristic calibrationDataCharacteristic = null;                              //Characteristic used to send data from the Android device to the BM7x or RN487x module
+    private BluetoothGattCharacteristic calibrationDataCharacteristic    = null;                              //Characteristic used to send data from the Android device to the BM7x or RN487x module
 
 
     private ByteArrayOutputStream transparentReceiveOutput = new ByteArrayOutputStream();           //Object to hold incoming bytes from the Transparent UART Receive characteristic until the Main Activity requests them
@@ -136,33 +136,33 @@ public class BleService extends Service {
     // java doesn't have types such as UB16, so store them in a larger signed int
 
     // UB8
-    private int majorVersionNumber = -1;
-    private int minorVersionNumber = -1;
-    private String firmwareVersionString = "vX.XX";
+    private int     majorVersionNumber = -1;
+    private int     minorVersionNumber = -1;
+    private String  firmwareVersionString = "vX.XX";
 
     //private byte[]  probeName = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
     private byte[] probeName = "uninitialised   ".getBytes();
     private String probeNameString = "uninitialised";
 
     // UB8
-    private int shotInterval = -1;
+    private int     shotInterval = -1;
 
-    private int probeMode = -1;
+    private int     probeMode = -1;
 
     //
     // Probe modes
     //
-    final int PROBE_MODE_IDLE = 0;
-    final int PROBE_MODE_SURVEY = 1;
+    final int PROBE_MODE_IDLE          = 0;
+    final int PROBE_MODE_SURVEY        = 1;
     final int PROBE_MODE_ROLLING_SHOTS = 2;
     final int PROBE_MODE_ROLLING_SHOTS_ACC_ONLY = 3;
     final int PROBE_MODE_ROLLING_SHOTS_MAG_ONLY = 4;
 
     // UB16
-    private int rollingShotInterval = -1;
-    private int surveyMaxShots = -1;
-    private int debugValue = -1;
-    private int debug2Value = -1;
+    private int     rollingShotInterval = -1;
+    private int     surveyMaxShots = -1;
+    private int     debugValue = -1;
+    private int     debug2Value = -1;
 
     //////////////////////////////////////////////////////////////////////
     //
@@ -178,19 +178,19 @@ public class BleService extends Service {
 
     private int binCalData_size = 0;  // determine the length of binCalData during parsing
 
-    private String calibratedDateString = "No calibration data";
-    private String modifiedDateString = "No calibration data";
+    private String  calibratedDateString = "No calibration data";
+    private String  modifiedDateString   = "No calibration data";
 
     // calibration coefficients
-    private double acc_A[] = new double[3];    // offsets
+    private double acc_A[]   = new double[3];    // offsets
     private double acc_B[][] = new double[3][3]; // first order terms
-    private double acc_C[] = new double[3];    // cubic terms
+    private double acc_C[]   = new double[3];    // cubic terms
 
-    private double mag_A[] = new double[3];
+    private double mag_A[]   = new double[3];
     private double mag_B[][] = new double[3][3];
-    private double mag_C[] = new double[3];
+    private double mag_C[]   = new double[3];
 
-    private double temp_param[] = new double[2];   // offset, scale
+    private double temp_param[]   = new double[2];   // offset, scale
 
     private double accManualZeroOffset = 0;  // used in zero roll offset feature of corecams to align drill head
     private int offset_of_accManualZeroOffset = 0;  // where accManualZeroOffset is located in the the current cal binary
@@ -201,6 +201,8 @@ public class BleService extends Service {
     // end of calibration variables
     //
     //////////////////////////////////////////////////////////////////////
+
+
 
 
     //
@@ -216,18 +218,18 @@ public class BleService extends Service {
     final private int ringBufferSize = 122;
     private int recNum_RingBuffer[] = new int[ringBufferSize];
 
-    private double acc_X_RingBuffer[] = new double[ringBufferSize];
-    private double acc_Y_RingBuffer[] = new double[ringBufferSize];
-    private double acc_Z_RingBuffer[] = new double[ringBufferSize];
+    private double acc_X_RingBuffer[]   = new double[ringBufferSize];
+    private double acc_Y_RingBuffer[]   = new double[ringBufferSize];
+    private double acc_Z_RingBuffer[]   = new double[ringBufferSize];
 
-    private double mag_X_RingBuffer[] = new double[ringBufferSize];
-    private double mag_Y_RingBuffer[] = new double[ringBufferSize];
-    private double mag_Z_RingBuffer[] = new double[ringBufferSize];
+    private double mag_X_RingBuffer[]   = new double[ringBufferSize];
+    private double mag_Y_RingBuffer[]   = new double[ringBufferSize];
+    private double mag_Z_RingBuffer[]   = new double[ringBufferSize];
 
-    private double roll_RingBuffer[] = new double[ringBufferSize];
-    private double dip_RingBuffer[] = new double[ringBufferSize];
-    private double az_RingBuffer[] = new double[ringBufferSize];
-    private double temp_RingBuffer[] = new double[ringBufferSize];
+    private double roll_RingBuffer[]    = new double[ringBufferSize];
+    private double dip_RingBuffer[]     = new double[ringBufferSize];
+    private double az_RingBuffer[]      = new double[ringBufferSize];
+    private double temp_RingBuffer[]      = new double[ringBufferSize];
 
     private byte latestBoreshot[] = new byte[25];    // PJH - can these be commoned into latestShot?
     private byte latestCoreshot[] = new byte[25];
@@ -249,7 +251,6 @@ public class BleService extends Service {
         RETRIEVE_CAL,        // this also uses the calPageNumber variable
         CONFIG_READY
     }
-
     private statesInterrogateConfig stateInterrogateConfig = statesInterrogateConfig.IDLE;
     private byte calPageNumber[] = new byte[1];
     //byte param[] = new byte[1];   // used to pass calPageNumber to
@@ -263,23 +264,23 @@ public class BleService extends Service {
     //
     // PJH - these conversion routines are a hack, but couldn't find a nice off the shelf solution
     //
-    private int convertUb8ToInt(byte[] b) {
+    private int convertUb8ToInt(byte [] b) {
         int value = 0;
-        value = ((int) b[0]) & 0xFF;
+        value = ((int)b[0]) & 0xFF;
         return (value);
     }
 
     // PJH - have confirmed this endianness is correct (RollingShotInterval is returned as '1000' - 1000ms = 1 sec)
-    private int convertUb16ToInt(byte[] b) {  // little endian
+    private int convertUb16ToInt(byte [] b) {  // little endian
         int value = 0;
-        value = ((((int) b[1]) & 0xFF) << 8) + (((int) b[0]) & 0xFF);
+        value = ((((int)b[1]) & 0xFF)<<8) + (((int)b[0]) & 0xFF);
         return (value);
     }
 
 
+
     // ----------------------------------------------------------------------------------------------------------------
     // Binder to return a reference to this BleService so clients of the service can access it's methods
-
     /******************************************************************************************************************
      * Methods for handling creation and binding of the BleService.
      */
@@ -295,7 +296,8 @@ public class BleService extends Service {
             if (btAdapter == null) {                                                                //Unlikely that there is no Bluetooth radio but best to check anyway
                 Log.e(TAG, "Could not get a BluetoothAdapter on this device");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
         return new LocalBinder();                                                                   //Return Binder object that the binding Activity needs to use the service
@@ -326,7 +328,8 @@ public class BleService extends Service {
             if (btGatt != null) {                                                                   //See if there is an existing Bluetooth connection
                 btGatt.close();                                                                     //Close the connection as the service is ending
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
         super.onDestroy();
@@ -355,7 +358,8 @@ public class BleService extends Service {
                         default:
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
             }
         }
@@ -377,7 +381,7 @@ public class BleService extends Service {
                         case BluetoothProfile.STATE_CONNECTED: {                                    //Are now connected
                             Log.i(TAG, "Connected to BLE device");
                             transparentReceiveOutput.reset();      // PJH REMOVE                                 //Reset (empty) the ByteArrayOutputStream of any data left over from a previous connection
-                            sendBroadcast(new Intent(ACTION_BLE_CONNECTED));                        //Let the BleMainActivity know that we are connected by broadcasting an Intent
+                            sendBroadcast(new Intent(ACTION_BLE_CONNECTED));                        //Let the MainActivity know that we are connected by broadcasting an Intent
                             //descriptorWriteQueue.clear();                                           //Clear write queues in case there was something left in the queue from the previous connection
                             //characteristicWriteQueue.clear();
                             btGatt.discoverServices();                                              //Discover services after successful connection
@@ -385,7 +389,7 @@ public class BleService extends Service {
                         }
                         case BluetoothProfile.STATE_DISCONNECTED: {                                 //Are now disconnected
                             Log.i(TAG, "Disconnected from BLE device");
-                            sendBroadcast(new Intent(ACTION_BLE_DISCONNECTED));                     //Let the BleMainActivity know that we are disconnected by broadcasting an Intent
+                            sendBroadcast(new Intent(ACTION_BLE_DISCONNECTED));                     //Let the MainActivity know that we are disconnected by broadcasting an Intent
                         }
                     }
                 }
@@ -395,7 +399,7 @@ public class BleService extends Service {
                         Log.d(TAG, "Connection attempt failed, trying again");
                     }
                     else if (newState == BluetoothProfile.STATE_DISCONNECTED) {                     //Not trying another connection attempt and are not connected
-                        sendBroadcast(new Intent(ACTION_BLE_DISCONNECTED));                         //Let the BleMainActivity know that we are disconnected by broadcasting an Intent
+                        sendBroadcast(new Intent(ACTION_BLE_DISCONNECTED));                         //Let the MainActivity know that we are disconnected by broadcasting an Intent
                         Log.i(TAG, "Unexpectedly disconnected from BLE device");
                     }
                 }
@@ -1856,7 +1860,7 @@ public class BleService extends Service {
                                             pTmp += 8;
                                         }
                                     }
-                                    p += blk_len;   // advance pointer to next block
+                                    p += blk_len;   // advance pointer to next block                                  
                                 }
                                 else if (hdr_id == 0x03) {    // mag block =============================================
                                     if (blk_len <= 10) {
@@ -2569,5 +2573,14 @@ public class BleService extends Service {
     public void stopRecordingSensorData () {  // or should this be called pause?
         sensorDataRecordingActive = false;
     }
+
+
+
+
+
+
+
+
+
 
 }

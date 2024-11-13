@@ -56,10 +56,10 @@ public class modeSelectionActivity extends AppCompatActivity {
 
     public void onSubmit(View v) {
         if (spinnerModes.getSelectedItem().toString().equals("Core Orientation (Dual)")) {
-            MainActivity.preferences.setMode("Core Orientation (Dual)");
+//            MainActivity.preferences.setMode("Core Orientation (Dual)");
 
         } else if (spinnerModes.getSelectedItem().toString().equals("Bore Orientation (Single)")) {
-            MainActivity.preferences.setMode("Bore Orientation (Single)");
+//            MainActivity.preferences.setMode("Bore Orientation (Single)");
 
         } else {
             Log.d(TAG, "Error, selected item is not an option");

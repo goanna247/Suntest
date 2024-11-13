@@ -23,14 +23,14 @@ public class editMaxMovementDeviationActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
 
         maxDeviation = findViewById(R.id.magneticDeviationEdit);
-        maxDeviation.setText(Double.toString(MainActivity.preferences.getMovementMaximumDeviation()));
+//        maxDeviation.setText(Double.toString(MainActivity.preferences.getMovementMaximumDeviation()));
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     public void movementDeviationSubmit(View v) {
-        MainActivity.preferences.setMovementMaximumDeviation(Double.parseDouble(maxDeviation.getText().toString()));
+//        MainActivity.preferences.setMovementMaximumDeviation(Double.parseDouble(maxDeviation.getText().toString()));
         Intent intent = new Intent(this, PreferencesActivity.class);
         startActivity(intent);
     }

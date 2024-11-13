@@ -23,14 +23,14 @@ public class editMagDeviationActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
 
         magneticDeviation = findViewById(R.id.magneticDeviationEdit);
-        magneticDeviation.setText(Double.toString(MainActivity.preferences.getMagneticMaximumDeviation()));
+//        magneticDeviation.setText(Double.toString(MainActivity.preferences.getMagneticMaximumDeviation()));
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     public void magneticDeviationSubmit(View v) {
-        MainActivity.preferences.setMagneticMaximumDeviation(Double.parseDouble(magneticDeviation.getText().toString()));
+//        MainActivity.preferences.setMagneticMaximumDeviation(Double.parseDouble(magneticDeviation.getText().toString()));
         Intent intent = new Intent(this, PreferencesActivity.class);
         startActivity(intent);
     }
