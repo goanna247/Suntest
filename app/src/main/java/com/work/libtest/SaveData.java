@@ -30,7 +30,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.navigation.ui.AppBarConfiguration;
+//import androidx.navigation.ui.AppBarConfiguration;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -58,7 +58,7 @@ public class SaveData extends AppCompatActivity {
 
     public static final String EXTRA_PARENT_ACTIVITY = "Parent_activity"; //either View or Sensor
 
-    private AppBarConfiguration appBarConfiguration;
+//    private AppBarConfiguration appBarConfiguration;
 
     private Menu menu;
 

@@ -6,7 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
-import androidx.activity.OnBackPressedCallback;
+//import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -33,7 +33,7 @@ public class SurveyOptionsActivity extends AppCompatActivity {
     private String mDeviceAddress;
     private String mDeviceConnectionStatus;
 
-    private OnBackPressedCallback onBackPressedCallback;
+//    private OnBackPressedCallback onBackPressedCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,13 +55,13 @@ public class SurveyOptionsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 //        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        OnBackPressedCallback callback = new OnBackPressedCallback(true /* enabled by default */) {
-            @Override
-            public void handleOnBackPressed() {
-                // Handle the back button event
-                Log.e(TAG, "HELLO WTF");
-            }
-        };
+//        OnBackPressedCallback callback = new OnBackPressedCallback(true /* enabled by default */) {
+//            @Override
+//            public void handleOnBackPressed() {
+//                // Handle the back button event
+//                Log.e(TAG, "HELLO WTF");
+//            }
+//        };
     }
 
     public void surveyOptionsSubmit(View v) {

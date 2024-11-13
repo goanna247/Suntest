@@ -324,13 +324,9 @@ public class BleService extends Service {
         try {
             unregisterReceiver(broadcastReceiver);                                                  //Unregister receiver to handle Intents from the BluetoothAdapter
             if (btGatt != null) {                                                                   //See if there is an existing Bluetooth connection
-                if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    return;
-                }
                 btGatt.close();                                                                     //Close the connection as the service is ending
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
         super.onDestroy();
@@ -359,8 +355,7 @@ public class BleService extends Service {
                         default:
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
             }
         }

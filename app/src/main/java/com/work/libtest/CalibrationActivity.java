@@ -1486,7 +1486,7 @@ import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.work.libtest.databinding.ActivityMainBinding;
+//import com.work.libtest.databinding.ActivityMainBinding;
 
 import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
@@ -1718,9 +1718,9 @@ public class CalibrationActivity extends AppCompatActivity {
                 if (stateApp == StateApp.RUNNING) {
                     stateApp = StateApp.ENABLING_BLUETOOTH;
                     stateConnection = StateConnection.DISCONNECTED;
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) { //not 100% sure this permission check is actually needed
-                        startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQ_CODE_ENABLE_BT);
-                    }
+//                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) { //not 100% sure this permission check is actually needed
+//                        startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQ_CODE_ENABLE_BT);
+//                    }
                     Log.i(TAG, "Requesting user to enable Bluetooth Radio");
                 }
             }
@@ -1986,7 +1986,7 @@ public class CalibrationActivity extends AppCompatActivity {
      */
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Start the BleScanActivity that scans for available Bluetooth devices and lets the user select one
+    // Start the com.work.libtest.BleScanActivity that scans for available Bluetooth devices and lets the user select one
 //    private void startBleScanActivity() {
 //        try {
 //            bleService.invalidateCalibration();  // to force a full connect and reread of the calibration data
@@ -1994,8 +1994,8 @@ public class CalibrationActivity extends AppCompatActivity {
 //                stateConnection = StateConnection.DISCONNECTING;                                    //Are disconnecting prior to doing a scan
 //                haveSuitableProbeConnected = false;
 //                bleService.disconnectBle();                                                         //Disconnect an existing Bluetooth connection or cancel a connection attempt
-//                final Intent bleScanActivityIntent = new Intent(CalibrationActivity.this, BleScanActivity.class); //Create Intent to start the BleScanActivity
-//                startActivityForResult(bleScanActivityIntent, REQ_CODE_SCAN_ACTIVITY);              //Start the BleScanActivity
+//                final Intent bleScanActivityIntent = new Intent(CalibrationActivity.this, com.work.libtest.BleScanActivity.class); //Create Intent to start the com.work.libtest.BleScanActivity
+//                startActivityForResult(bleScanActivityIntent, REQ_CODE_SCAN_ACTIVITY);              //Start the com.work.libtest.BleScanActivity
 //            }
 //        } catch (Exception e) {
 //            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
