@@ -16,20 +16,18 @@ public class Measurement {
     private String date;
     private String time;
     private String temp;
-    private String nanotesla; //wtf is this
     private String depth;
     private String dip;
     private String roll;
     private String azimuth;
 
-    public Measurement(String measurementName, String date, String time, String temp, String nanotesla,
+    public Measurement(String measurementName, String date, String time, String temp,
                        String depth, String dip, String roll, String azimuth) {
         super();
         this.setMeasurementName(measurementName);
         this.setDate(date);
         this.setTime(time);
         this.setTemp(temp);
-        this.setNanotesla(nanotesla);
         this.setDepth(depth);
         this.setDip(dip);
         this.setRoll(roll);
@@ -50,10 +48,6 @@ public class Measurement {
 
     public String getTemp() {
         return temp;
-    }
-
-    public String getNanotesla() {
-        return nanotesla;
     }
 
     public String getDepth() {
@@ -90,10 +84,6 @@ public class Measurement {
 
     public void setDip(String dip) {
         this.dip = dip;
-    }
-
-    public void setNanotesla(String nanotesla) {
-        this.nanotesla = nanotesla;
     }
 
     public void setRoll(String roll) {

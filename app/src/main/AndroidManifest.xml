@@ -4,11 +4,7 @@
     package="com.work.libtest"
     android:versionCode="1"
     android:versionName="1.0">
-    <!-- <uses-feature android:name="android.hardware.bluetooth_le" /> -->
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH" /> -->
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> -->
+
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission
@@ -21,7 +17,6 @@
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
-
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
@@ -42,13 +37,13 @@
             android:name=".CalibrationActivity"
             android:exported="false"
             android:label="@string/title_activity_calibration"
-            android:theme="@style/Theme.AppCompat.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity
             android:name=".ViewMeasurements"
             android:exported="false"
             android:label=""
             android:parentActivityName=".TakeMeasurements"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.TakeMeasurements" />
@@ -58,16 +53,13 @@
             android:exported="false" />
         <activity
             android:name=".PreviousSurvey"
-            android:exported="false" /> <!-- <service -->
-        <!-- android:name=".BluetoothQueueService" -->
-        <!-- android:enabled="true" -->
-        <!-- android:exported="true" /> -->
+            android:exported="false" />
         <activity
             android:name=".SaveData"
             android:exported="false"
             android:label=" "
             android:parentActivityName=".SensorActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.SaveData" />
@@ -77,7 +69,7 @@
             android:exported="false"
             android:label=""
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.MainActivity" />
@@ -87,7 +79,7 @@
             android:exported="false"
             android:label=" "
             android:parentActivityName=".ProbeDetails"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.ProbeDetails" />
@@ -97,7 +89,7 @@
             android:exported="false"
             android:label="Orientation"
             android:parentActivityName=".ProbeDetails"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
             android:name=".ResetSurveyActivity"
             android:exported="false" />
@@ -106,7 +98,7 @@
             android:exported="false"
             android:label=" "
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.MainActivity" />
@@ -127,7 +119,7 @@
             android:name=".InitalisePopupActivity"
             android:label="Initialise Popup Activity"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.MainActivity" />
@@ -136,7 +128,7 @@
             android:name=".Preferences.emailFiles.emailFilesActivity"
             android:label="@string/title_activity_email_files"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
@@ -145,7 +137,7 @@
             android:name=".Preferences.deleteFiles.deleteFilesActivity"
             android:label="@string/title_activity_delete_files"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
@@ -154,12 +146,12 @@
             android:name=".BleScanActivity"
             android:parentActivityName="com.work.libtest.BleScanActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity
             android:name=".Preferences.editRoll.editRollActivity"
             android:label="@string/title_activity_edit_roll"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
@@ -168,7 +160,7 @@
             android:name=".Preferences.editMaxMovementDeviation.editMaxMovementDeviationActivity"
             android:label="@string/title_activity_edit_max_movement_deviation"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
@@ -177,7 +169,7 @@
             android:name=".Preferences.editMagMagnitude.editMagMagnitudeActivity"
             android:label="@string/title_activity_edit_mag_magnitude"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
@@ -186,7 +178,7 @@
             android:name=".Preferences.editMagDeviation.editMagDeviationActivity"
             android:label="@string/title_activity_edit_mag_deviation"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
@@ -195,7 +187,7 @@
             android:name=".Preferences.editInitialDepth.editInitialDepthActivity"
             android:label="Edit"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
@@ -204,7 +196,7 @@
             android:name=".Preferences.editDip.editDipActivity"
             android:label="Edit"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
@@ -213,7 +205,7 @@
             android:name=".Preferences.editDepthInterval.editDepthIntervalActivity"
             android:label="Edit"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
@@ -222,24 +214,17 @@
             android:name=".Preferences.modeSelection.modeSelectionActivity"
             android:label="Selection"
             android:parentActivityName=".Preferences.PreferencesActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
-        </activity> <!-- <activity -->
-        <!-- android:name=".Preferences.PreferencesOperationsMode" -->
-        <!-- android:label="@string/title_activity_preferences_operations_mode" -->
-        <!-- android:parentActivityName=".Preferences.PreferencesActivity" -->
-        <!-- android:theme="@style/AppTheme.NoActionBar"> -->
-        <!-- <meta-data -->
-        <!-- android:name="android.support.PARENT_ACTIVITY" -->
-        <!-- android:value="com.work.libtest.Preferences.PreferencesActivity" /> -->
-        <!-- </activity> -->
+        </activity>
+
         <activity
             android:name=".SurveyOptions.SurveyOptionsActivity"
             android:label="Survey Options"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.MainActivity" />
@@ -248,7 +233,7 @@
             android:name=".SurveyOptions.AllSurveyOptionsActivity"
             android:label="Survey Options"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.MainActivity" />
@@ -257,7 +242,7 @@
             android:name=".Preferences.PreferencesActivity"
             android:label="Preferences"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.MainActivity" />
@@ -266,7 +251,7 @@
             android:name=".About.AboutActivity"
             android:label="About"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.MainActivity" />
@@ -275,7 +260,7 @@
             android:name=".SelectProbe.SelectProbe"
             android:label="Select Probe"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.MainActivity" />
@@ -283,7 +268,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
             <intent-filter>
                 <action
                     android:name="android.intent.action.MAIN"
@@ -297,5 +282,4 @@
             android:label="Device Scan Activity"
             android:theme="@android:style/Theme.Holo.Light" />
     </application>
-
 </manifest>

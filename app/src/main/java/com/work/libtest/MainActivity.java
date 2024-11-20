@@ -1342,8 +1342,6 @@
 //    }
 //}
 
-
-
 package com.work.libtest;
 
 import android.Manifest;
@@ -1375,7 +1373,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ProgressBar;
+//import android.widget.ProgressBar;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Button;
@@ -1391,6 +1391,9 @@ import androidx.core.content.ContextCompat;
 //import com.jjoe64.graphview.series.DataPoint;
 //import com.jjoe64.graphview.series.LineGraphSeries;
 
+import com.work.libtest.Preferences.Preferences;
+import com.work.libtest.SurveyOptions.SurveyOptionsActivity;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -1401,8 +1404,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 //import java.util.List;
 import java.util.Locale;
-//import java.time.Instant;
-//import java.util.Arrays;
 
 /**
  * Activity shows temperature and accelerometer data from the AVR BLE development board (running custom firmware)
@@ -1416,7 +1417,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQ_CODE_ACCESS_LOC2 =   4;                                            //or requesting location access a second time.
     private static final long CONNECT_TIMEOUT =       10000;                                        //Length of time in milliseconds to try to connect to a device
 
-    private ProgressBar progressBar;                                                                //Progress bar (indeterminate circular) to show that activity is busy connecting to BLE device
     private BleService bleService;                                                                  //Service that handles all interaction with the Bluetooth radio and remote device
     private ByteArrayOutputStream transparentUartData = new ByteArrayOutputStream();                //Stores all the incoming byte arrays received from BLE device in bleService
     private ShowAlertDialogs showAlert;                                                             //Object that creates and shows all the alert pop ups used in the app
@@ -1426,97 +1426,22 @@ public class MainActivity extends AppCompatActivity {
     private boolean haveSuitableProbeConnected = false;
 
     private TextView textDeviceNameAndAddress;                                                      //To show device and status information on the screen
-    private TextView textDeviceStatus;                                                      //To show device and status information on the screen
-    private TextView labelFirmwareVersion;
-    private TextView textFirmwareVersion;                                                      //To show device and status information on the screen
-    private TextView labelCalibratedDate;                                                      //To show device and status information on the screen
-    private TextView textCalibratedDate;                                                      //To show device and status information on the screen
-    private Button buttonReconnect;
+    private TextView textDeviceStatus;
+
+    private ImageView blackProbeStatusImg;
+    private LinearLayout WhiteProbeContainer; //the second container for a probe, used if the app is in dual mode
 
     private boolean forceUncalibratedMode = false;  // user can tap CalibrationDate label and disable calibration
 
-    private TextView labelAcc, labelMag, labelAverage;
-    private TextView textAccX, textAccY, textAccZ, textAccMag;
-    private TextView textMagX, textMagY, textMagZ, textMagMag;
-    private TextView labelRoll, labelDip, labelAz;
-    private TextView textRoll, textDip, textAz, textAzErr;
-    private TextView textRoll360;
-    private TextView textTempUc;
-    private TextView labelAveraging;
-    private EditText editBoxAverage;
-    private Button buttonLive, buttonRecord;
-    private Switch switchRecord;
-
-    private TextView labelDebug1, labelDebug2, labelInterval;
-    private EditText editBoxDebug1, editBoxDebug2;
-    private TextView textInterval;
-
-    private TextView labelAcceptDip, labelAcceptAz;
-    private TextView textAlignCount, textAlignAvgDip, textAlignAvgAz, textAlignCountdown;
-    private Button buttonAlignStart, buttonAlignTakeReading, buttonAlignUpdate;
-    private TextView textAcceptLocation, textAcceptComment;
-    private TextView textAcceptDip, textAcceptAz;
-    private Button buttonAcceptStart, buttonAcceptTakeReading;
-    private TextView textAcceptResultAz, textAcceptResultDip;
-
-    // ideal variables for current acceptance test
-    // HACK - to save time, these values are currently hard coded in the app!
-    // (but can be modified for the current session by the align stuff)
-    // BUT  WHEN DOING AN ALIGN, NEED TO MANUALLY RECORD THE RESULTS TO ADD TO THE SOURCE CODE
-    private String acceptLocation = "None";
-    private boolean acceptIdealModified = false;  // to indicate if align has updated these values (they are no longer the normal values
-    private double acceptIdeal50Az = 0;
-    private double acceptIdeal50Dip = 0;
-    private double acceptIdeal60Az = 0;
-    private double acceptIdeal60Dip = 0;
-    private double acceptIdeal30Az = 0;
-    private double acceptIdeal30Dip = 0;
-
-    // Alignment variables
-    private static int alignSamplesPerReading = 5; //10; //5;  // now explicitly set to 10 in AlignStartButton OnClick handler
-    private int alignCount = 0;
-    private double alignDipTotal = 0;
-    private double alignAzTotal = 0;
-
-    private double newAlignReadingDipSum = 0;  // actually sum of all the dip readings
-    private double newAlignReadingAzSum = 0;  // actually sum of all the dip readings
-    private int newAlignCountRemaining = 0;  // when non zero triggers actions in processNewReading
-
-    // acceptance variables
-    private int acceptState = 0;  // 0=idle, 1-12=sample points
-
-    private boolean acceptShowLiveError = false;
-    private double  acceptCurrentLiveDipError = 0;
-    private double  acceptCurrentLiveAzError = 0;
-    private double  acceptCurrentLiveRoll360Error = 0;
-    private static final int acceptAcceptableLiveError = 4;
-
-    private static int acceptSamplesPerReading = 5; //10; //5;   // currenlt overriden by average edit box
-    private double newAcceptReadingDipSum = 0;  // actually sum of all the dip readings
-    private double newAcceptReadingAzSum = 0;  // actually sum of all the az readings
-    private int newAcceptCountRemaining = 0;  // when non zero triggers actions in processNewReading
-
-    private double acceptDip[] = new double[12];
-    private double acceptAz[] = new double[12];
-    private double acceptRoll[] = new double[12];
-    private double acceptRmsDip = 0;
-    private double acceptRmsAz = 0;
-
-    int acceptTestPointDip[]  = { -50, -50, -50, -50, -60, -60, -60, -60, -30, -30, -30, -30 };
-    int acceptTestPointRoll[] = { 355,  80, 170, 260, 355,  80, 170, 260, 355,  80, 170, 260 };
-
     int recordCount = 0;  // number of shots recorded so far
     String recordFilename = "SensorData-Auto-yyyyMMdd-HHmmss.csv";
-
-
-    //private TextView textTemperature, textAccelerometerX, textAccelerometerY, textAccelerometerZ;   //To show the temperature and accelerometer measurements
-    //private SwitchCompat switchGreenLed, switchRedLed;                                              //Switches to control and show LED state
+                                             //Switches to control and show LED state
     private enum StateConnection {DISCONNECTED, CONNECTING, DISCOVERING, CONNECTED, DISCONNECTING}  //States of the Bluetooth connection
     private StateConnection stateConnection;                                                        //State of Bluetooth connection
     private enum StateApp {STARTING_SERVICE, REQUEST_PERMISSION, ENABLING_BLUETOOTH, RUNNING}       //States of the app
-    private StateApp stateApp;                                                                      //State of the app
-    //private LineGraphSeries<DataPoint> accelXSeries, accelYSeries, accelZSeries;                    //Data to plot on the graph
-    //private double accelGraphHorizontalPoint = 0d;                                                  //Current horizontal position to be plotted on the graph
+    private StateApp stateApp;
+
+    public static Preferences preferences = new Preferences();
 
     /******************************************************************************************************************
      * Methods for handling life cycle events of the activity.
@@ -1531,12 +1456,7 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  // PJH - try preventing phone from sleeping
-            setContentView(R.layout.ble_main_screen);                                                   //Show the main screen - may be shown briefly if we immediately start the scan activity
-            Toolbar myToolbar = findViewById(R.id.toolbar);                                             //Get a reference to the Toolbar at the top of the screen
-            setSupportActionBar(myToolbar);                                                             //Treat the toolbar as an Action bar (used for app name, menu, navigation, etc.)
-            progressBar = findViewById(R.id.toolbar_progress_bar);                                      //Get a reference to the progress bar
-            progressBar.setIndeterminate(true);                                                         //Make the progress bar indeterminate (circular)
-            progressBar.setVisibility(ProgressBar.INVISIBLE);                                           //Hide the circular progress bar
+            setContentView(R.layout.activity_main);                                                   //Show the main screen - may be shown briefly if we immediately start the scan activity             //Hide the circular progress bar
             showAlert = new ShowAlertDialogs(this);                                             //Create the object that will show alert dialogs
             Log.i(TAG, "PJH - ========== onCreate ============");    // just as a separator in hte logcat window (to distinguish this run from the previous run)
             stateConnection = StateConnection.DISCONNECTED;                                             //Initial stateConnection when app starts
@@ -1545,7 +1465,6 @@ public class MainActivity extends AppCompatActivity {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) { //Check whether we have location permission, required to scan
                 stateApp = StateApp.REQUEST_PERMISSION;                                                 //Are requesting Location permission
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQ_CODE_ACCESS_LOC1); //Request fine location permission
-                //Log.i(TAG, "PJH - have requested FINE permissions");
             }
             if (stateApp == StateApp.STARTING_SERVICE) {                                                //Only start BleService if we already have location permission
                 Intent bleServiceIntent = new Intent(this, BleService.class);             //Create Intent to start the BleService
@@ -1554,491 +1473,22 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, "PJH - ========== onCreate2 ============");    // just as a separator in hte logcat window (to distinguish this run from the previous run)
             connectTimeoutHandler = new Handler(Looper.getMainLooper());                                //Create a handler for a delayed runnable that will stop the connection attempt after a timeout
 
-            textDeviceNameAndAddress = findViewById(R.id.deviceNameAndAddressText);                     //Get a reference to the TextView that will display the device name and address
-            textDeviceStatus = findViewById(R.id.deviceStatusText);                     //Get a reference to the TextView that will display the device name and address
-            labelFirmwareVersion =  findViewById(R.id.labelFirmware);
-            textFirmwareVersion = findViewById(R.id.firmwareVersionText);                     //Get a reference to the TextView that will display the device name and address
+            textDeviceNameAndAddress = findViewById(R.id.BlackProbeTxt);                     //Get a reference to the TextView that will display the device name and address
+            textDeviceStatus = findViewById(R.id.BlackProbeStatusTxt);                     //Get a reference to the TextView that will display the device name and address
+            blackProbeStatusImg = findViewById(R.id.BlackProbeStatusImg);
+            WhiteProbeContainer = (LinearLayout) findViewById(R.id.WhiteProbeContainer);
 
-            buttonReconnect = (Button) findViewById(R.id.reconnectBtn);
-            buttonReconnect.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    Log.i(TAG, "PJH - processing Reconnect button press");
+//            blackProbeStatusImg.setImageResource(R.drawable.unconnected);
 
-                    if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
-                        // attempt a reconnection
-                        stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-                        connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
-                    }
-                    updateConnectionState();
+            if (MainActivity.preferences.getMode().equals("Core Orientation (Dual)") || MainActivity.preferences.getMode().equals("Dual")) {
+                WhiteProbeContainer.setVisibility(View.VISIBLE);
+            } else if (MainActivity.preferences.getMode().equals("Bore Orientation (Single)") || MainActivity.preferences.getMode().equals("Single")) {
+                WhiteProbeContainer.setVisibility(View.GONE);
+            } else {
+                Log.e(TAG, "Probe mode is invalid?!");
+            }
 
-                    //ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                    //toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-                }
-            });
-
-            textCalibratedDate = findViewById(R.id.calibratedDateText);                     //Get a reference to the TextView that will display the device name and address
-            labelCalibratedDate = findViewById(R.id.labelCalibratedDate);                     //Get a reference to the TextView that will display the device name and address
-            labelCalibratedDate.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    Log.i(TAG, "PJH - processing CalibrationDate label tap");
-                    if (textCalibratedDate.getText() == "DISABLED"){
-                        String java_date = bleService.getCalibratedDateString();
-                        textCalibratedDate.setText(java_date);
-                        bleService.enableCalibration();
-                    }
-                    else {
-                        // probe is idle, so start rolling shots
-                        textCalibratedDate.setText("DISABLED");
-                        bleService.disableCalibration();
-                    }
-                    //ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                    //toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-                }
-            });
-
-            editBoxDebug1 = findViewById(R.id.debug1TextNumber);
-            editBoxDebug1.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                @Override
-                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        //String text = v.getText().toString();
-                        editBoxDebug1.setText("yah");
-                        //Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
-                        return true;
-                    }
-                    return false;
-                }
-            });
-
-            labelDebug1 = findViewById(R.id.labelDebug1);                     //Get a reference to the TextView that will display the device name and address
-            labelDebug1.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    Log.i(TAG, "PJH - processing Debug1 label tap");
-                    // request current value from probe
-                }
-            });
-
-            editBoxDebug2 = findViewById(R.id.debug2TextNumber);
-            labelDebug2 = findViewById(R.id.labelDebug2);                     //Get a reference to the TextView that will display the device name and address
-            labelDebug2.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    Log.i(TAG, "PJH - processing Debug2 label tap");
-                    // request current value from probe
-                }
-            });
-
-            textInterval = findViewById(R.id.intervalText);
-            labelInterval = findViewById(R.id.labelInterval);                     //Get a reference to the TextView that will display the device name and address
-            labelInterval.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    Log.i(TAG, "PJH - processing Interval label tap");
-                    // request current value from probe
-                }
-            });
-
-            textAccX = findViewById(R.id.accXText);
-            textAccY = findViewById(R.id.accYText);
-            textAccZ = findViewById(R.id.accZText);
-            textAccMag = findViewById(R.id.accMagText);
-
-            textMagX = findViewById(R.id.magXText);
-            textMagY = findViewById(R.id.magYText);
-            textMagZ = findViewById(R.id.magZText);
-            textMagMag = findViewById(R.id.magMagText);
-
-            textRoll = findViewById(R.id.rollText);
-            textDip = findViewById(R.id.dipText);
-            textAz = findViewById(R.id.azText);
-            textAzErr = findViewById(R.id.azErrText);
-            textRoll360 = findViewById(R.id.roll360Text);
-            textTempUc = findViewById(R.id.tempUcText);
-
-            buttonLive = (Button) findViewById(R.id.liveBtn);
-            buttonLive.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click - start rolling shots
-                    Log.i(TAG, "PJH - processing Live Data button press");
-                    if (buttonLive.getText() == "PAUSE"){
-                        // rolling shots is running, so stop it
-                        buttonLive.setText("LIVE DATA");
-                        bleService.setProbeIdle();
-                    }
-                    else {
-                        // probe is idle, so start rolling shots
-                        buttonLive.setText("PAUSE");
-                        bleService.setProbeMode(2); //PROBE_MODE_ROLLING_SHOTS);
-                    }
-                    //ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                    //toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-                }
-            });
-//            buttonLive.setOnLongClickListener(new View.OnLongClickListener() {
-//                public boolean onLongClick(View v) {
-//                    // for a long press, start rolling shots acc only
-//                    Log.i(TAG, "PJH - processing Live button long press");
-//
-//                    if (buttonLive.getText() == "PAUSE"){
-//                        // rolling shots is running, so stop it
-//                        buttonLive.setText("LIVE DATA");
-//                        bleService.setProbeIdle();
-//                    }
-//                    else {
-//                        // probe is idle, so start rolling shots acc only
-//                        buttonLive.setText("PAUSE");
-//                        bleService.setProbeMode(3); //PROBE_MODE_ROLLING_SHOTS_ACC_ONLY);
-//                    }
-//
-//                    return true;
-//                }
-//            });
-//
-            switchRecord = (Switch) findViewById(R.id.recordSwitch);
-            switchRecord.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    Log.i(TAG, "PJH - processing Record enable switch press");
-
-                    if (switchRecord.isChecked()) {
-                        bleService.enableRecordingSensorData();
-                    }
-                    else
-                    {
-                        bleService.disableRecordingSensorData();
-                    }
-                }
-            });
-
-            buttonRecord = (Button) findViewById(R.id.recordBtn);
-            buttonRecord.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    Log.i(TAG, "PJH - processing Record button press");
-
-                    if (switchRecord.isChecked() && (recordCount <= 0)) {  // was && (recordCount < 0)
-                        // start a new recording
-                        bleService.initRecordingSensorData();
-                        bleService.startRecordingSensorData();
-                        recordCount = bleService.getSensorDataCount();  // should be 0
-                        buttonRecord.setText(String.format("Save: %d", recordCount));
-                    }
-                    else {
-                        // save whatever data has been recorded so far
-                        String nowDate = new SimpleDateFormat("yyyyMMdd-hhmmss", Locale.getDefault()).format(new Date());
-                        //String safeBleDeviceAddress = bleDeviceAddress.replace(':','-');
-                        String safeBleDeviceName = bleDeviceName.replace(':','-');
-                        String filename = String.format("SensorData-%s-%s.csv", safeBleDeviceName, nowDate);
-                        Log.i(TAG, String.format("PJH - SensorData filename: %s", filename));
-                        //writeSensorDataToFile(getExternalFilesDir("/").getAbsolutePath() + "/"+filename);
-                        //String csvBody = "";
-                        recordCount = bleService.getSensorDataCount();
-                        if (recordCount > 0) {
-
-
-                            Log.i(TAG, "PJH - about to save");
-                            buttonRecord.setText("Saving data");
-                            bleService.stopRecordingSensorData();
-                            //recordCount = bleService.getSensorDataCount();
-
-                            writeSensorDataToFile(getExternalFilesDir("/").getAbsolutePath() + "/"+filename);
-
-                            ////Log.i(TAG, String.format("PJH - about to save %d sensorData records", recordCount);
-                            //Log.i(TAG, "PJH - about to get header");
-                            //String header = bleService.sensorDataReportGetReportHeader();
-                            //csvBody += header+"\n";
-                            //String record;
-                            //for (int i=0; i<recordCount; i++) {
-                            //    record = bleService.sensorDataReportGetReportLine(i);
-                            //    csvBody += record+"\n";
-                            //}
-
-                            //FileOutputStream stream = new FileOutputStream(file);
-                            //stream.write(csvBody.getBytes());
-                            //stream.close();
-
-                            // have finished saving data, so reset button back to 'Record'
-                            bleService.initRecordingSensorData();
-                            buttonRecord.setText("Record");
-                        }
-                        else {
-                            bleService.initRecordingSensorData();
-                            recordCount = bleService.getSensorDataCount();
-
-                            buttonRecord.setText("Record");
-                        }
-                    }
-                }
-            });
-            buttonRecord.setOnLongClickListener(new View.OnLongClickListener() {
-                public boolean onLongClick(View v) {
-                    // abort the current recording
-                    Log.i(TAG, "PJH - processing Record button long press");
-
-                    // start a new recording
-                    bleService.initRecordingSensorData();
-                    recordCount = bleService.getSensorDataCount();
-
-                    buttonRecord.setText("Record");
-
-                    return true;
-                }
-            });
-
-            editBoxAverage = findViewById(R.id.averageTextNumber);
-
-            //
-            // align and accept
-            //
-            labelAcceptDip =  findViewById(R.id.labelAcceptDip);
-            labelAcceptAz =  findViewById(R.id.labelAcceptAz);
-            textAcceptResultAz =  findViewById(R.id.acceptResultAzText);
-            textAcceptResultDip =  findViewById(R.id.acceptResultDipText);
-
-            textAlignCount = findViewById(R.id.alignCountText);
-            textAlignAvgDip = findViewById(R.id.alignAvgDipText);
-            textAlignAvgAz = findViewById(R.id.alignAvgAzText);
-            textAlignCountdown = findViewById(R.id.alignCountdownText);
-
-            textAcceptLocation = findViewById(R.id.acceptLocationText);
-            textAcceptLocation.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    Log.i(TAG, "PJH - processing Align Location change");
-                    if (acceptLocation == "None") {
-                        acceptLocation = "Wilson";
-                        acceptIdealModified = false;  // to indicate if align has updated these values (they are no longer the normal values
-                        acceptIdeal50Az  = 283.476; //283.195; // 20220727 from 284.145;
-                        acceptIdeal50Dip = -53.1416; //-53.212;
-                        acceptIdeal60Az  = 352.35; //352.225; // 20220727 from 352.354;
-                        acceptIdeal60Dip = -59.789; //-59.719;
-                        acceptIdeal30Az  =  59.428; // 20220727 at midnight // 20220727 noon from 59.870; // 20220727 from 58.111;
-                        acceptIdeal30Dip = -28.212; //-28.326;
-                    }
-                    else if (acceptLocation == "Wilson") {
-                        acceptLocation = "Orange Grove";
-                        acceptIdealModified = false;  // to indicate if align has updated these values (they are no longer the normal values
-                        acceptIdeal50Az  = 297.78;
-                        acceptIdeal50Dip = -49.55;
-                        acceptIdeal60Az  = 359.75; // avg of 20 samples, as -60 tray moved
-                        acceptIdeal60Dip = -59.75;
-                        acceptIdeal30Az  = 69.49;
-                        acceptIdeal30Dip = -29.05;
-                    }
-                    else if (acceptLocation == "Orange Grove") {
-                        acceptLocation = "Orange Grove (classic)";
-                        acceptIdealModified = false;  // to indicate if align has updated these values (they are no longer the normal values
-                        acceptIdeal50Az  = 297.78;
-                        acceptIdeal50Dip = -49.55;
-                        acceptIdeal60Az  = 358.95;
-                        acceptIdeal60Dip = -61.09;
-                        acceptIdeal30Az  = 69.49;
-                        acceptIdeal30Dip = -29.05;   // as at 2021-08-05
-                    }
-                    else {
-                        acceptLocation = "None";
-                        acceptIdealModified = false;  // to indicate if align has updated these values (they are no longer the normal values
-                        acceptIdeal50Az  = 0;
-                        acceptIdeal50Dip = 0;
-                        acceptIdeal60Az  = 0;
-                        acceptIdeal60Dip = 0;
-                        acceptIdeal30Az  = 0;
-                        acceptIdeal30Dip = 0;
-                    }
-                    textAcceptLocation.setText(acceptLocation);
-                    textAcceptLocation.setTextColor(Color.BLACK);   // these values have not been modified
-
-                    ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-                }
-            });
-
-
-            textAcceptComment = findViewById(R.id.acceptCommentText);
-            textAcceptDip = findViewById(R.id.acceptDipText);
-            textAcceptAz = findViewById(R.id.acceptAzText);
-
-            buttonAlignStart = (Button) findViewById(R.id.alignStartBtn);
-            buttonAlignStart.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    initAlign(v, 5);  // was 10
-                }
-            });
-            buttonAlignStart.setOnLongClickListener(new View.OnLongClickListener() {
-                public boolean onLongClick(View v) {
-                    initAlign(v, 2);  // hack in measurement size of 240 for stability tests - was 240
-
-                    return true;
-                }
-            });
-
-            buttonAlignTakeReading = (Button) findViewById(R.id.alignTakeReadingBtn);
-            buttonAlignTakeReading.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    if (haveSuitableProbeConnected) {
-                        Log.i(TAG, "PJH - processing Align Take Reading button press");
-                        newAlignReadingDipSum = 0;
-                        newAlignReadingAzSum = 0;
-                        //alignSamplesPerReading = toInteger(editBoxAverage.getText().toString());
-                        newAlignCountRemaining = alignSamplesPerReading;  // nominally 10
-                        if (switchRecord.isChecked()) {  // do we have a race condition here (may miss first sample?)
-                            // tell bleService to record the next 'newAlignCountRemaining' shots
-                            bleService.startRecordingSensorData();
-                            // will be stopped in processNewReading, when last shot processed
-                        }
-                        textAlignCountdown.setText(String.format("(%d)",newAlignCountRemaining));
-                        // wait for 20 readings to be received
-                        //if (buttonLive.getText() == "PAUSE"){
-                        //    // rolling shots is running, so stop it
-                        //    buttonLive.setText("LIVE DATA");
-                        //    bleService.setProbeIdle();
-                        //}
-                        //else {
-                        //    // probe is idle, so start rolling shots
-                        //    buttonLive.setText("PAUSE");
-                        //    bleService.startRollingShots();
-                        //}
-                        //ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                        //toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-                    }
-                }
-            });
-
-            buttonAlignUpdate = (Button) findViewById(R.id.alignUpdateBtn);
-            buttonAlignUpdate.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-
-
-                    if (haveSuitableProbeConnected) {
-                        Log.i(TAG, "PJH - processing Align Update button press");
-
-                        double dip = (alignDipTotal / alignCount);
-                        double az  = (alignAzTotal / alignCount);
-
-                        if (Math.abs(dip+60) < 5) {
-                            // we are updating the -60 setting
-                            Log.i(TAG, "PJH - Updating accept values for dip of -60");
-                            acceptIdeal60Dip = dip;
-                            acceptIdeal60Az = az;
-                            // and change color to indicate updated parameters
-                            textAcceptLocation.setTextColor(Color.RED);
-                        }
-                        else if (Math.abs(dip+50) < 5) {
-                            // we are updating the -50 setting
-                            Log.i(TAG, "PJH - Updating accept values for dip of -50");
-                            acceptIdeal50Dip = dip;
-                            acceptIdeal50Az = az;
-                            // and change color to indicate updated parameters
-                            textAcceptLocation.setTextColor(Color.RED);
-                        }
-                        else if (Math.abs(dip+30) < 5) {
-                            // we are updating the -30 setting
-                            Log.i(TAG, "PJH - Updating accept values for dip of -30");
-                            acceptIdeal30Dip = dip;
-                            acceptIdeal30Az = az;
-                            // and change color to indicate updated parameters
-                            textAcceptLocation.setTextColor(Color.RED);
-                        }
-                        else {
-                            Log.i(TAG, "PJH - ERROR - unknown align dip");
-                        }
-
-                        ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                        toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-                    }
-                }
-            });
-
-            buttonAcceptStart = (Button) findViewById(R.id.acceptStartBtn);
-            buttonAcceptStart.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    if ((haveSuitableProbeConnected) && (alignCount==0)) {
-                        Log.i(TAG, "PJH - processing Accept Start button press");
-
-                        if (acceptLocation == "None") {
-                            // show error dialog
-                            showAlert.showAcceptLocationErrorDialog(MainActivity.this);
-                        }
-                        else {
-
-                            if (buttonAcceptStart.getText() == "START") {
-                                // PJH TODO - need to stop LIVE DATA or accept
-                                acceptState = 1;
-                                //textAcceptComment.setText("1of12 Place probe in '-50' tray, adjust roll to 355 degrees, step back and press 'Take Reading'");
-                                textAcceptComment.setText(String.format("%dof12 Place probe in '%d' tray, adjust roll to %d degrees, step back and press 'Take Reading'",
-                                        acceptState, acceptTestPointDip[acceptState - 1], acceptTestPointRoll[acceptState - 1]));
-
-                                textRoll.setVisibility(View.INVISIBLE);   // hide live roll (-180..180) as Accept uses 0..360
-                                acceptShowLiveError = true;
-
-                                if (switchRecord.isChecked()) {
-                                    // sensor data recording is enabled
-                                    bleService.initRecordingSensorData();
-                                }
-
-                                buttonAcceptStart.setText("ABORT");
-                                bleService.setProbeMode(2); //PROBE_MODE_ROLLING_SHOTS);  TODO - this is wrong for codecam
-                            } else {    // must be abort
-                                // probe is idle, so start rolling shots
-                                buttonAcceptStart.setText("START");
-                                textAcceptComment.setText("Select Location and press Start\n(in -50 tray, at 0 roll, az should be 283.26)");
-
-                                acceptShowLiveError = false;  // turn off error display and make sure everything back to normal
-                                textDip.setTextColor(Color.BLACK);
-                                textRoll360.setTextColor(Color.BLACK);
-                                textRoll.setVisibility(View.VISIBLE);
-
-                                bleService.setProbeIdle();
-                                acceptState = 0;
-                            }
-                        }
-                    }
-                }
-            });
-
-            buttonAcceptTakeReading = (Button) findViewById(R.id.acceptTakeReadingBtn);
-            buttonAcceptTakeReading.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    // Do something in response to button click
-                    if (haveSuitableProbeConnected) {
-                        Log.i(TAG, "PJH - processing Accept Take Reading button press");
-
-                        if (acceptState > 0) {
-                            if ( (acceptCurrentLiveDipError>=acceptAcceptableLiveError) ||  (acceptCurrentLiveRoll360Error>=acceptAcceptableLiveError) ) {
-                                // display error popup (probe not in the required position)
-                                showAlert.showAcceptPositionErrorDialog(MainActivity.this);
-                            }
-                            else {
-                                Log.i(TAG, "PJH - accept - starting a new reading");
-                                if (acceptState > 0) {
-                                    newAcceptReadingDipSum = 0;   // reset the averaging totals for the new reading
-                                    newAcceptReadingAzSum = 0;
-                                    //acceptSamplesPerReading = toInteger(editBoxAverage.getText().toString());
-                                    newAcceptCountRemaining = acceptSamplesPerReading;  // start taking the new reading (in ProcessNewReading)
-                                    textAlignCountdown.setText(String.format("(%d)", newAcceptCountRemaining));  // and show the countdown display
-
-                                    if (switchRecord.isChecked()) {  // do we have a race condition here (may miss first sample?)
-                                        // tell bleService to record the next 'newAlignCountRemaining' shots
-                                        bleService.startRecordingSensorData();
-                                        // will be stopped in processNewReading, when last shot processed
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-
-            initializeDisplay();  // PJH - MIGHT GET SOME FLASH OF INITIAL DATA - TODO remove from layout file
-
+            initializeDisplay();
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
@@ -2353,6 +1803,7 @@ public class MainActivity extends AppCompatActivity {
                     initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
                     transparentUartData.reset();   // PJH remove                                                 //Also clear any buffered incoming data
                     stateConnection = StateConnection.DISCOVERING;                                  //BleService automatically starts service discovery after connecting
+                    blackProbeStatusImg.setImageResource(R.drawable.ready);
                     updateConnectionState();                                                        //Update the screen and menus
                     break;
                 }
@@ -2360,15 +1811,8 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Received Intent ACTION_BLE_DISCONNECTED");
                     initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
                     transparentUartData.reset();                                                    //Also clear any buffered incoming data
-                    //if (stateConnection == StateConnection.CONNECTED) {                             //See if we were connected before
-                    //    showAlert.showLostConnectionDialog(new Runnable() {                         //Show the AlertDialog for a lost connection
-                    //        @Override
-                    //        public void run() {                                                     //Runnable to execute if OK button pressed
-                    //            startBleScanActivity();                                             //Launch the BleScanActivity to scan for BLE devices
-                    //        }
-                    //    });
-                    //}
-                    stateConnection = StateConnection.DISCONNECTED;                                 //Are disconnected
+                    stateConnection = StateConnection.DISCONNECTED;
+                    blackProbeStatusImg.setImageResource(R.drawable.unconnected);
 
                     // but we want to reconnect automatically - TODO add retry counter then give up
                     if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
@@ -2383,6 +1827,7 @@ public class MainActivity extends AppCompatActivity {
                 case BleService.ACTION_BLE_DISCOVERY_DONE: {                                        //Have completed service discovery
                     Log.d(TAG, "PJH - Received Intent  ACTION_BLE_DISCOVERY_DONE");
                     connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
+                    blackProbeStatusImg.setImageResource(R.drawable.calibrating);
                     stateConnection = StateConnection.CONNECTED;                                    //Were already connected but showing discovering, not connected
                     updateConnectionState();                                                        //Update the screen and menus
                     Log.i(TAG, "PJH - about to request Ezy config");
@@ -2391,6 +1836,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 case BleService.ACTION_BLE_DISCOVERY_FAILED: {                                      //Service discovery failed to find the right service and characteristics
                     Log.d(TAG, "Received Intent  ACTION_BLE_DISCOVERY_FAILED");
+                    blackProbeStatusImg.setImageResource(R.drawable.unconnected);
                     stateConnection = StateConnection.DISCONNECTING;                                //Were already connected but showing discovering, so are now disconnecting
                     connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
                     bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
@@ -2405,82 +1851,24 @@ public class MainActivity extends AppCompatActivity {
                 }
                 case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
                     Log.d(TAG, "Received Intent  ACTION_BLE_CONFIG_READY");
-                    progressBar.setVisibility(ProgressBar.INVISIBLE);
-                    //initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
-                    //transparentUartData.reset();                                                    //Also clear any buffered incoming data
-// PJH - ideally, want to change the state to READY, to tell app the probe is ready to go
-// but concerned that changing from CONNECTED will break other stuff
-// MAYBE use another flag
-                    //stateConnection = StateConnection.READY;  remains as CONNECTED                                //BleService automatically starts service discovery after connecting
-                    //updateConnectionState();                                                        //Update the screen and menus
+                    textDeviceStatus.setText(R.string.ready);
+                    blackProbeStatusImg.setImageResource(R.drawable.ready);
 
-                    //String verString = String.format("%d", bleService.getRollingShotInterval());
-                    String verString = bleService.getFirmwareVersionString();
-                    textDeviceStatus.setText(R.string.ready);  // PJH - hack - shouldn't be here!
-                    labelFirmwareVersion.setVisibility(View.VISIBLE);
-                    textFirmwareVersion.setText(verString);
-                    textFirmwareVersion.setVisibility(View.VISIBLE);
-/*
-                    byte[] binaryCalData = bleService.getBinaryCalData();
-                    // we know this is only the first 16 bytes
-                    // PJH - HACK to get out first date
-                    int len = binaryCalData[5];
-                    if ((len == 4) || (len==8)) {
-                        long unix_tick = 0;
-                        //for (byte b : bytes) {
-                        for (int i=(6+len-1); i>=6; i--) {
-                            unix_tick = (unix_tick << 8) + (binaryCalData[i] & 0xFF);
-                        }
-
-                        Date date = new Date(unix_tick*1000L);
-                        SimpleDateFormat jdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-                        jdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
-                        String java_date = jdf.format(date);
-
- */
                     bleService.parseBinaryCalibration();   // process thr calibration data just retrieved
-// PJH - HACK HACK HACK   - BEWARE BLE has no queueing yet!!!!
                     bleService.setNotifications(true);   // PJH - HACK - find place where this write doesn't kill something else
-                    // this seems to be working, but it REALLY needs to be incorporated into the config state machine PJH IMPORTANT
-                    // (and duplicate for coreshot)
-                    String java_date = bleService.getCalibratedDateString();
-                    labelCalibratedDate.setVisibility(View.VISIBLE);
-                    textCalibratedDate.setText(java_date);
-                    textCalibratedDate.setVisibility(View.VISIBLE);
-                    //}
-
-                    int probeShotInterval = bleService.getShotInterval();
-                    textInterval.setText(Integer.toString(probeShotInterval));
-                    int probeDebug1 = bleService.getDebug1();
-                    editBoxDebug1.setText(Integer.toString(probeDebug1));
-                    int probeDebug2 = bleService.getDebug2();
-                    editBoxDebug1.setText(Integer.toString(probeDebug2));
-
                     haveSuitableProbeConnected = true;   // this enables the test stuff
-                    // PJH - TODO - need to invalidate this if there is any problems encountered
-                    // (initially just set it false when scan is run)
                     break;
                 }
                 case BleService.ACTION_BLE_FETCH_CAL: {                                        //Have completed service discovery
-                    Log.d(TAG, "PJH - Received Intent  ACTION_BLE_FETCH_CAL");
-                    // PJH - HACK - should be in updateConnectionState
+                    Log.d(TAG, "Received Intent  ACTION_BLE_FETCH_CAL");
                     textDeviceStatus.setText("Fetching calibration");                            //Show "Discovering"
-                    progressBar.setVisibility(ProgressBar.VISIBLE);
+                    blackProbeStatusImg.setImageResource(R.drawable.calibrating);
                     break;
                 }
                 case BleService.ACTION_BLE_NEW_DATA_RECEIVED: {                                     //Have received data (characteristic notification) from BLE device
-                    Log.i(TAG, "PJH - Received Intent ACTION_BLE_NEW_DATA_RECEIVED");
-                    //    final byte[] newBytes = bleService.readFromTransparentUART();
-                    //    processIncomingData(newBytes);
-                    processNewReading();
+                    Log.i(TAG, "Received Intent ACTION_BLE_NEW_DATA_RECEIVED");
                     break;
                 }
-                //case BleService.ACTION_BLE_CHARACTERISTIC_READ: {                                     //Have received data (characteristic notification) from BLE device
-                //    Log.d(TAG, "Received Intent ACTION_BLE_CHARACTERISTIC_READ");
-                //    final byte[] newBytes = bleService.getCharacteristicReadResults();
-                //    processCharacteristicRead(newBytes);
-                //    break;
-                //}
                 default: {
                     Log.w(TAG, "Received Intent with invalid action: " + action);
                 }
@@ -2495,46 +1883,6 @@ public class MainActivity extends AppCompatActivity {
     private void initializeDisplay() {
         try {
             textDeviceStatus.setText("Not Connected");  // PJH - hack - shouldn't be here!
-            labelFirmwareVersion.setVisibility(View.INVISIBLE);
-            textFirmwareVersion.setText("");
-            textFirmwareVersion.setVisibility(View.INVISIBLE);
-
-            labelCalibratedDate.setVisibility(View.INVISIBLE);
-            textCalibratedDate.setText("");
-            textCalibratedDate.setVisibility(View.INVISIBLE);
-
-            // PJH - not sure if setting to a null string will fully overwrite any existing numbers
-            textAccX.setText("");
-            textAccY.setText("");
-            textAccZ.setText("");
-            textAccMag.setText("");
-
-            textMagX.setText("");
-            textMagY.setText("");
-            textMagZ.setText("");
-            textMagMag.setText("");
-
-            textRoll.setText("");
-            textRoll360.setText("");
-            textDip.setText("");
-            textAz.setText("");
-            textAzErr.setText("");
-
-
-            textAlignCount.setText("0");
-            textAlignAvgDip.setText("");
-            textAlignAvgAz.setText("");
-
-            textAcceptComment.setText("Select Location and press Start\n(in -50 tray, at 0 roll, az should be 283.26)");
-            textAcceptDip.setText("");
-            textAcceptAz.setText("");
-
-            buttonAlignStart.setText("START");  // was having issues with first click not working
-            buttonAcceptStart.setText("START");
-
-            textAcceptResultAz.setText("");
-            textAcceptResultDip.setText("");
-
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
@@ -2553,419 +1901,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return null;
     }
-
-
-    // a new shot has been received, so retrieve and display it
-    private void processNewReading() {
-        try {
-            int count = toInteger(editBoxAverage.getText().toString());
-            if (count < 1) {
-                count = 1;
-                editBoxAverage.setText(Integer.toString(count));  // only update if it is invalid
-            }
-            if (count > 120) {   // this value is set by ringBufferSize in bleService
-                count = 120;
-                editBoxAverage.setText(Integer.toString(count));  // only update if it is invalid
-            }
-
-            //textFirmwareVersion.setText(Integer.toString(count));  // hack
-            double newVal[] = bleService.getLatestBoreshot(count);
-
-            recordCount = bleService.getSensorDataCount();
-            if (bleService.isRecordingSensorDataEnabled() && (recordCount > 0)) {
-                buttonRecord.setText(String.format("Save: %d", recordCount));
-            }
-
-
-            textAccX.setText(String.format("%7.4f", newVal[1]));
-            textAccY.setText(String.format("%7.4f", newVal[2]));
-            textAccZ.setText(String.format("%7.4f", newVal[3]));
-            boolean accValid = true;
-            double accMag = Math.sqrt(newVal[1]*newVal[1] + newVal[2]*newVal[2] + newVal[3]*newVal[3]);
-            if (Math.abs(accMag-1.0)>0.03) { accValid = false; }
-            textAccMag.setText(String.format("(%7.4f)", accMag));
-            if (accValid) {
-                textAccMag.setTextColor(Color.BLACK);
-            }
-            else {
-                textAccMag.setTextColor(Color.RED);
-            }
-
-            double magMag = Math.sqrt(newVal[4]*newVal[4] + newVal[5]*newVal[5] + newVal[6]*newVal[6]);
-
-            //
-            textMagX.setText(String.format("%7.4f", newVal[4]));
-            textMagY.setText(String.format("%7.4f", newVal[5]));
-            textMagZ.setText(String.format("%7.4f", newVal[6]));
-
-            textMagMag.setText(String.format("(%7.4f)", magMag));
-
-            textRoll.setText(String.format("%7.4f", newVal[7]));
-            textRoll360.setText(String.format("(%7.4f)", newVal[7]+180));
-            textDip.setText(String.format("%7.4f", newVal[8]));
-            textAz.setText(String.format("%7.4f", newVal[9]));
-            textAzErr.setText("");  // just in case we are out of accept mode - will this flicker?
-
-            textTempUc.setText(String.format("%7.4f", newVal[10]));
-
-            //
-            // Check if taking reading for alignment
-            //
-            if (newAlignCountRemaining > 0) {
-                //Log.i(TAG, String.format("PJH - align sample %d (remaining)", newAlignCountRemaining));
-                newAlignReadingDipSum += newVal[8];
-                newAlignReadingAzSum += newVal[9];
-                newAlignCountRemaining -= 1;
-                textAlignCountdown.setText(String.format("(%d)",newAlignCountRemaining));
-
-                if (newAlignCountRemaining == 0) {
-                    // ok, we just took te last sample for this reading
-                    if (switchRecord.isChecked()) {  // do we have a race condition here
-                        // we have recorded the last of the shots
-                        bleService.stopRecordingSensorData();
-                    }
-
-                    // now update the totals
-                    alignDipTotal += newAlignReadingDipSum;
-                    alignAzTotal  += newAlignReadingAzSum;
-                    alignCount += 1;
-                    // and update the display
-                    textAlignCount.setText(String.format("%d", alignCount));
-                    textAlignAvgDip.setText(String.format("%7.4f", (alignDipTotal / alignCount / alignSamplesPerReading)));
-                    textAlignAvgAz.setText(String.format("%7.4f", (alignAzTotal / alignCount / alignSamplesPerReading)));
-
-                    ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);   // beep
-                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-
-                    textAlignCountdown.setText("");
-                }
-            }
-
-            if (acceptShowLiveError) {
-                acceptCurrentLiveDipError = Math.abs(newVal[8] - acceptTestPointDip[acceptState - 1]);
-                acceptCurrentLiveRoll360Error = Math.abs(newVal[7] + 180 - acceptTestPointRoll[acceptState - 1]);
-                //textFirmwareVersion.setText(String.format("Acc DipErr=%3.2f RollErr=%3.2f", acceptCurrentLiveDipError, acceptCurrentLiveRoll360Error));// PJH TODO DEBUG HACK
-                double azIdeal = 0;
-                if ((acceptState >= 1) && (acceptState <=4)) { azIdeal = acceptIdeal50Az; }
-                if ((acceptState >= 5) && (acceptState <=8)) { azIdeal = acceptIdeal60Az; }
-                if ((acceptState >= 9) && (acceptState <=12)) { azIdeal = acceptIdeal30Az; }
-                acceptCurrentLiveAzError = Math.abs(newVal[9] - azIdeal);
-
-
-
-                // if current dip is more than 4 degrees from the desired position, show live dip in red
-                if (acceptCurrentLiveDipError < acceptAcceptableLiveError) {
-                    textDip.setTextColor(Color.BLACK);
-                } else {
-                    textDip.setTextColor(Color.RED);
-                }
-                // if current roll is more than 4 degrees from the desired position, show live roll360 in red
-                if (acceptCurrentLiveRoll360Error < 4) {
-                    textRoll360.setTextColor(Color.BLACK);
-                } else {
-                    textRoll360.setTextColor(Color.RED);
-                }
-
-                textAzErr.setText(String.format("(err:%7.4f)", acceptCurrentLiveAzError));
-            }
-            else {
-                // this should never be required, but just in case...
-                acceptCurrentLiveDipError = 0;
-                acceptCurrentLiveRoll360Error = 0;
-                acceptCurrentLiveAzError = 0;
-            }
-
-            //
-            // Check if taking reading for acceptance test
-            //
-            if (newAcceptCountRemaining > 0) {
-                //Log.i(TAG, String.format("PJH - accept sample %d (remaining)", newAcceptCountRemaining));
-                newAcceptReadingDipSum += newVal[8];
-                newAcceptReadingAzSum += newVal[9];
-                newAcceptCountRemaining -= 1;
-                textAlignCountdown.setText(String.format("(%d)",newAcceptCountRemaining));  // yes, I know it is in the wrong area
-
-                if (acceptState > 0) {
-                    textAcceptResultAz.setText("");
-                    textAcceptResultDip.setText("");
-                }
-
-                if (newAcceptCountRemaining == 0) {
-                    // ok, we just took te last sample for this reading
-
-                    if (switchRecord.isChecked()) {  // do we have a race condition here
-                        // we have recorded the last of the shots
-                        bleService.stopRecordingSensorData();
-                    }
-
-                    if ((acceptState>0) && (acceptState<=12)) {
-                        acceptDip[acceptState-1]  = newAcceptReadingDipSum / acceptSamplesPerReading;
-                        acceptAz[acceptState-1]   = newAcceptReadingAzSum  / acceptSamplesPerReading;
-                        acceptRoll[acceptState-1] = newVal[7];
-                        acceptState += 1;
-                    }
-                    // now update the totals
-                    //alignDipTotal += newAlignReadingDipSum;
-                    //alignAzTotal  += newAlignReadingAzSum;
-                    //alignCount += 1;
-                    // and update the display
-                    //textAlignCount.setText(String.format("%d", alignCount));
-                    textAcceptDip.setText(String.format("%7.4f", (newAcceptReadingDipSum / acceptSamplesPerReading)));
-                    textAcceptAz.setText(String.format("%7.4f", (newAcceptReadingAzSum  / acceptSamplesPerReading)));
-
-                    if (acceptState >= 13) {
-                        // Ok, have taken all 12 readings
-                        textAcceptComment.setText(String.format("Test complete"));
-                        buttonAcceptStart.setText("START");
-
-                        acceptShowLiveError = false;  // turn off error display and make sure everything back to normal
-                        textDip.setTextColor(Color.BLACK);
-                        textRoll360.setTextColor(Color.BLACK);
-                        textRoll.setVisibility(View.VISIBLE);
-
-                        bleService.setProbeIdle();
-                        // now generate results file
-                        String nowDate = new SimpleDateFormat("yyyy-MM-dd_hh-mm", Locale.getDefault()).format(new Date());
-                        String safeBleDeviceAddress = bleDeviceAddress.replace(':','-');
-                        String safeBleDeviceName = bleDeviceName.replace(':','-');
-                        String filename = String.format("AcceptTest_%s_%s_%s.csv", nowDate, safeBleDeviceAddress, safeBleDeviceName);
-                        Log.i(TAG, String.format("PJH - Accept filename: %s", filename));
-                        writeAcceptReadingsToFile(getExternalFilesDir("/").getAbsolutePath() + "/"+filename);
-                        // and do calculations
-                        double sqAzDeltaSum = 0;
-                        double sqDipDeltaSum = 0;
-                        double err = 0;
-                        for (int i=0; i<4; i++) {
-                            err = acceptAz[i]-acceptIdeal50Az;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqAzDeltaSum += (err * err );
-
-                            //sqDipDeltaSum += ((acceptDip[i]-acceptIdeal50Dip) * (acceptDip[i]-acceptIdeal50Dip) );
-                            err = acceptDip[i]-acceptIdeal50Dip;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqDipDeltaSum += (err * err );
-
-                        }
-                        for (int i=4; i<8; i++) {
-                            //sqAzDeltaSum += ((acceptAz[i]-acceptIdeal60Az) * (acceptAz[i]-acceptIdeal60Az) );
-                            err = acceptAz[i]-acceptIdeal60Az;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqAzDeltaSum += (err * err );
-
-                            //sqDipDeltaSum += ((acceptDip[i]-acceptIdeal60Dip) * (acceptDip[i]-acceptIdeal60Dip) );
-                            err = acceptDip[i]-acceptIdeal60Dip;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqDipDeltaSum += (err * err );
-
-                        }
-                        for (int i=8; i<12; i++) {
-                            //sqAzDeltaSum += ((acceptAz[i]-acceptIdeal30Az) * (acceptAz[i]-acceptIdeal30Az) );
-                            err = acceptAz[i]-acceptIdeal30Az;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqAzDeltaSum += (err * err );
-
-                            //sqDipDeltaSum += ((acceptDip[i]-acceptIdeal30Dip) * (acceptDip[i]-acceptIdeal30Dip) );
-                            err = acceptDip[i]-acceptIdeal30Dip;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqDipDeltaSum += (err * err );
-
-                        }
-                        acceptRmsAz = Math.sqrt(sqAzDeltaSum/12);
-                        acceptRmsDip = Math.sqrt(sqDipDeltaSum/12);
-
-                        textAcceptResultAz.setText(String.format("%5.3f", acceptRmsAz));     // show the result (summary) of the test
-                        textAcceptResultDip.setText(String.format("%5.3f", acceptRmsDip));
-                        textAcceptComment.setText(String.format("Test complete\nPress Start to begin a new test."));
-                        acceptState = 0;
-                    }
-                    else {
-                        // more readings to take...
-                        textAcceptComment.setText(String.format("%dof12 Place probe in '%d' tray, adjust roll to %d degrees, step back and press 'Take Reading'",
-                                acceptState, acceptTestPointDip[acceptState - 1], acceptTestPointRoll[acceptState - 1]));
-                    }
-
-                    ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-
-                    textAlignCountdown.setText("");   // hide the countdown
-
-                }
-            }
-
-        } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
-        }
-    }
-
-
-    public void writeAcceptReadingsToFile(final String filename) {
-        File file = new File(filename);
-        try {
-
-            // generate the original acceptance report
-            String csvBody = "";
-            csvBody += "Reading,Roll,Dip,Azimuth\n";
-            for (int i = 0; i < 12; i++) {
-                csvBody += String.format("%d,%f,%f,%f\n", i + 1, acceptRoll[i], acceptDip[i], acceptAz[i]);
-            }
-            csvBody += "\n\n\n";
-
-            csvBody += String.format("Location, %s\n\n", acceptLocation);
-
-            csvBody += String.format("Tray, IdealDip, IdealAzimuth\n");
-            csvBody += String.format("-60, %f, %f\n", acceptIdeal60Dip, acceptIdeal60Az);
-            csvBody += String.format("-50, %f, %f\n", acceptIdeal50Dip, acceptIdeal50Az);
-            csvBody += String.format("-30, %f, %f\n", acceptIdeal30Dip, acceptIdeal30Az);
-            csvBody += "\n\n\n";
-
-            FileOutputStream stream = new FileOutputStream(file);
-            stream.write(csvBody.getBytes());
-            stream.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-
-    public void writeSensorDataToFile(final String filename) {
-        File file = new File(filename);
-        try {
-            // generate the original SensorData report
-            String csvBody = "";
-
-            Log.i(TAG, "PJH - about to save");
-            //buttonRecord.setText("Saving data");
-            //bleService.stopRecordingSensorData();
-            recordCount = bleService.getSensorDataCount();
-
-            //Log.i(TAG, String.format("PJH - about to save %d sensorData records", recordCount);
-            Log.i(TAG, "PJH - about to get header");
-            String header = bleService.sensorDataReportGetReportHeader();
-            csvBody += header+"\n";
-
-            String record;
-            for (int i=0; i<recordCount; i++) {
-                record = bleService.sensorDataReportGetReportLine(i);
-                csvBody += record+"\n";
-            }
-
-
-            FileOutputStream stream = new FileOutputStream(file);
-            stream.write(csvBody.getBytes());
-            stream.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-
-
-    private void processIncomingData(byte[] newBytes) {
-        try {
-            /*
-            transparentUartData.write(newBytes);                                                    //Add new data to any previous bytes left over
-            boolean search = (transparentUartData.size() >= 8);                                     //Need at least 8 bytes for a complete message
-            while (search) {                                                                        //Keep searching until the code has worked through all the bytes
-                final byte[] allBytes = transparentUartData.toByteArray();                          //Put all the bytes into a byte array
-                search = false;                                                                     //Assume there is no termination byte, and update to repeat the search if we find one
-                for (int i = 0; i < allBytes.length; i++) {                                         //Loop through all the bytes
-                    if (allBytes[i] == (byte)']') {                                                 // to look for termination byte
-                        byte[] newLine = Arrays.copyOf(allBytes, i);                                //Get all the bytes up to the termination byte
-                        byte[] leftOver = Arrays.copyOfRange(allBytes, i + 1, allBytes.length); //Get all the remaining bytes after the termination byte
-                        transparentUartData.reset();                                                //Clear out the original data
-                        transparentUartData.write(leftOver);                                        // and save the remaining bytes for later
-                        final String newLineStr = new String(newLine, StandardCharsets.UTF_8);      //Create a string from the bytes up to the termination byte
-                        int ledIndex = newLineStr.indexOf("L02");                                   //Search for the text for the LED state
-                        int tempIndex = newLineStr.indexOf("T04");                                  //Search for the text for the temperature reading
-                        int accelIndex = newLineStr.indexOf("X0C");                                 //Search for the text for the accelerometer readings
-                        //Got LED packet
-                        if (ledIndex != -1) {                                                       //See if the LED text was found
-                            if (newLineStr.charAt(ledIndex + 3) == '0') {                           //See if the status is for the green LED (LED0)
-                                if (newLineStr.charAt(ledIndex + 4) == '0' && switchGreenLed.isChecked()) { //See if the LED is off and should be on
-                                    bleService.writeToTransparentUART("[0L0201]".getBytes());       //Write command to the Transparent UART to light the green LED (LED0)
-                                }
-                                else if (newLineStr.charAt(ledIndex + 4) == '1' && !switchGreenLed.isChecked()) { //See if the LED is on and should be off
-                                    bleService.writeToTransparentUART("[0L0200]".getBytes());       //Write command to the Transparent UART to turn off the green LED (LED0)
-                                }
-                            }
-                            else if (newLineStr.charAt(ledIndex + 3) == '1') {                      //See if the status is for the red LED (LED1)
-                                if (newLineStr.charAt(ledIndex + 4) == '0' && switchRedLed.isChecked()) { //See if the LED is off and should be on
-                                    bleService.writeToTransparentUART("[0L0211]".getBytes());       //Write command to the Transparent UART to light the red LED (LED1)
-                                }
-                                else if (newLineStr.charAt(ledIndex + 4) == '1' && !switchRedLed.isChecked()) { //See if the LED is on and should be off
-                                    bleService.writeToTransparentUART("[0L0210]".getBytes());       //Write command to the Transparent UART to turn off the red LED (LED1)
-                                }
-                            }
-                        }
-                        //Got temperature packet
-                        if (tempIndex != -1) {                                                      //See if the temperature text was found
-                            int rawTemp = (Character.digit(newLineStr.charAt(tempIndex + 5), 16) << 12) //Pull out the ascii characters for the temperature reading
-                                    + (Character.digit(newLineStr.charAt(tempIndex + 6), 16) << 8)
-                                    + (Character.digit(newLineStr.charAt(tempIndex + 3), 16) << 4)
-                                    + Character.digit(newLineStr.charAt(tempIndex + 4), 16);
-                            double temperature = (rawTemp > 32767) ? ((double)(rawTemp - 65536)) / 16 : ((double)(rawTemp)) / 16; //Convert unsigned left shifted to signed
-                            textTemperature.setText(String.format("%s%s", temperature, getString(R.string.degrees_celcius)));     //Display the temperature on the screen
-                        }
-                        //Got accelerometer packet
-                        if (accelIndex != -1) {                                                     //See if the accelerometer text was found
-                            int rawX = (Character.digit(newLineStr.charAt(accelIndex + 5), 16) << 12) //Pull out the ascii characters for the accelerometer X readings
-                                    + (Character.digit(newLineStr.charAt(accelIndex + 6), 16) << 8)
-                                    + (Character.digit(newLineStr.charAt(accelIndex + 3), 16) << 4)
-                                    + Character.digit(newLineStr.charAt(accelIndex + 4), 16);
-                            int accelX = (rawX > 2047) ? (rawX - 4096) : rawX;                      //Convert unsigned 12-bit to signed
-                            int rawY = (Character.digit(newLineStr.charAt(accelIndex + 9), 16) << 12) //Pull out the ascii characters for the accelerometer Y readings
-                                    + (Character.digit(newLineStr.charAt(accelIndex + 10), 16) << 8)
-                                    + (Character.digit(newLineStr.charAt(accelIndex + 7), 16) << 4)
-                                    + Character.digit(newLineStr.charAt(accelIndex + 8), 16);
-                            int accelY = (rawY > 2047) ? (rawY - 4096) : rawY;                      //Convert unsigned 12-bit to signed
-                            int rawZ = (Character.digit(newLineStr.charAt(accelIndex + 13), 16) << 12) //Pull out the ascii characters for the accelerometer Z readings
-                                    + (Character.digit(newLineStr.charAt(accelIndex + 14), 16) << 8)
-                                    + (Character.digit(newLineStr.charAt(accelIndex + 11), 16) << 4)
-                                    + Character.digit(newLineStr.charAt(accelIndex + 12), 16);
-                            int accelZ = (rawZ > 2047) ? (rawZ - 4096) : rawZ;                      //Convert unsigned 12-bit to signed
-                            textAccelerometerX.setText(String.format("%s%d", getString(R.string.accelerometer_x), accelX));        //Display the accelerometer X readings
-                            textAccelerometerY.setText(String.format("%s%d", getString(R.string.accelerometer_y), accelY));        //Display the accelerometer Y readings
-                            textAccelerometerZ.setText(String.format("%s%d", getString(R.string.accelerometer_z), accelZ));        //Display the accelerometer Z readings
-                            accelXSeries.appendData(new DataPoint(accelGraphHorizontalPoint, accelX), true, 100); //Update the graph with the new accelerometer readings
-                            accelYSeries.appendData(new DataPoint(accelGraphHorizontalPoint, accelY), true, 100);
-                            accelZSeries.appendData(new DataPoint(accelGraphHorizontalPoint, accelZ), true, 100);
-                            accelGraphHorizontalPoint += 1d;                                        //Increment the index for the next point on the horizontal axis of the graph
-                        }
-                        search = true;                                                              //Found a termination byte during this search so repeat the search to see if there are any more
-                        break;
-                    }
-                }
-
-
-            }
-        */
-        } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
-        }
-    }
-
-/*
-    private void processCharacteristicRead(byte[] newBytes) {
-        try {
-
-        } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
-        }
-    }
- */
-
-
-
 
     /******************************************************************************************************************
      * Methods for scanning, connecting, and showing event driven dialogs
@@ -3036,38 +1971,25 @@ public class MainActivity extends AppCompatActivity {
                 switch (stateConnection) {
                     case CONNECTING: {
                         textDeviceStatus.setText(R.string.waiting_to_connect);                             //Show "Connecting"
-                        progressBar.setVisibility(ProgressBar.VISIBLE);                             //Show the circular progress bar
+                        blackProbeStatusImg.setImageResource(R.drawable.disconnecting);
                         break;
                     }
                     case CONNECTED: {
                         textDeviceStatus.setText(R.string.interrogating_configuration);
-                        //if (bleDeviceName != null) {                                                //See if there is a device name
-                        //    textDeviceNameAndAddress.setText(bleDeviceName);                        //Display the name
-                        //} else {
-                        //    textDeviceNameAndAddress.setText(R.string.unknown_device);                     //or display "Unknown Device"
-                        //}
-                        //if (bleDeviceAddress != null) {                                             //See if there is an address
-                        //    textDeviceNameAndAddress.append(" - " + bleDeviceAddress);              //Display the address
-                        //}
-                        progressBar.setVisibility(ProgressBar.INVISIBLE);                           //Hide the circular progress bar
                         break;
                     }
                     case DISCOVERING: {
-                        //textDeviceStatus.setText(R.string.discovering);                            //Show "Discovering"
                         textDeviceStatus.setText(R.string.interrogating_features);                            //Show "Discovering"
-                        progressBar.setVisibility(ProgressBar.VISIBLE);                             //Show the circular progress bar
                         break;
                     }
                     case DISCONNECTING: {
                         textDeviceStatus.setText(R.string.disconnecting);                          //Show "Disconnectiong"
-                        progressBar.setVisibility(ProgressBar.INVISIBLE);                           //Hide the circular progress bar
                         break;
                     }
                     case DISCONNECTED:
                     default: {
                         stateConnection = StateConnection.DISCONNECTED;                             //Default, in case state is unknown
                         textDeviceStatus.setText(R.string.not_connected);                          //Show "Not Connected"
-                        progressBar.setVisibility(ProgressBar.INVISIBLE);                           //Hide the circular progress bar
                         break;
                     }
                 }
@@ -3076,39 +1998,46 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
-    // alignInit is called when Align Start button is pressed,
-    // so it also has to handle the alternate abort functionality
-    private void initAlign(View v, int count) {
-        if ((haveSuitableProbeConnected) && (acceptState == 0)) {
-            Log.i(TAG, "PJH - processing Align Start Data button press");
-            if (buttonAlignStart.getText() == "START"){
-                // PJH TODO - need to stop LIVE DATA or accept
-                alignCount = 0;
-                alignDipTotal = 0;
-                alignAzTotal = 0;
-                textAlignCount.setText("0");
-                textAlignAvgDip.setText("0");
-                textAlignAvgAz.setText("0");
-
-                alignSamplesPerReading = count;
-
-                buttonAlignStart.setText("ABORT");
-                bleService.setProbeMode(2); //PROBE_MODE_ROLLING_SHOTS);  // TODO - this is wrong for corecam
-
-                if (switchRecord.isChecked()) {
-                    // sensor data recording is enabled
-                    bleService.initRecordingSensorData();
-                }
-            }
-            else {    // must be abort
-                buttonAlignStart.setText("START");
-                bleService.setProbeIdle();
-                textAlignCountdown.setText("");
-            }
-            //ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-            //toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
+    /********************************************************************************
+     * On Screen button methods
+     */
+    public void blackProbeSelect(View v) {
+        //Check if device is connected before allowing user to see data from the probe
+        if (bleDeviceName != null && haveSuitableProbeConnected) { //TODO @ANNA - add something here that says the probe has to be calibrated before we can move on
+            Intent intent = new Intent(this, ProbeDetails.class);
+            intent.putExtra(ProbeDetails.EXTRA_DEVICE_NAME, bleDeviceName);
+            intent.putExtra(ProbeDetails.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+            intent.putExtra(ProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableProbeConnected);
+            startActivity(intent);
+        } else {
+            //TODO make a popup that says device not connected cannot get data
         }
+    }
 
+    public void BlackProbeBtnClick(View v) {
+        if (haveSuitableProbeConnected) {
+            Intent intent = new Intent(this, InitalisePopupActivity.class);
+            Log.d(TAG, "Device Name: " + bleDeviceName + ", Device Address: " + bleDeviceAddress);
+            intent.putExtra(InitalisePopupActivity.EXTRA_DEVICE_NAME, bleDeviceName);
+            intent.putExtra(InitalisePopupActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+            startActivity(intent);
+        } else {
+            Log.e(TAG, "Probe is disconnected");
+        }
+    }
+
+    public void holeIDBtnClick(View v) {
+        Intent intent = new Intent(this, SurveyOptionsActivity.class);
+        intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_NAME, bleDeviceName);
+        intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+        startActivity(intent);
+    }
+
+    public void operatorIDBtnClick(View v) {
+        Intent intent = new Intent(this, SurveyOptionsActivity.class);
+        intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_NAME, bleDeviceName);
+        intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+        intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_CONNECTION, haveSuitableProbeConnected);
+        startActivity(intent);
     }
 }

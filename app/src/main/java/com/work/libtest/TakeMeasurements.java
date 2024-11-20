@@ -1,66 +1,61 @@
 package com.work.libtest;
 
-import static com.work.libtest.Operation.OPERATION_NOTIFY;
-import static com.work.libtest.Operation.OPERATION_READ;
-import static com.work.libtest.Operation.OPERATION_WRITE;
-
+import android.Manifest;
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
+import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
+
 
 public class TakeMeasurements extends AppCompatActivity {
     public static String TAG = "Take Measurements";
     public Menu menu;
 
     public static int shotWriteType = 00;
-
-    private final String LIST_NAME = "NAME";
-    private final String LIST_UUID = "UUID";
-
-    private String mDeviceName;
-    private String mDeviceAddress;
-    private String mConnectionStatus;
-    private String mPrevDepth;
-    private String mNextDepth;
 
     public static final String EXTRA_DEVICE_NAME = "Device_name";
     public static final String EXTRA_DEVICE_ADDRESS = "Device_address";
@@ -69,15 +64,7 @@ public class TakeMeasurements extends AppCompatActivity {
     public static final String EXTRA_PREV_DEPTH = "prev depth";
     public static final String EXTRA_NEXT_DEPTH = "next depth";
 
-    int resumePosition = 128; //error code
-
-    private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics = new ArrayList<>();
-    private boolean mConnected = true;
-    private BluetoothGattCharacteristic mNotifyCharacteristic;
-    private Handler handler;
-
-    private BluetoothLeService mBluetoothLeService;
-    private BluetoothGatt mBluetoothGatt;
+    int resumePosition = 128; //error code - NEEDED BY OTHER ACTIVITIES
 
     //probe info
     private TextView connectionStatus;
@@ -86,18 +73,6 @@ public class TakeMeasurements extends AppCompatActivity {
     private ImageView collectionNumImg;
 
     private ConstraintLayout loadingSection;
-
-    private int probeNumber;
-    private int shotFormat = 4;
-    private int recordNumber = 0; //TODO probably not needed here
-    private double roll = 0;
-    private double dip = 0;
-    private double azimuth = 0;
-    private double accX = 0;
-    private double accY = 0;
-    private double accZ = 0;
-    private double accTemp = 0;
-    private final double accMagError = 0;
 
     private double shotInterval = 0; //TODO
 
@@ -161,6 +136,7 @@ public class TakeMeasurements extends AppCompatActivity {
     String highByte, lowByte;
     boolean hold = false;
     int numSaved = 0;
+    private ShowAlertDialogs showAlert;
 
     private Button directionButton;
     private Button takeMeasurement;
@@ -168,6 +144,8 @@ public class TakeMeasurements extends AppCompatActivity {
     private TextView nextDepth;
 //    private CheckBox exportAllData;
     private Button withdrawButton;
+    private TextView connectionStatusText;
+    private ImageView connectionStatusImage;
 
     private Button setProbeOn;
 
@@ -187,1931 +165,1357 @@ public class TakeMeasurements extends AppCompatActivity {
     boolean returning = false;
     boolean viewMeasurements = false;
 
-    private long startTime = 0; //for timer
+    long startTime = 0;
+
+    double elapsedTime; //a long may work better for these data points
+    double elapsedSeconds;
+    double secondsDisplay;
+    double elapsedMinutes;
+
+//    private long startTime = 0; //for timer
     public int seconds;
     private int starttime = 0;
 
+    private static final int REQ_CODE_ENABLE_BT =     1;                                            //Codes to identify activities that return results such as enabling Bluetooth
+    private static final int REQ_CODE_SCAN_ACTIVITY = 2;                                            //or scanning for bluetooth devices
+    private static final int REQ_CODE_ACCESS_LOC1 =   3;                                            //or requesting location access.
+    private static final int REQ_CODE_ACCESS_LOC2 =   4;                                            //or requesting location access a second time.
+    private static final long CONNECT_TIMEOUT =       10000;
+
+    private enum StateConnection {DISCONNECTED, CONNECTING, DISCOVERING, CONNECTED, DISCONNECTING}
+    private StateConnection stateConnection;
+    private enum StateApp {STARTING_SERVICE, REQUEST_PERMISSION, ENABLING_BLUETOOTH, RUNNING}
+    private StateApp stateApp;
+
+    private BleService bleService;
+
+    private TextView labelAcc, labelMag, labelAverage;
+    private TextView textAccX, textAccY, textAccZ, textAccMag;
+    private TextView textMagX, textMagY, textMagZ, textMagMag;
+    private TextView labelRoll, labelDip, labelAz;
+    private TextView textRoll, textDip, textAz, textAzErr;
+    private TextView textRoll360;
+    private TextView textTempUc;
+    private TextView labelAveraging;
+    private EditText editBoxAverage;
+    private Button buttonLive, buttonRecord;
+    private Switch switchRecord;
+    private Handler connectTimeoutHandler;
+    private String bleDeviceName, bleDeviceAddress;
+
+    private ProgressBar progressBar;                                                                //Progress bar (indeterminate circular) to show that activity is busy connecting to BLE device
+                                                           //Service that handles all interaction with the Bluetooth radio and remote device
+    private ByteArrayOutputStream transparentUartData = new ByteArrayOutputStream();                //Stores all the incoming byte arrays received from BLE device in bleService
+
+    private boolean haveSuitableProbeConnected = false;
+
+    private TextView textDeviceNameAndAddress;                                                      //To show device and status information on the screen
+    private TextView textDeviceStatus;                                                      //To show device and status information on the screen
+    private TextView labelFirmwareVersion;
+    private TextView textFirmwareVersion;                                                      //To show device and status information on the screen
+    private TextView labelCalibratedDate;                                                      //To show device and status information on the screen
+    private TextView textCalibratedDate;                                                      //To show device and status information on the screen
+    private Button buttonReconnect;
+
+    private boolean forceUncalibratedMode = false;  // user can tap CalibrationDate label and disable calibration
+
+
+    private TextView labelDebug1, labelDebug2, labelInterval;
+    private EditText editBoxDebug1, editBoxDebug2;
+    private TextView textInterval;
+
+    private TextView labelAcceptDip, labelAcceptAz;
+    private TextView textAlignCount, textAlignAvgDip, textAlignAvgAz, textAlignCountdown;
+    private Button buttonAlignStart, buttonAlignTakeReading, buttonAlignUpdate;
+    private TextView textAcceptLocation, textAcceptComment;
+    private TextView textAcceptDip, textAcceptAz;
+    private Button buttonAcceptStart, buttonAcceptTakeReading;
+    private TextView textAcceptResultAz, textAcceptResultDip;
+
+    // ideal variables for current acceptance test
+    // HACK - to save time, these values are currently hard coded in the app!
+    // (but can be modified for the current session by the align stuff)
+    // BUT  WHEN DOING AN ALIGN, NEED TO MANUALLY RECORD THE RESULTS TO ADD TO THE SOURCE CODE
+    private String acceptLocation = "None";
+    private boolean acceptIdealModified = false;  // to indicate if align has updated these values (they are no longer the normal values
+    private double acceptIdeal50Az = 0;
+    private double acceptIdeal50Dip = 0;
+    private double acceptIdeal60Az = 0;
+    private double acceptIdeal60Dip = 0;
+    private double acceptIdeal30Az = 0;
+    private double acceptIdeal30Dip = 0;
+
+    // Alignment variables
+    private static int alignSamplesPerReading = 5; //10; //5;  // now explicitly set to 10 in AlignStartButton OnClick handler
+    private int alignCount = 0;
+    private double alignDipTotal = 0;
+    private double alignAzTotal = 0;
+
+    private double newAlignReadingDipSum = 0;  // actually sum of all the dip readings
+    private double newAlignReadingAzSum = 0;  // actually sum of all the dip readings
+    private int newAlignCountRemaining = 0;  // when non zero triggers actions in processNewReading
+
+    // acceptance variables
+    private int acceptState = 0;  // 0=idle, 1-12=sample points
+
+    private boolean acceptShowLiveError = false;
+    private double  acceptCurrentLiveDipError = 0;
+    private double  acceptCurrentLiveAzError = 0;
+    private double  acceptCurrentLiveRoll360Error = 0;
+    private static final int acceptAcceptableLiveError = 4;
+
+    private static int acceptSamplesPerReading = 5; //10; //5;   // currenlt overriden by average edit box
+    private double newAcceptReadingDipSum = 0;  // actually sum of all the dip readings
+    private double newAcceptReadingAzSum = 0;  // actually sum of all the az readings
+    private int newAcceptCountRemaining = 0;  // when non zero triggers actions in processNewReading
+
+    private double acceptDip[] = new double[12];
+    private double acceptAz[] = new double[12];
+    private double acceptRoll[] = new double[12];
+    private double acceptRmsDip = 0;
+    private double acceptRmsAz = 0;
+
+    int acceptTestPointDip[]  = { -50, -50, -50, -50, -60, -60, -60, -60, -30, -30, -30, -30 };
+    int acceptTestPointRoll[] = { 355,  80, 170, 260, 355,  80, 170, 260, 355,  80, 170, 260 };
 
-    private interface MessageConstants {
-        int MESSAGE_READ = 0;
-        int MESSAGE_WRITE = 1;
-        int MESSAGE_TOAST = 2;
-    }
+    int recordCount = 0;  // number of shots recorded so far
+    String recordFilename = "SensorData-Auto-yyyyMMdd-HHmmss.csv";
 
-    //TIMER NOT WORKING
-    Handler timerHandler = new Handler();
-    Runnable timerRunnable = new Runnable() {
-        @Override
-        public void run() {
-            long millis = System.currentTimeMillis() - startTime;
-            seconds = (int) (millis / 1000);
 
-            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (!mBluetoothAdapter.isEnabled()) {
-                updateConnectionState("Disconnected");
-            }
+    /******************************************************************************************************************
+     * Methods for handling life cycle events of the activity.
+     */
 
-            if (connectionStatus.equals("Disconnected")) {
-                updateConnectionState("Disconnected");
-            }
-
-            /**
-             * @ITEM - Loading Bar
-             * Creates a timer bar to show loading status
-             */
-            if (collectingData && (seconds - starttime <= 15)) {
-                int timePassed = seconds - starttime;
-                switch (timePassed) {
-                    case 0:
-                        collectionNumImg.setImageResource(R.drawable.s0);
-                        break;
-                    case 1:
-                        collectionNumImg.setImageResource(R.drawable.s1);
-                        break;
-                    case 2:
-                        collectionNumImg.setImageResource(R.drawable.s2);
-                        break;
-                    case 3:
-                        collectionNumImg.setImageResource(R.drawable.s3);
-                        break;
-                    case 4:
-                        collectionNumImg.setImageResource(R.drawable.s4);
-                        break;
-                    case 5:
-                        collectionNumImg.setImageResource(R.drawable.s5);
-                        break;
-                    case 6:
-                        collectionNumImg.setImageResource(R.drawable.s6);
-                        break;
-                    case 7:
-                        collectionNumImg.setImageResource(R.drawable.s7);
-                        break;
-                    case 8:
-                        collectionNumImg.setImageResource(R.drawable.s8);
-                        break;
-                    case 9:
-                        collectionNumImg.setImageResource(R.drawable.s9);
-                        break;
-                    case 10:
-                        collectionNumImg.setImageResource(R.drawable.s10);
-                        break;
-                    case 11:
-                        collectionNumImg.setImageResource(R.drawable.s11);
-                        break;
-                    case 12:
-                        collectionNumImg.setImageResource(R.drawable.s12);
-                        break;
-                    case 13:
-                        collectionNumImg.setImageResource(R.drawable.s13);
-                        break;
-                    case 14:
-                        collectionNumImg.setImageResource(R.drawable.s14);
-                        /**
-                         * Update  next depth after taking the current value
-                         */
-                        measurementNum++;
-                        takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
-                        Log.e(TAG, "MEASUREMENT TAKEN");
-                        takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
-                        if (directionButton.getText().equals("IN")) {
-                            takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
-                            double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
-                            prevDepth.setText("PREV DEPTH: " + (nextDepthNum));
-                            nextDepth.setText("NEXT DEPTH: " + (nextDepthNum + depthInterval));
-                        } else if (directionButton.getText().equals("OUT")) {
-                            takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
-                            double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
-                            prevDepth.setText("PREV DEPTH: " + (nextDepthNum));
-                            nextDepth.setText("NEXT DEPTH: " + (nextDepthNum - depthInterval));
-                        } else {
-                            Log.e(TAG, "ERROR, direction button has invalid text");
-                        }
-                        break;
-                    case 15:
-                        collectionNumImg.setImageResource(R.drawable.s15);
-                        break;
-                }
-            } else {
-                collectingData = false;
-            }
-
-            timerHandler.postDelayed(this, 1000);
-        }
-    };
-
-    //Queue managers
-    public synchronized void request(Operation operation) {
-        Log.d(TAG, "requesting operation: " + operation.toString());
-        Log.d(TAG, "Current Time: " + seconds);
-        try {
-            operations.add(operation);
-            if (currentOp == null) {
-                currentOp = operations.poll();
-                performOperation();
-            } else {
-                Log.e(TAG, "current operation is not null");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error thrown while requesting an operation: " + e);
-        }
-
-    }
-
-    public synchronized void operationCompleted() {
-        Log.d(TAG, "Operation completed, moving to next one");
-        currentOp = null;
-        if (operations.peek() != null) {
-            currentOp = operations.poll();
-            performOperation();
-        } else {
-            if (returning) {
-                finished = true;
-            }
-            Log.d(TAG, "Queue empty");
-            settingProbeMode = false;
-            if (secondCollect) {
-                new CountDownTimer(1000, 1000) {
-                    public void onFinish() {
-                        loadingSection.setVisibility(View.VISIBLE);
-                        settingProbeMode = true;
-                        boolean status2 = mBluetoothLeService.writeToProbeMode(01);
-                        Log.e(TAG, "STATUS OF WRITE2: " + status2);
-                        try {
-                            Thread.sleep(1000);
-                        } catch (Exception e) {
-                            Log.e(TAG, "Could not sleep" + e);
-                        }
-                        if (status2) {
-                            dataToBeRead = 0;
-                            displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                        } else {
-                            try {
-                                if (mConnectionStatus.equals("Connected")) {
-                                    updateConnectionState("Connected");
-                                } else {
-                                    Log.e(TAG, "Device disconnected");
-                                    updateConnectionState("Disconnected");
-                                }
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error setting connection state: " + e);
-                            }
-
-                        }
-                        new CountDownTimer(700, 1) { //definetly inefficicent, but if it works dont touch it lol
-
-                            public void onTick(long millisUntilFinished) {
-//                mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-                            }
-
-                            public void onFinish() {
-//                    dataToBeRead = 0;
-//                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                            }
-                        }.start();
-                        collect = true;
-                        starttime = seconds;
-                        secondCollect = false;
-                    }
-
-                    public void onTick(long millisUntilFinished) {
-                        // millisUntilFinished    The amount of time until finished.
-                    }
-                }.start();
-
-            }
-            if (collect) {
-                loadingSection.setVisibility(View.INVISIBLE);
-                setProbeOn.setText("PROBE ON");
-            } else {
-                setProbeOn.setText("SET PROBE ON");
-            }
-        }
-    }
-
-    public void performOperation() {
-        Log.d(TAG, "Performing operation: " + currentOp.getCharacteristic().getUuid().toString());
-        if (currentOp != null) {
-            operationOngoing = true;
-            Log.e(TAG, "Current performing option on service: " + currentOp.getService().getUuid().toString() + " with characteristic: " + currentOp.getCharacteristic().getUuid().toString());
-            if (currentOp.getService() != null && currentOp.getCharacteristic() != null && currentOp.getAction() != 0) {
-                switch (currentOp.getAction()) {
-                    case OPERATION_WRITE:
-                        Log.e(TAG, "Writing?!");
-                        //TODO write to the character
-                        Log.d(TAG, "Attempting to write to a characteristic: " + currentOp.getCharacteristic().getUuid().toString());
-                        mBluetoothLeService.writeData(currentOp.getCharacteristic());
-                        break;
-                    case OPERATION_READ:
-                        Log.d(TAG, "Reading characteristic with service: " + currentOp.getService().getUuid().toString() + " and characteristic: " + currentOp.getCharacteristic().getUuid().toString());
-                        mBluetoothLeService.readCharacteristic(currentOp.getCharacteristic());
-                        break;
-                    case OPERATION_NOTIFY:
-                        //make the character notify
-                        try {
-                            mBluetoothLeService.setCharacteristicNotification(currentOp.getCharacteristic(), true);
-
-                        } catch (Exception e) {
-                            Log.e(TAG, "CANT SET CHARACTERISTIC TO NOTIFY" + e);
-                        }
-                        break;
-                    default:
-                        Log.e(TAG, "Action not valid");
-                        break;
-                }
-            }
-        }
-    }
-
-    public void resetQueue() {
-        operations.clear();
-        currentOp = null;
-    }
-
-    public void clear(View view) {
-//        resetQueue();
-        try {
-            settingProbeMode = true;
-            writeProbe(01);
-        } catch (Exception e) {
-            Log.e(TAG, "Exception thrown: " + e);
-        }
-    }
-
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
-            if (!mBluetoothLeService.initialize()) {
-                Log.e(TAG, "Enable to initalise bluetooth");
-                finish();
-            }
-            mBluetoothLeService.connect(mDeviceAddress);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mBluetoothLeService = null;
-        }
-    };
-
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                mConnected = true;
-                updateConnectionState("Connected");
-                Log.d(TAG, "Device Connected");
-                invalidateOptionsMenu();
-                mConnectionStatus = "Connected";
-
-            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                mConnected = false;
-                updateConnectionState("Disconnected");
-                Log.d(TAG, "Device Disconnected");
-                clearUI();
-                mBluetoothLeService.connect(mDeviceAddress);
-                mConnectionStatus = "Disconnected";
-
-            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                //Task show information
-                displayGattServices(mBluetoothLeService.getSupportedGattServices());
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-//                Log.d(TAG, intent.getStringExtra())
-
-                if (intent.getStringExtra(BluetoothLeService.EXTRA_DATA) != null) {
-                    Log.d(TAG, "OTHER DATA !? uwu: " + intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-                } else if (intent.getStringExtra(BluetoothLeService.SERIAL_NUMBER) != null) {
-                    Log.d(TAG, "Device Serial number is: " + intent.getStringExtra(BluetoothLeService.SERIAL_NUMBER));
-                } else if (intent.getStringExtra(BluetoothLeService.DEVICE_ADDRESS) != null) {
-                    Log.d(TAG, "Device Address is: " + intent.getStringExtra(BluetoothLeService.DEVICE_ADDRESS));
-                } else if (intent.getStringExtra(BluetoothLeService.MAJOR_FIRMWARE_VERSION) != null) {
-                    Log.d(TAG, "Major firmware version is: " + intent.getStringExtra(BluetoothLeService.MAJOR_FIRMWARE_VERSION));
-                } else if (intent.getStringExtra(BluetoothLeService.MINOR_FIRMWARE_VERSION) != null) {
-                    Log.d(TAG, "Minor firmware version is: " + intent.getStringExtra(BluetoothLeService.MINOR_FIRMWARE_VERSION));
-                } else if (intent.getStringExtra(BluetoothLeService.RECORD_COUNT) != null) {
-                    Log.d(TAG, "Record count is: " + intent.getStringExtra(BluetoothLeService.RECORD_COUNT));
-                } else if (intent.getStringExtra(BluetoothLeService.SHOT_INTERVAL) != null) {
-                    Log.d(TAG, "Shot interval is: " + intent.getStringExtra(BluetoothLeService.SHOT_INTERVAL));
-                    shotInterval = Double.parseDouble(intent.getStringExtra(BluetoothLeService.SHOT_INTERVAL));
-                } else if (intent.getStringExtra(BluetoothLeService.SHOT_REQUEST) != null) {
-                    Log.d(TAG, "Shot request is: " + intent.getStringExtra(BluetoothLeService.SHOT_REQUEST));
-                } else if (intent.getStringExtra(BluetoothLeService.CORE_SHOT) != null) { //needs to be fixed to be the same as bore shot
-                    Log.e(TAG, "CORE SHOT");
-                    String coreShotData = intent.getStringExtra(BluetoothLeService.CORE_SHOT);
-                    String[] core_shot_data = coreShotData.split(":", 20); //split the data up into bytes
-                    shot_format = core_shot_data[0];
-                    Log.e(TAG, String.valueOf(core_shot_data));
-
-                    if (!hold) {
-//                        collectingData = true;
-                        switch (shot_format) {
-                            case "1":
-                                //first format(12): Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), Accelerometer Temperature(1)
-                                Log.e(TAG, "SHOT FORMAT 1: CORE SHOT");
-                                String a = "", b = "";
-                                for (int i = 0; i < core_shot_data.length; i++) {
-                                    if (i == 0) {
-                                        shotFormat = Integer.valueOf(shot_format);
-//                                        dev_shot_format.setText(shot_format);
-                                    } else if (i == 1) {
-                                        try {
-                                            highByte = core_shot_data[i];
-//                                            Log.e(TAG, "high byte: " + highByte);
-                                        } catch (Exception e) {
-                                            Log.e(TAG, "Exception thrown in high byte: " + e);
-                                        }
-                                    } else if (i == 2) {
-                                        try {
-                                            int value = 0;
-                                            if (Integer.valueOf(highByte) > 0 && Integer.valueOf(highByte) < 128) {
-                                                value = (128 * Integer.valueOf(highByte));
-                                            } else if (Integer.valueOf(highByte) < 0 && Integer.valueOf(highByte) >= -128) {
-                                                value = (128 * (128 + Integer.valueOf(highByte))) + (128 * 127);
-                                            }
-                                            lowByte = core_shot_data[i];
-//                                            Log.e(TAG, "low byte: " + lowByte);
-                                            if (Integer.valueOf(lowByte) > 0 && Integer.valueOf(lowByte) < 128) {
-                                                value = value + Integer.valueOf(lowByte);
-                                            } else if (Integer.valueOf(lowByte) < 1 && Integer.valueOf(lowByte) >= -128) {
-                                                value = 128 + (128 + Integer.valueOf(lowByte));
-                                            }
-//                                            Log.e(TAG, "final record number: " + value);
-//                                            dev_record_number.setText(Integer.toString(value));
-                                            recordNumber = value;
-                                        } catch (Exception e) {
-                                            Log.e(TAG, "Exception thrown in low byte: " + e);
-                                        }
-                                    } else if (i == 3) {
-                                        probe_temp = core_shot_data[i];
-                                        tempData.add(probe_temp);
-                                        Log.e(TAG, "Adding: " + nextDepth.getText().toString() + " to depth data");
-//                                        depthData.add(nextDepth.getText().toString());
-                                    } else if (i == 4) {
-                                        //ISSUE the documentation says that temperature should be divided by 256 to be read correct, but this seems to work so idk
-                                        probe_temp = probe_temp + "." + core_shot_data[i]; //as it is a fixed point value with 8 binary places
-//                                        orientation_temperature_data.setText(probe_temp);
-                                        accTemp = Double.parseDouble(probe_temp);
-                                    } else if (i == 5) { //AX 1
-                                        core_ax_binary = "";
-                                        core_ax = core_shot_data[i];
-                                        int num = Integer.parseInt(core_shot_data[i]);
-                                        if (num < 0) {
-                                            //need to convert from -128 - 0 to a positive number
-                                            num = 128 + (128 + num);
-                                        }
-//                                        Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        core_ax_binary = binaryOutput;
-//                                        Log.e(TAG, "binary core_ax: " + binaryOutput);
-                                    } else if (i == 6) { //AX 2
-                                        int num = Integer.parseInt(core_shot_data[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-//                                        Log.e(TAG, "record number byte 1 in integer form is: " + num);
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        core_ax_binary = core_ax_binary + binaryOutput;
-//                                        Log.e(TAG, "Core AX Binary: " + core_ax_binary);
-
-                                        if (core_ax_binary.length() > 16) {
-                                            Log.e(TAG, "Error, AX binary longer than 16 bits");
-//                                            accelerometer_x_data.setText("Error");
-                                        } else {
-                                            if (core_ax_binary.charAt(0) == '1') {
-                                                core_ax_binary = core_ax_binary.substring(1);
-                                                core_ax = Integer.toString(Integer.parseInt(core_ax_binary, 2));
-                                                core_ax = Integer.toString(Integer.valueOf(core_ax) * -1);
-                                                setUncalibratedX(core_ax);
-                                                calculateMeanMaxAccX();
-
-                                            } else {
-                                                core_ax = Integer.toString(Integer.parseInt(core_ax_binary, 2));
-                                                setUncalibratedX(core_ax);
-                                                calculateMeanMaxAccX();
-                                            }
-                                        }
-                                    } else if (i == 7) { //AY 1
-                                        core_ay_binary = "";
-                                        core_ay = core_shot_data[i];
-                                        int num = Integer.parseInt(core_shot_data[i]);
-                                        if (num < 0) {
-                                            //need to convert from -128 - 0 to a positive number
-                                            num = 128 + (128 + num);
-                                        }
-//                                        Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        core_ay_binary = binaryOutput;
-//                                        Log.e(TAG, "binary core_ay: " + binaryOutput);
-                                    } else if (i == 8) { //AY 2
-                                        int num = Integer.parseInt(core_shot_data[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-//                                        Log.e(TAG, "record number byte 1 in integer form is: " + num);
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        core_ay_binary = core_ay_binary + binaryOutput;
-//                                        Log.e(TAG, "Core AY Binary: " + core_ay_binary);
-
-                                        if (core_ay_binary.length() > 16) {
-                                            Log.e(TAG, "Error, AY binary longer than 16 bits");
-//                                            accelerometer_y_data.setText("Error");
-                                        } else {
-                                            if (core_ay_binary.charAt(0) == '1') {
-                                                core_ay_binary = core_ay_binary.substring(1);
-                                                core_ay = Integer.toString(Integer.parseInt(core_ay_binary, 2));
-                                                core_ay = Integer.toString(Integer.valueOf(core_ay) * -1);
-                                                setUncalibratedY(core_ay);
-                                                calculateMeanMaxAccY();
-                                            } else {
-                                                core_ay = Integer.toString(Integer.parseInt(core_ay_binary, 2));
-                                                setUncalibratedY(core_ay);
-                                                calculateMeanMaxAccY();
-                                            }
-                                        }
-                                    } else if (i == 9) { //AZ 1
-                                        core_az_binary = "";
-                                        core_az = core_shot_data[i];
-                                        int num = Integer.parseInt(core_shot_data[i]);
-                                        if (num < 0) {
-                                            //need to convert from -128 - 0 to a positive number
-                                            num = 128 + (128 + num);
-                                        }
-//                                        Log.e(TAG, "record number byte 1 in integer form is: " + num); //Seems not helpful
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        core_az_binary = binaryOutput;
-//                                        Log.e(TAG, "binary core_az: " + binaryOutput);
-                                    } else if (i == 10) { //AZ 2
-                                        int num = Integer.parseInt(core_shot_data[i]);
-                                        if (num < 0) {
-                                            num = 128 + (128 + num);
-                                        }
-
-//                                        Log.e(TAG, "record number byte 1 in integer form is: " + num);
-                                        String binaryOutput = Integer.toBinaryString(num);
-                                        if (Integer.toBinaryString(num).length() < 8) {
-                                            for (int k = 8; k > Integer.toBinaryString(num).length(); k--) {
-                                                binaryOutput = "0" + binaryOutput;
-                                            }
-                                        }
-                                        core_az_binary = core_az_binary + binaryOutput;
-//                                        Log.e(TAG, "Core AY Binary: " + core_az_binary);
-
-                                        if (core_az_binary.length() > 16) {
-                                            Log.e(TAG, "Error, AY binary longer than 16 bits");
-//                                            accelerometer_z_data.setText("Error");
-                                        } else {
-                                            if (core_az_binary.charAt(0) == '1') {
-                                                core_az_binary = core_az_binary.substring(1);
-                                                core_az = Integer.toString(Integer.parseInt(core_az_binary, 2));
-                                                core_az = Integer.toString(Integer.valueOf(core_az) * -1);
-                                                setUncalibratedZ(core_az);
-                                                calculateMeanMaxZ();
-                                            } else {
-                                                core_az = Integer.toString(Integer.parseInt(core_az_binary, 2));
-                                                setUncalibratedZ(core_az);
-                                                calculateMeanMaxZ();
-                                            }
-                                        }
-                                        try {
-                                            calculateRoll(Double.valueOf(core_ay), Double.valueOf(core_az));
-                                            calculateDip(Double.valueOf(core_ax), Double.valueOf(core_ay), Double.valueOf(core_az));
-                                        } catch (Exception e) {
-                                            Log.e(TAG, "Error calling calculate roll and dip functions: " + e);
-                                        }
-                                    } else if (i == 11) { // Temperature
-                                        acc_temp = core_shot_data[i];
-//                                        Log.d(TAG, "Accelerometer temperature: " + acc_temp);
-                                        if (accTemp == -128) {
-//                                            accelerometer_temp_data.setText("Not Avaliable");
-                                            accTemp = 0;
-                                        } else {
-//                                            accelerometer_temp_data.setText(acc_temp);
-                                            accTemp = Double.parseDouble(acc_temp);
-                                        }
-                                    }
-                                }
-
-//                                Log.e(TAG, "Company Name: " + MainActivity.surveys.get(0).getSurveyOptions().getCompanyName());
-                                if (collect) {
-                                    Log.e(TAG, "DATA COLLECTED: " + dataCollected);
-                                    if (dataCollected <= 3) {
-                                        double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
-                                        String date_time = String.valueOf(Calendar.getInstance().getTime());
-                                        Log.e(TAG, "DATE : " + date_time);
-                                        ProbeData newData = new ProbeData(ProbeDataStorage.arrayListNum, companyName, operatorName, mDeviceName, holeID, (measurementNum + 1), Double.toString(nextDepthNum), date_time,null, (shotFormat + 3), recordNumber, roll, dip, accTemp, accX, accY,
-                                                accZ, accTemp, accMagError, mdMeanChecked,
-                                                mdAccX, mdAccY, mdAccZ, fastMagChecked);
-//                                        if (exportAllData.isChecked()) {
-//                                            probeData.add(newData);
-//                                            ProbeDataStorage.probeDataTotal.add(newData);
-//                                        } else { //take an average of the 3 values collected
-//                                            subProbeData.add(newData);
-//                                            if (dataCollected == 2) {
-//                                                int shot__format = 0;
-//                                                int record__number = 0;
-//                                                double roll_ = 0;
-//                                                double dip_ = 0;
-//                                                double orientation_temp = 0;
-//                                                double acc_x = 0;
-//                                                double acc_y = 0;
-//                                                double acc_z = 0;
-//                                                double acctemp = 0;
-//                                                double acc_mag_error = 0;
-//                                                boolean show_mean_values = false;
-//                                                double max_mean_accX = 0;
-//                                                double max_mean_accY = 0;
-//                                                double max_mean_accZ = 0;
-//                                                boolean fast_mag_only = false;
-//                                                if (subProbeData.get(0) != null) {
-//                                                    for (int i = 0; i < subProbeData.size(); i++) {
-//                                                        roll_ = roll_ + subProbeData.get(i).getRoll();
-//                                                        dip_ = dip_ + subProbeData.get(i).getDip();
-//                                                        orientation_temp = orientation_temp + subProbeData.get(i).getOrientation_temp();
-//                                                        acc_x = acc_x + subProbeData.get(i).getAcc_x();
-//                                                        acc_y = acc_y + subProbeData.get(i).getAcc_y();
-//                                                        acc_z = acc_z + subProbeData.get(i).getAcc_z();
-//                                                        acctemp = acctemp + subProbeData.get(i).getAcc_temp();
-//                                                        acc_mag_error = acc_mag_error + subProbeData.get(i).getAcc_mag_error();
-//                                                        max_mean_accX = max_mean_accX + subProbeData.get(i).getMax_mean_accX();
-//                                                        max_mean_accY = max_mean_accY + subProbeData.get(i).getMax_mean_accY();
-//                                                        max_mean_accZ = max_mean_accZ + subProbeData.get(i).getMax_mean_accZ();
-//                                                    }
-//                                                    shot__format = 4;
-//                                                    record__number = subProbeData.get(0).getRecordNumber();
-//                                                    roll_ = roll_ / 3;
-//                                                    dip_ = dip_ / 3;
-//                                                    orientation_temp = orientation_temp / 3;
-//                                                    acc_x = acc_x / 3;
-//                                                    acc_y = acc_y / 3;
-//                                                    acc_z = acc_z / 3;
-//                                                    acctemp = acctemp / 3;
-//                                                    acc_mag_error = acc_mag_error / 3;
-//                                                    show_mean_values = subProbeData.get(0).getShow_mean_values();
-//                                                    max_mean_accX = max_mean_accX / 3;
-//                                                    max_mean_accY = max_mean_accY / 3;
-//                                                    max_mean_accZ = max_mean_accZ / 3;
-//                                                    fast_mag_only = subProbeData.get(0).getFast_mag_only();
-//                                                    try {
-//                                                        double nextDepthNum1 = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
-//                                                        int survey_num = ProbeDataStorage.probeDataTotal.size();
-//                                                        String dateTime = String.valueOf(Calendar.getInstance().getTime());
-//                                                        Log.e(TAG, "DATE : " + dateTime);
-//                                                        ProbeData new_data = new ProbeData(ProbeDataStorage.arrayListNum, companyName, operatorName, mDeviceName, holeID, (measurementNum + 1), Double.toString(nextDepthNum1), dateTime, shot__format, record__number, roll_, dip_, orientation_temp, acc_x, acc_y, acc_z, acctemp, acc_mag_error,
-//                                                                show_mean_values, max_mean_accX, max_mean_accY, max_mean_accZ, fast_mag_only);
-//                                                        probeData.add(new_data);
-//                                                        ProbeDataStorage.probeDataTotal.add(new_data);
-//                                                    } catch (Exception e) {
-//                                                        Log.e(TAG, "CANNOT ADD AVERAGE OF PROBE DATA: " + e);
-//                                                    }
-//                                                }
-//                                                subProbeData.removeAll(subProbeData);
-//                                            }
-                                        }
-                                        dataCollected++;
-//                                    }
-//                                    if (dataCollected == 0) {
-//                                        collectionNumImg.setImageResource(R.drawable.old_s0);
-//                                    } else if (dataCollected == 1) {
-//                                        collectionNumImg.setImageResource(R.drawable.old_s1);
-//                                        dataCollected++;
-//                                    } else if (dataCollected == 2) {
-//                                        collectionNumImg.setImageResource(R.drawable.old_s2);
-//
-//                                    } else if (dataCollected == 3) {
-//                                        collectionNumImg.setImageResource(R.drawable.old_s3);
-//
-
-//                                        collect = false;
-//                                        measurementNum++;
-//                                        dataCollected = 0;
-
-//                                        collectionNumImg.setImageResource(R.drawable.s0);
-                                    }
-
-
-                                    //DO SHIT WITH THE INFO!!!!
-//                                }
-                                //TODO ISSUE TASK FIXME UNTESTED
-                                break;
-                            case "2":
-                                //second format(19) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), Accelerometer Temperature(1), MX (2), MY (2), MZ (2), Magnetometer Temperature (1)
-                                Log.e(TAG, "SHOT FORMAT 2: CORE SHOT");
-                                break;
-                            case "3":
-                                //third format(20) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), MX(3), MY(3), MZ(3)
-                                Log.e(TAG, "SHOT FORMAT 3: CORE SHOT");
-                                break;
-                            case "4":
-                                Log.e(TAG, "SHOT FORMAT 4: CORE SHOT");
-                                break;
-                            case "5":
-                                Log.e(TAG, "SHOT FORMAT 5: CORE SHOT");
-
-                                break;
-                            default:
-                                Log.e(TAG, "ERROR: Shot format not valid: " + shot_format);
-                                break;
-                        }
-                    }
-
-                } else if (intent.getStringExtra(BluetoothLeService.BORE_SHOT) != null) {
-                    /**
-                     * Returning incorrect data some of the time
-                     */
-                    String currentRawBoreMeasurement = intent.getStringExtra(BluetoothLeService.BORE_SHOT);
-                    Log.d(TAG, "Bore shot raw data is: " + intent.getStringExtra(BluetoothLeService.BORE_SHOT));
-                    String boreShotData = intent.getStringExtra(BluetoothLeService.BORE_SHOT);
-                    String[] bore_shot_data = boreShotData.split(":", 20); //split the data up into bytes
-                    shot_format = bore_shot_data[0];
-                    Log.e(TAG, "SHOT FORMAT: " + shot_format);
-                    if (!shot_format.equals("0")) {
-                        rawData.add(intent.getStringExtra(BluetoothLeService.BORE_SHOT)); //we just add the entire thingo?
-                        Log.e(TAG, "Adding: " + nextDepth.getText().toString() + " to depth data");
-                        depthData.add(prevDepth.getText().toString().replace("PREV DEPTH: ", ""));
-                    }
-
-                    if (!hold) {
-                        switch (shot_format) {
-                            case "1":
-                                break;
-                            case "2":
-                                //second format(19) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), Accelerometer Temperature(1), MX (2), MY (2), MZ (2), Magnetometer Temperature (1)
-                                break;
-                            case "3":
-                                //third format(20) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), MX(3), MY(3), MZ(3)
-                                String a = "", b = "";
-                                //REFER BACK TO OLD TO ADD INTO SHIT
-
-                                Log.e(TAG, "SHOT FORMAT 3");
-//                                    //third format(20) : Format(1), Record number(2), Probe temperature(2), AX(2), AY(2), AZ(2), MX(3), MY(3), MZ(3)
-//
-//                                    dShotFormat = Integer.valueOf(shot_format);
-//                                dev_shot_format.setText(shot_format);
-//
-                                Log.e(TAG, "ANNA ----------------------------------");
-                                byte[] char_all_bore_shot = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-                                String[] string_all_bore_shot = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
-                                for (int i = 0; i < bore_shot_data.length; i++) {
-////                                        Log.e(TAG, "Shot " + i + ": " + bore_shot_data[i]);
-                                    int bore_value;
-                                    try {
-                                        bore_value = Integer.valueOf(bore_shot_data[i]);
-                                    } catch (Exception e) {
-                                        bore_value = -2;
-                                    }
-                                    try {
-                                        if (bore_value < 0) {
-                                            String unsignedHex = String.format("%02X", bore_value & 0xff);
-                                            string_all_bore_shot[i] = unsignedHex;
-                                        } else {
-                                            string_all_bore_shot[i] = Integer.toHexString(bore_value);
-                                        }
-                                    } catch (Exception e) {
-                                        string_all_bore_shot[i] = "-1";
-                                    }
-                                }
-                                Log.e(TAG, "ALl string data: " + Arrays.toString(string_all_bore_shot));
-
-                                //Format all the displayed numbers so they arent incredibly long
-                                DecimalFormat numberFormat = new DecimalFormat("0.0000000");
-
-                                try {
-                                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[1], 16);
-                                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[2], 16);
-                                    recordNumber = Integer.parseInt(numberFormat.format((int) twoBytesToValue(value2, value1)));
-                                } catch (Exception e) {
-                                    Log.e(TAG, "EXCEPTION thrown in record number: " + e);
-                                }
-//                                  next 2 bytes after probe temperature
-                                try {
-                                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[3], 16);
-                                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[4], 16);
-                                    int shotProbeTempRaw = ((int)value1 << 8) + (((int)value2) & 0x00FF);
-                                    double probeTempU = (double)shotProbeTempRaw/256.0;
-                                    double probeTemp = CalibrationHelper.temp_param[0] + (CalibrationHelper.temp_param[1] * probeTempU);
-
-                                    tempData.add(numberFormat.format(probeTemp));
-                                    depthData.add("20m"); //TODO - FIX
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Exception thrown in probe temperature: " + e);
-                                }
-
-                                double ux = 0;
-                                double uy = 0;
-                                double uz = 0;
-                                double[] calAcc;
-
-                                //TODO could probably turn this into a function for better code functionality
-                                try {
-                                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[5], 16);
-                                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[6], 16);
-                                    int shotAccX = ((int)value1 << 8) + (((int)value2) & 0x00FF);
-                                    ux = ((double)shotAccX)/32.0/512.0;
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Exception thrown setting ux: " + e);
-                                }
-
-                                try {
-                                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[7], 16);
-                                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[8], 16);
-                                    int shotAccY = ((int)value1 << 8) + (((int)value2) & 0x00FF);
-                                    uy = ((double)shotAccY)/32.0/512.0;
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Exception thrown setting uy: " + e);
-                                }
-
-                                try {
-                                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[9], 16);
-                                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[10], 16);
-                                    int shotAccZ = ((int)value1 << 8) + (((int)value2) & 0x00FF);
-                                    uz = ((double)shotAccZ)/32.0/512.0;
-
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Exception thrown setting uz: " + e);
-                                }
-
-                                double umx = 0;
-                                double umy = 0;
-                                double umz = 0;
-                                double[] calMag;
-
-                                try {
-                                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[11], 16);
-                                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[12], 16);
-                                    byte value3 = (byte) Integer.parseInt(string_all_bore_shot[13], 16);
-                                    int shotMagX = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
-                                    umx = ((double)shotMagX *0.001);
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Exception thrown setting umx");
-                                }
-
-                                try {
-                                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[14], 16);
-                                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[15], 16);
-                                    byte value3 = (byte) Integer.parseInt(string_all_bore_shot[16], 16);
-                                    int shotMagY = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
-                                    umy = ((double)shotMagY *0.001);
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Exception thrown setting umx");
-                                }
-
-                                try {
-                                    byte value1 = (byte) Integer.parseInt(string_all_bore_shot[17], 16);
-                                    byte value2 = (byte) Integer.parseInt(string_all_bore_shot[18], 16);
-                                    byte value3 = (byte) Integer.parseInt(string_all_bore_shot[19], 16);
-                                    int shotMagZ = ((((int)value1 << 8) + (((int)value2) & 0x00FF) ) << 8) + (((int)value3) & 0x00FF);
-                                    umz = ((double)shotMagZ *0.001);
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Exception thrown setting umx");
-                                }
-
-                                calAcc = CalibrationHelper.CalibrationHelp(CalibrationHelper.accelerationCalibration, ux, uy, uz);
-                                calMag = CalibrationHelper.CalibrationHelp(CalibrationHelper.magnetometerCalibration, umx, umy, umz);
-
-                                //Set the display values for x, y and z calibrated values
-                                double cx = calAcc[0];
-                                double cy = calAcc[1];
-                                double cz = calAcc[2];
-
-                                double cmx = calMag[0];
-                                double cmy = calMag[1];
-                                double cmz = calMag[2];
-
-                                //Set roll and dip values
-                                double cal_roll_radian = Math.atan2(cy, cz);
-                                if (cal_roll_radian > Math.PI) { cal_roll_radian -= (2 * Math.PI); }
-                                if (cal_roll_radian < -Math.PI) { cal_roll_radian += (2*Math.PI); }
-                                double cal_dip_radian = Math.atan2(-cx, Math.sqrt((cy*cy)+(cz*cz)));
-
-                                double den = (cmx * Math.cos(cal_dip_radian)) + (cmy * Math.sin(cal_dip_radian) * Math.sin(cal_roll_radian)) + (cmz * Math.sin(cal_dip_radian) * Math.cos(cal_roll_radian));
-                                double num = (cmy * Math.cos(cal_roll_radian)) - (cmz * Math.sin(cal_roll_radian));
-                                double cal_az_radian = Math.atan2(-num, den);
-                                if (cal_az_radian > Math.PI) { cal_az_radian -= (2*Math.PI); }
-                                if (cal_az_radian < -Math.PI) { cal_az_radian += (2*Math.PI); }
-                                if (cal_az_radian < 0) { cal_az_radian += (2*Math.PI); }
-
-                                //convert to degrees :(
-                                double cal_roll_degree = cal_roll_radian*180/Math.PI;
-                                double cal_dip_degree = cal_dip_radian*180/Math.PI;
-                                double cal_az_degree = cal_az_radian*180/Math.PI;
-
-                                //display orientation data
-//                                orientation_roll_data.setText(numberFormat.format(cal_roll_degree));
-                                roll = Double.parseDouble(numberFormat.format(cal_roll_degree));
-//                                orientation_dip_data.setText(numberFormat.format(cal_dip_degree));
-                                dip = Double.parseDouble(numberFormat.format(cal_dip_degree));
-//                                orientation_azimuth_data.setText(numberFormat.format(cal_az_degree));
-                                azimuth = Double.parseDouble(numberFormat.format(cal_az_degree));
-
-//                                accelerometer_x_data.setText(numberFormat.format(cx));
-                                core_ax = numberFormat.format(cx);
-//                                accelerometer_y_data.setText(numberFormat.format(cy));
-                                core_ay = numberFormat.format(cy);
-//                                accelerometer_z_data.setText(numberFormat.format(cz));
-                                core_az = numberFormat.format(cz);
-
-//                                magnetometer_x_data.setText(numberFormat.format(cmx));
-                                mag_x = numberFormat.format(cmx);
-//                                magnetometer_y_data.setText(numberFormat.format(cmy));
-                                mag_y = numberFormat.format(cmy);
-//                                magnetometer_z_data.setText(numberFormat.format(cmz));
-                                mag_z = numberFormat.format(cmz);
-
-                                ArrayList<ProbeData> newProbeData = new ArrayList<ProbeData>();
-
-                                try { //TODO CHANGE ALL -1
-                                    ProbeData newData = new ProbeData(ProbeDataStorage.arrayListNum, companyName, operatorName,"-1", holeID, (measurementNum + 1), "-1", dateData.get(0), 6, recordNumber, roll, dip, azimuth,
-                                            accTemp, Double.parseDouble(core_ax), Double.parseDouble(core_ay), Double.parseDouble(core_az), Double.parseDouble(mag_x), Double.parseDouble(mag_y), Double.parseDouble(mag_z), false, -1, -1, -1, -1, -1, -1); //TODO only some of this data is correct
-                                    Log.e(TAG, "ADDED SOME NEW DATA: " + newData.returnData());
-                                    probeDataa.add(new ProbeData(ProbeDataStorage.arrayListNum, companyName, operatorName,"-1", holeID, (measurementNum + 1), "-1", dateData.get(0), 6, recordNumber, roll, dip, azimuth,
-                                            accTemp, Double.parseDouble(core_ax), Double.parseDouble(core_ay), Double.parseDouble(core_az), Double.parseDouble(mag_x), Double.parseDouble(mag_y), Double.parseDouble(mag_z), false, -1, -1, -1, -1, -1, -1));
-    //                                depthData.add(String.valueOf(nextDepthNum));
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Exception thrown adding a new piece of data: " + e + e.getStackTrace());
-                                }
-                                break;
-                            case "4":
-                                Log.d(TAG, "CASE 4");
-                                break;
-                            case "5":
-                                Log.d(TAG, "CASE 5");
-                                break;
-                            case "6":
-                                Log.d(TAG, "CASE 6");
-                                break;
-                            default:
-                                Log.e(TAG, "ERROR: Shot format not valid: " + shot_format);
-                                break;
-                        }
-                    }
-                } else if (intent.getStringExtra(BluetoothLeService.PROBE_MODE) != null) {
-                    Log.d(TAG, "Probe Mode is: " + intent.getStringExtra(BluetoothLeService.PROBE_MODE));
-                    if (intent.getStringExtra(BluetoothLeService.PROBE_MODE).equals("1")) {
-                        _probeMode = 1;
-                        Log.d(TAG, "Probe mode set to 1");
-                    } else if (intent.getStringExtra(BluetoothLeService.PROBE_MODE).equals("2")) {
-                        _probeMode = 2;
-                        Log.d(TAG, "Probe mode set to 2");
-                    } else {
-                        _probeMode = 0;
-                        Log.d(TAG, "Probe mode set to 0");
-                    }
-                } else {
-
-                }
-                operationCompleted();
-
-            } else if (intent != null) {
-                operationCompleted();
-            }
-        }
-    };
-
-    private void clearUI() {
-
-    }
-
-    public static short toInt16(byte[] bytes, int index) {
-        return (short) ((bytes[index + 1] << 8) | (bytes[index] & 0xFF));
-    }
-
-    private double twoBytesToValue(byte value1, byte value2) {
-        byte[] dataArray = new byte[] {value1, value2};
-        int i1 = toInt16(dataArray, 0);
-        return i1;
-    }
-
-    private class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-        private byte[] mmBuffer;
-
-        public ConnectedThread(BluetoothSocket socket) {
-            mmSocket = socket;
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            try {
-                tmpIn = socket.getInputStream();
-            } catch (IOException e) {
-                Log.e(TAG, "Error occured when creating an input stream", e);
-            }
-
-            try {
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-                Log.e(TAG, "Error occured when creating output stream", e);
-            }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-
-        public void run() {
-            mmBuffer = new byte[1024];
-            int numBytes;
-
-            while (true) {
-                try {
-                    numBytes = mmInStream.read(mmBuffer);
-                    Message readMsg = handler.obtainMessage(
-                            MessageConstants.MESSAGE_READ, numBytes, -1, mmBuffer
-                    );
-                    readMsg.sendToTarget();
-                } catch (IOException e) {
-                    Log.d(TAG, "Input stream was disconnected", e);
-                    break;
-                }
-            }
-        }
-
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-                Message writtenMsg = handler.obtainMessage(
-                        MessageConstants.MESSAGE_WRITE, -1, -1, mmBuffer
-                );
-                writtenMsg.sendToTarget();
-            } catch (IOException e) {
-                Log.e(TAG, "Error occured in sending data", e);
-                Message writeErrorMsg = handler.obtainMessage(MessageConstants.MESSAGE_TOAST);
-                Bundle bundle = new Bundle();
-                bundle.putString("toast", "couldn't send data to the other device");
-                writeErrorMsg.setData(bundle);
-                handler.sendMessage(writeErrorMsg);
-            }
-        }
-
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Could not close the connect socket");
-            }
-        }
-    }
-
-    public static void setShotsNull() {
-        Log.e(TAG, "-----------------------ANNA------------------------");
-        Log.e(TAG, "Removing data");
-        probeDataa = new ArrayList<ProbeData>();
-        exportProbeData = new ArrayList<ProbeData>();
-        rawData = new ArrayList<String>();
-        shotsToCollect.clear();
-        timeData.clear();
-        dateData.clear();
-
-
-        try {
-            Log.e(TAG, probeDataa.get(0).returnData());
-        } catch (Exception e) {
-            Log.e(TAG, "Nope!");
-        }
-    }
-
-    //CALLBACK
+    // ----------------------------------------------------------------------------------------------------------------
+    // Activity launched
+    // Invoked by launcher Intent
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_take_measurements);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-
-//        shotWriteType = 2;
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);  //Call superclass (AppCompatActivity) onCreate method
 
         try {
-            probeDataa.clear();
-        } catch (Exception e) {
-            Log.e(TAG, "exception thrown: " + e);
-        }
-        try {
-            rawData.clear();
-        } catch (Exception e) {
-            Log.e(TAG, "exception thrown: " + e);
-        }
-//        rawData = new ArrayList<>();
-        dataToBeRead = 0;
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  // PJH - try preventing phone from sleeping
+            setContentView(R.layout.activity_take_measurements);                                                   //Show the main screen - may be shown briefly if we immediately start the scan activity
+            Toolbar myToolbar = findViewById(R.id.toolbar);                                             //Get a reference to the Toolbar at the top of the screen
+            setSupportActionBar(myToolbar);                                                             //Treat the toolbar as an Action bar (used for app name, menu, navigation, etc.)
+            showAlert = new ShowAlertDialogs(this);                                             //Create the object that will show alert dialogs
+            Log.i(TAG, "========== TakeMeasurement - onCreate ============");    // just as a separator in hte logcat window (to distinguish this run from the previous run)
+            stateConnection = StateConnection.DISCONNECTED;                                             //Initial stateConnection when app starts
+            stateApp = StateApp.STARTING_SERVICE;                                                       //Are going to start the BleService service
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) { //Check whether we have location permission, required to scan
+                stateApp = StateApp.REQUEST_PERMISSION;                                                 //Are requesting Location permission
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQ_CODE_ACCESS_LOC1); //Request fine location permission
+            }
+            if (stateApp == StateApp.STARTING_SERVICE) {                                                //Only start BleService if we already have location permission
+                Intent bleServiceIntent = new Intent(this, BleService.class);             //Create Intent to start the BleService
+                this.bindService(bleServiceIntent, bleServiceConnection, BIND_AUTO_CREATE);             //Create and bind the new service with bleServiceConnection object that handles service connect and disconnect
+            }
+            connectTimeoutHandler = new Handler(Looper.getMainLooper());                                //Create a handler for a delayed runnable that will stop the connection attempt after a timeout
 
-        final Intent intent = getIntent();
-        mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
-        mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
-        mConnectionStatus = intent.getStringExtra(EXTRA_DEVICE_CONNECTION_STATUS);
-        mPrevDepth = intent.getStringExtra(EXTRA_PREV_DEPTH);
-        mNextDepth = intent.getStringExtra(EXTRA_NEXT_DEPTH);
-        Log.d(TAG, "Device Name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
+            connectionStatusText = findViewById(R.id.connection_status_text);
+            connectionStatusImage = findViewById(R.id.connection_status_img);
 
-        startTime = System.currentTimeMillis();
-        timerHandler.postDelayed(timerRunnable, 0);
+            connectionStatusText.setText("Connected");
+            connectionStatusImage.setImageResource(R.drawable.ready);
+            collectionNumImg = findViewById(R.id.collection_num);
 
+//            textDeviceNameAndAddress = findViewById(R.id.deviceNameAndAddressText);                     //Get a reference to the TextView that will display the device name and address
+//            textDeviceStatus = findViewById(R.id.deviceStatusText);                     //Get a reference to the TextView that will display the device name and address
+//            labelFirmwareVersion =  findViewById(R.id.labelFirmware);
+//            textFirmwareVersion = findViewById(R.id.firmwareVersionText);                     //Get a reference to the TextView that will display the device name and address
 
+            //These need to be changed to a record instead of a display
+//            textAccX = findViewById(R.id.accXText);
+//            textAccY = findViewById(R.id.accYText);
+//            textAccZ = findViewById(R.id.accZText);
+//            textAccMag = findViewById(R.id.accMagText);
+//
+//            textMagX = findViewById(R.id.magXText);
+//            textMagY = findViewById(R.id.magYText);
+//            textMagZ = findViewById(R.id.magZText);
+//            textMagMag = findViewById(R.id.magMagText);
+//
+//            textRoll = findViewById(R.id.rollText);
+//            textDip = findViewById(R.id.dipText);
+//            textAz = findViewById(R.id.azText);
+//            textAzErr = findViewById(R.id.azErrText);
+//            textRoll360 = findViewById(R.id.roll360Text);
+//            textTempUc = findViewById(R.id.tempUcText);
 
-        try {
-            if (intent.getStringExtra(EXTRA_MEASUREMENT_TYPE).equals(null)) {
-                if (!intent.getStringExtra(EXTRA_MEASUREMENT_TYPE).equals("NEW")) {
-                    try {
-                        resumePosition = Integer.valueOf(intent.getStringExtra(EXTRA_MEASUREMENT_TYPE));
-                    } catch (Exception e) {
-                        Log.e(TAG, "Cannot set position of measurement to be resumed: " + e);
+            buttonLive = (Button) findViewById(R.id.probeOn);
+            buttonLive.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    // Do something in response to button click - start rolling shots
+                    Log.i(TAG, "PJH - processing Live Data button press");
+                    if (buttonLive.getText() == "PAUSE"){ //TODO - @ANNA remove ability to pause the session once started, makes life a pain
+                        bleService.setProbeIdle();
+                    }
+                    else {
+                        bleService.setProbeMode(1); //TODO - @ANNA needs to also start the timer here
+                        connectionStatusText.setText("Collecting Data");
+                        connectionStatusImage.setImageResource(R.drawable.calibrating);
+
+                        startTime = System.currentTimeMillis();
+                        //@ANNA - ISSUE - user can press this button multiple times and reset the probe internal shot count.....
                     }
                 }
-            }
+            });
+            initializeDisplay();
         } catch (Exception e) {
-            Log.e(TAG, "Exception thrown: " + e);
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
-
-        try {
-            if (resumePosition != 128) {
-                record_number = String.valueOf(ProbeDataStorage.probeDataTotal.get(resumePosition));
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error assigning record number: " + e);
-        }
-
-
-        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-
-        connectionStatus = findViewById(R.id.connection_status_text);
-        connectionStatusImg = findViewById(R.id.connection_status_img);
-        directionButton = findViewById(R.id.direction_button);
-        takeMeasurement = findViewById(R.id.take_measurement_button);
-        prevDepth = findViewById(R.id.previous_depth_txt);
-        nextDepth = findViewById(R.id.next_depth_txt);
-        collectionNumImg = findViewById(R.id.collection_num);
-//        exportAllData = findViewById(R.id.exportAllData);
-        loadingSection = findViewById(R.id.loading);
-        setProbeOn = findViewById(R.id.probeOn);
-        withdrawButton = findViewById(R.id.withdraw_button);
-
-        loadingSection.setVisibility(View.INVISIBLE);
-
-        takeMeasurement.setText("TAKE MEASUREMENT " + rawData.size());
-
-        try {
-//            if (mPrevDepth.length() > 0) {
-//                prevDepth.setText(mPrevDepth);
-//                nextDepth.setText(mNextDepth);
-//
-//            } else {
-//                Log.e(TAG, "IS NULL");
-//            }
-            Log.d(TAG, "Prev depth: " + mPrevDepth);
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting previous depth: " + e);
-        }
-
-//        prevDepth.setText("PREV DEPTH: " + (nextDepthNum));
-//        nextDepth.setText("NEXT DEPTH: " + (nextDepthNum + depthInterval));
-
-        try {
-            if (mConnectionStatus.equals("Connected")) {
-                updateConnectionState("Connected");
-            } else {
-                Log.e(TAG, "Device disconnected");
-                updateConnectionState("Disconnected");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting connection state: " + e);
-        }
-            if (resumePosition != 128) {
-                try {
-//                    holeID = MainActivity.surveys.get(resumePosition).getSurveyOptions().getHoleID();
-//                    operatorName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getOperatorName();
-//                    companyName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getCompanyName();
-//                    initialDepth = MainActivity.surveys.get(resumePosition).getSurveyOptions().getInitialDepth();
-//                    depthInterval = MainActivity.surveys.get(resumePosition).getSurveyOptions().getDepthInterval();
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown in on create 1: " + e);
-                }
-            } else {
-                try {
-//                    holeID = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getHoleID();
-//                    operatorName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getOperatorName();
-//                    companyName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getCompanyName();
-//                    initialDepth = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth();
-//                    depthInterval = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getDepthInterval();
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown in on create 2: " + e);
-                }
-            }
-        takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
-        nextDepth.setText("NEXT DEPTH: " + (initialDepth + depthInterval * measurementNum));
-
-        setSupportActionBar(toolbar);
     }
 
+    // ----------------------------------------------------------------------------------------------------------------
+    // Activity started
+    // Nothing needed here, all done in onCreate() and onResume()
+    @Override
+    public void onStart() {
+        super.onStart();                                                                            //Call superclass (AppCompatActivity) onStart method
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Activity resumed
+    // Register the receiver for Intents from the BleService
     @Override
     protected void onResume() {
-        super.onResume();
-
-        probeDataa = null;
-
-        final Intent intent = getIntent();
-        mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
-        mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
-        mConnectionStatus = intent.getStringExtra(EXTRA_DEVICE_CONNECTION_STATUS);
-        mPrevDepth = intent.getStringExtra(EXTRA_PREV_DEPTH);
-        mNextDepth = intent.getStringExtra(EXTRA_NEXT_DEPTH);
-        Log.d(TAG, "Device Name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
-
-        if (mConnectionStatus.equals("Connected")) {
-            updateConnectionState("Connected");
-        } else {
-            Log.e(TAG, "Device disconnected");
-            updateConnectionState("Disconnected");
-        }
-
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-        if (mBluetoothLeService != null) {
-            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
-            Log.d(TAG, "Connection request result = " + result);
-        }
-
-        if (resumePosition != 128) {
-            try {
-//                holeID = MainActivity.surveys.get(resumePosition).getSurveyOptions().getHoleID();
-//                operatorName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getOperatorName();
-//                companyName = MainActivity.surveys.get(resumePosition).getSurveyOptions().getCompanyName();
-//                initialDepth = MainActivity.surveys.get(resumePosition).getSurveyOptions().getInitialDepth();
-//                depthInterval = MainActivity.surveys.get(resumePosition).getSurveyOptions().getDepthInterval();
-            } catch (Exception e) {
-                Log.e(TAG, "Exception thrown in on resume 1: " + e);
-            }
-        } else {
-            try {
-//                holeID = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getHoleID();
-//                operatorName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getOperatorName();
-//                companyName = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getCompanyName();
-//                initialDepth = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth();
-//                depthInterval = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getDepthInterval();
-            } catch (Exception e) {
-                Log.e(TAG, "Exception thrown in on resume 2: " + e);
-            }
-        }
-
+        super.onResume();                                                                           //Call superclass (AppCompatActivity) onResume method
         try {
-            if (mPrevDepth.length() > 0) {
-                prevDepth.setText(mPrevDepth);
-                nextDepth.setText(mNextDepth);
-            } else {
-                Log.e(TAG, "IS NULL");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting previous depth: " + e);
-        }
-
-        takeMeasurement.setText("TAKE MEASUREMENT " + rawData.size());
-
-    }
-
-    private void displayGattServices(List<BluetoothGattService> gattServices) {
-        if (gattServices == null) return;
-
-        String uuid = null;
-        String unknownServiceString = "Unknown service";
-        String unknownCharaString = "Unknown characteristics";
-        ArrayList<HashMap<String, String>> gattServiceData = new ArrayList<>();
-        ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicsData = new ArrayList<>();
-        mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-
-        //HERE
-//        settingProbeMode
-        for (BluetoothGattService gattService : gattServices) {
-            HashMap<String, String> currentServiceData = new HashMap<>();
-            uuid = gattService.getUuid().toString();
-            currentServiceData.put(LIST_NAME, SampleGattAttributes.lookup(uuid, unknownServiceString));
-            currentServiceData.put(LIST_UUID, uuid);
-            gattServiceData.add(currentServiceData);
-
-            ArrayList<HashMap<String, String>> gattCharacteristicGroupData = new ArrayList<>();
-            List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
-            ArrayList<BluetoothGattCharacteristic> charas = new ArrayList<>();
-
-            Log.d(TAG, "Gatt service is: " + gattService.getUuid().toString());
-            //look for the device ID
-            for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
-//                Log.e(TAG, "Setting probe mode: " + settingProbeMode);
-                if (settingProbeMode) {
-                    if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.PROBE_MODE)) {
-                        charas.add(gattCharacteristic);
-                        HashMap<String, String> currentCharaData = new HashMap<>();
-                        uuid = gattCharacteristic.getUuid().toString();
-                        currentCharaData.put(
-                                LIST_NAME, SampleGattAttributes.lookup(uuid, unknownCharaString)
-                        );
-                        currentCharaData.put(LIST_UUID, uuid);
-                        gattCharacteristicGroupData.add(currentCharaData);
-
-
-                        Log.d(TAG, "Gatt characteristic is: " + gattCharacteristic.getUuid().toString());
-                        if (gattCharacteristic.getUuid() != null) {
-                            if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.PROBE_MODE) && _probeMode != 1) {
-                                Log.e(TAG, "In probe mode, current mode: " + _probeMode);
-                                Operation getProbeModeOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-                                try {
-                                    request(getProbeModeOperation);
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Exception thrown for requesting operation");
-                                }
-                            }
-                        } else {
-                            Log.e(TAG, "gatt characteristic uuid is null");
-                        }
-
-                    }else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.CORE_SHOT)) {
-                        Log.e(TAG, "Notifying core shot");
-                        CORE_SHOT_CHARACTERISTIC = gattCharacteristic;
-                        Operation getCoreShotNotifyOperation = new Operation(gattService, gattCharacteristic, OPERATION_NOTIFY);
-
-                        try {
-                            request(getCoreShotNotifyOperation);
-                        } catch (Exception e) {
-                            Log.e(TAG, "Exception thrown for requesting operation");
-                        }
-                    } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.BORE_SHOT)) {
-                        Log.e(TAG, "Notifying bore shot");
-                        BORE_SHOT_CHARACTERISTIC = gattCharacteristic;
-                        Operation getBoreShotNotifyOperation = new Operation(gattService, gattCharacteristic, OPERATION_NOTIFY);
-
-                        try {
-                            request(getBoreShotNotifyOperation);
-                        } catch (Exception e) {
-                            Log.e(TAG, "Exception thrown for requesting operation");
-                        }
-                    } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.SHOT_REQUEST)) {
-                        Log.e(TAG, "Writing to shot request");
-                        Operation getShotRequestOperation = new Operation(gattService, gattCharacteristic, OPERATION_WRITE);
-                        try {
-                            request(getShotRequestOperation);
-                        } catch (Exception e) {
-                            Log.e(TAG, "Exception thrown for requesting operation");
-                        }
-
-                    }
-                } else { //not setting the current probe mode
-                    charas.add(gattCharacteristic);
-                    HashMap<String, String> currentCharaData = new HashMap<>();
-                    uuid = gattCharacteristic.getUuid().toString();
-                    currentCharaData.put(
-                            LIST_NAME, SampleGattAttributes.lookup(uuid, unknownCharaString)
-                    );
-                    currentCharaData.put(LIST_UUID, uuid);
-                    gattCharacteristicGroupData.add(currentCharaData);
-
-                    Log.d(TAG, "Gatt characteristic is: " + gattCharacteristic.getUuid().toString());
-                    if (gattCharacteristic.getUuid() != null) {
-                        if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.DEVICE_ID)) { //FFF1
-                            Log.e(TAG, "Attempting to get device ID");
-                            Operation getDeviceIDOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-
-                            try {
-                                request(getDeviceIDOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-                        } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.DEVICE_ADDRESS)) { //FFF2
-                            Log.e(TAG, "Attempting to get device address");
-                            Operation getDeviceAddressOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-
-                            try {
-                                request(getDeviceAddressOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-                        } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.VERSION_MAJOR)) {
-                            Log.e(TAG, "Attempting to get version number (major)");
-                            Operation getVersionMajorOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-
-                            try {
-                                request(getVersionMajorOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-                        } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.RECORD_COUNT)) {
-                            Log.e(TAG, "Attempting to get record count");
-                            Operation getRecordCount = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-                            try {
-                                request(getRecordCount);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown attempting to get record count");
-                            }
-                        } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.VERSION_MINOR)) {
-                            Log.e(TAG, "Attempting to get version number (minor)");
-                            Operation getVersionMinorOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-
-                            try {
-                                request(getVersionMinorOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-                        } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.PROBE_MODE) && _probeMode != 1) {
-                            Log.e(TAG, "In probe mode, current mode: " + _probeMode);
-                            Operation getProbeModeOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-
-                            try {
-                                request(getProbeModeOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-
-                        } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.SHOT_INTERVAL)) {
-                            Log.e(TAG, "GETTING SHOT INTERVAL");
-                            Operation getShotInteralOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-
-                            try {
-                                request(getShotInteralOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-                        } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.CORE_SHOT)) {
-                            Log.e(TAG, "Reading core shot");
-                            CORE_SHOT_CHARACTERISTIC = gattCharacteristic;
-                            Operation getCoreShotOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-
-                            try {
-                                request(getCoreShotOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-
-                            Log.e(TAG, "Notifying core shot");
-                            CORE_SHOT_CHARACTERISTIC = gattCharacteristic;
-                            Operation getCoreShotNotifyOperation = new Operation(gattService, gattCharacteristic, OPERATION_NOTIFY);
-
-                            try {
-                                request(getCoreShotNotifyOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-                        } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.BORE_SHOT)) {
-                            Log.e(TAG, "Reading bore shot");
-                            BORE_SHOT_CHARACTERISTIC = gattCharacteristic;
-                            Operation getBoreShotOperation = new Operation(gattService, gattCharacteristic, OPERATION_READ);
-
-                            try {
-                                request(getBoreShotOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-
-                            Log.e(TAG, "Notifying bore shot");
-                            BORE_SHOT_CHARACTERISTIC = gattCharacteristic;
-                            Operation getBoreShotNotifyOperation = new Operation(gattService, gattCharacteristic, OPERATION_NOTIFY);
-
-                            try {
-                                request(getBoreShotNotifyOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-                        } else if (gattCharacteristic.getUuid().toString().equals(SampleGattAttributes.SHOT_REQUEST)) {
-                            Log.e(TAG, "Writing to shot request");
-                            Operation getShotRequestOperation = new Operation(gattService, gattCharacteristic, OPERATION_WRITE);
-                            try {
-                                request(getShotRequestOperation);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception thrown for requesting operation");
-                            }
-
-                        }
-                    } else {
-                        Log.e(TAG, "gatt characteristic uuid is null");
-                    }
+            registerReceiver(bleServiceReceiver, bleServiceIntentFilter());                         //Register receiver to handles events fired by the BleService
+            if (bleService != null && !bleService.isBluetoothRadioEnabled()) {                      //Check if Bluetooth radio was turned off while app was paused
+                if (stateApp == StateApp.RUNNING) {                                                 //Check that app is running, to make sure service is connected
+                    stateApp = StateApp.ENABLING_BLUETOOTH;                                         //Are going to request user to turn on Bluetooth
+                    stateConnection = StateConnection.DISCONNECTED;                                 //Must be disconnected if Bluetooth is off
+                    startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQ_CODE_ENABLE_BT); //Start the activity to ask the user to grant permission to enable Bluetooth
+                    Log.i(TAG, "Requesting user to enable Bluetooth radio");
                 }
             }
+            if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                // attempt a reconnection
+                stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+            }
+
+            updateConnectionState();                                                                //Update the screen and menus
+        } catch (Exception e) {
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
 
+    // ----------------------------------------------------------------------------------------------------------------
+    // Activity paused
+    // Unregister the receiver for Intents from the BleService
     @Override
     protected void onPause() {
-        super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
-        timerHandler.removeCallbacks(timerRunnable);
+        super.onPause();                                                                            //Call superclass (AppCompatActivity) onPause method
+        try {
+            unregisterReceiver(bleServiceReceiver);                                                     //Unregister receiver that was registered in onResume()
+        } catch (Exception e) {
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
     }
 
-    private void updateConnectionState(final String resourceId) {
-        runOnUiThread(new Runnable() {
+// PJH - somewhere here, need to ensure probe is idle (not in rolling shot mode)
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Activity stopped
+    // Nothing needed here, all done in onPause() and onDestroy()
+    @Override
+    public void onStop() {
+        super.onStop();                                                                             //Call superclass (AppCompatActivity) onStop method
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Activity is ending
+    // Unbind from BleService and save the details of the BLE device for next time
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();                                                                          //Call superclass (AppCompatActivity) onDestroy method
+        bleService.setProbeIdle();
+
+        if (stateApp != StateApp.REQUEST_PERMISSION) {                                              //See if we got past the permission request
+            unbindService(bleServiceConnection);                                                    //Unbind from the service handling Bluetooth
+        }
+    }
+
+    /******************************************************************************************************************
+     * Methods for handling menu creation and operation.
+     */
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Options menu is different depending on whether connected or not and if we have permission to scan
+    // Show Disconnect option if we are connected or show Connect option if not connected and have a device address
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.ble_main_menu, menu);                                      //Show the menu
+        if (stateApp == StateApp.RUNNING) {                                                         //See if we have permission, service started and Bluetooth enabled
+            menu.findItem(R.id.menu_scan).setVisible(true);                                         //Scan menu item
+            if (stateConnection == StateConnection.CONNECTED) {                                     //See if we are connected
+                menu.findItem(R.id.menu_disconnect).setVisible(true);                               //Are connected so show Disconnect menu
+                menu.findItem(R.id.menu_connect).setVisible(false);                                 //and hide Connect menu
+            }
+            else {                                                                                  //Else are not connected so
+                menu.findItem(R.id.menu_disconnect).setVisible(false);                              // hide the disconnect menu
+                if (bleDeviceAddress != null) {                                                     //See if we have a device address
+                    menu.findItem(R.id.menu_connect).setVisible(true);                              // then show the connect menu
+                }
+                else {                                                                              //Else no device address so
+                    menu.findItem(R.id.menu_connect).setVisible(false);                             // hide the connect menu
+                }
+            }
+        }
+        else {
+            menu.findItem(R.id.menu_scan).setVisible(false);                                        //No permission so hide scan menu item
+            menu.findItem(R.id.menu_connect).setVisible(false);                                     //and hide Connect menu
+            menu.findItem(R.id.menu_disconnect).setVisible(false);                                  //Are not connected so hide the disconnect menu
+        }
+        return true;
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Menu item selected
+    // Scan, connect or disconnect, etc.
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        try {
+//            switch (item.getItemId()) {
+//                case R.id.menu_scan: {                                                            //Menu option Scan chosen
+//                    initializeDisplay();   // remove any old readings, before selecting new probe
+//                    startBleScanActivity();                                                         //Launch the BleScanActivity to scan for BLE devices
+//                    return true;
+//                }
+//                case R.id.menu_connect: {                                                           //Menu option Connect chosen
+//                    if (bleDeviceAddress != null) {                                                 //Check that there is a valid Bluetooth LE address
+//                        stateConnection = StateConnection.CONNECTING;                               //Have an address so we are going to start connecting
+//                        connectWithAddress(bleDeviceAddress);                                       //Call method to ask the BleService to connect
+//                    }
+//                    return true;
+//                }
+//                case R.id.menu_disconnect: {                                                        //Menu option Disconnect chosen
+//                    stateConnection = StateConnection.DISCONNECTING;                                //StateConnection is used to determine whether disconnect event should trigger a popup to reconnect
+//                    updateConnectionState();                                                        //Update the screen and menus
+//                    bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
+//                    return true;
+//                }
+//                case R.id.menu_help: {                                                              //Menu option Help chosen
+//                    showAlert.showHelpMenuDialog(this.getApplicationContext());                     //Show the AlertDialog that has the Help text
+//                    return true;
+//                }
+//                case R.id.menu_about: {                                                             //Menu option About chosen
+//                    showAlert.showAboutMenuDialog(this);                                    //Show the AlertDialog that has the About text
+//                    return true;
+//                }
+//                case R.id.menu_exit: {                                                              //Menu option Exit chosen
+//                    showAlert.showExitMenuDialog(new Runnable() {                                   //Show the AlertDialog that has the Exit warning text
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            if (bleService != null) {                                               //Check if the service is running
+//                                bleService.disconnectBle();                                         //Ask the BleService to disconnect in case there is a Bluetooth connection
+//                            }
+//                            onBackPressed();                                                        //Exit by going back - ultimately calls finish()
+//                        }
+//                    });
+//                    return true;
+//                }
+//            }
+//        } catch (Exception e) {
+//            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+//        }
+//        return super.onOptionsItemSelected(item);                                                   //No valid menu item selected so pass up to superclass method
+//    }
+
+    /******************************************************************************************************************
+     * Callback methods for handling Service connection events and Activity result events.
+     */
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Callbacks for BleService service connection and disconnection
+    private final ServiceConnection bleServiceConnection = new ServiceConnection() {                //Create new ServiceConnection interface to handle connection and disconnection
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {              //Service connects
+            try {
+                Log.i(TAG, "BleService connected");
+                BleService.LocalBinder binder = (BleService.LocalBinder) service;                   //Get the Binder for the Service
+                bleService = binder.getService();                                                   //Get a link to the Service from the Binder
+                if (bleService.isBluetoothRadioEnabled()) {                                         //See if the Bluetooth radio is on
+                    stateApp = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
+                    //startBleScanActivity();                                                         //Launch the BleScanActivity to scan for BLE devices
+                }
+                else {                                                                              //Radio needs to be enabled
+                    stateApp = StateApp.ENABLING_BLUETOOTH;                                         //Are requesting Bluetooth to be turned on
+                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);     //Create an Intent asking the user to grant permission to enable Bluetooth
+                    startActivityForResult(enableBtIntent, REQ_CODE_ENABLE_BT);                     //Send the Intent to start the Activity that will return a result based on user input
+                    Log.i(TAG, "Requesting user to turn on Bluetooth");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {                            //BleService disconnects - should never happen
+            Log.i(TAG, "BleService disconnected");
+            bleService = null;                                                                      //Not bound to BleService
+        }
+    };
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Callback for Activities that return a result
+    // We call BluetoothAdapter to turn on the Bluetooth radio and BleScanActivity to scan
+    // and return the name and address of a Bluetooth LE device that the user chooses
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);                                    //Pass the activity result up to the parent method
+        switch (requestCode) {                                                                      //See which Activity returned the result
+            case REQ_CODE_ENABLE_BT: {
+                if (resultCode == Activity.RESULT_OK) {                                             //User chose to enable Bluetooth
+                    stateApp = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
+                    // PJH we want to stay on the main screen, until user taps 'Scan'
+                    //startBleScanActivity();                                                         //Start the BleScanActivity to do a scan for devices
+                } else {
+                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);     //User chose not to enable Bluetooth so create an Intent to ask again
+                    startActivityForResult(enableBtIntent, REQ_CODE_ENABLE_BT);                     //Send the Intent to start the activity that will return a result based on user input
+                    Log.i(TAG, "Requesting user to turn on Bluetooth again");
+                }
+                break;
+            }
+            case REQ_CODE_SCAN_ACTIVITY: {
+                showAlert.dismiss();
+                if (resultCode == Activity.RESULT_OK) {                                             //User chose a Bluetooth device to connect
+                    stateApp = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is fully operational
+                    bleDeviceAddress = intent.getStringExtra(BleScanActivity.EXTRA_SCAN_ADDRESS);   //Get the address of the BLE device selected in the BleScanActivity
+                    bleDeviceName = intent.getStringExtra(BleScanActivity.EXTRA_SCAN_NAME);         //Get the name of the BLE device selected in the BleScanActivity
+
+                    if (bleDeviceName != null) {                                                //See if there is a device name
+//                        textDeviceNameAndAddress.setText(bleDeviceName);                        //Display the name
+                    } else {
+//                        textDeviceNameAndAddress.setText(R.string.unknown_device);                     //or display "Unknown Device"
+                    }
+                    if (bleDeviceAddress != null) {                                             //See if there is an address
+                        textDeviceNameAndAddress.append(" - " + bleDeviceAddress);              //Display the address
+                    }
+
+                    if (bleDeviceAddress == null) {                                                 //Check whether we were given a device address
+                        stateConnection = StateConnection.DISCONNECTED;                             //No device address so not connected and not going to connect
+                    } else {
+                        stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                        connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+                    }
+                } else {                                                                            //Did not get a valid result from the BleScanActivity
+                    stateConnection = StateConnection.DISCONNECTED;                                 //No result so not connected and not going to connect
+                }
+                updateConnectionState();                                                            //Update the connection state on the screen and menus
+                break;
+            }
+        }
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Callback for permission requests (new feature of Android Marshmallow requires runtime permission requests)
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Log.i(TAG, "PJH - onRequestPermissionsResult");
+
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {                                 //See if location permission was granted
+            Log.i(TAG, "PJH - Location permission granted");
+            stateApp = StateApp.STARTING_SERVICE;                                                   //Are going to start the BleService service
+            Intent bleServiceIntent = new Intent(this, BleService.class);             //Create Intent to start the BleService
+            this.bindService(bleServiceIntent, bleServiceConnection, BIND_AUTO_CREATE);             //Create and bind the new service to bleServiceConnection object that handles service connect and disconnect
+        }
+        else if (requestCode == REQ_CODE_ACCESS_LOC1) {                                             //Not granted so see if first refusal and need to ask again
+            showAlert.showLocationPermissionDialog(new Runnable() {                                 //Show the AlertDialog that scan cannot be performed without permission
+                @TargetApi(Build.VERSION_CODES.M)
+                @Override
+                public void run() {                                                                 //Runnable to execute when Continue button pressed
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_CODE_ACCESS_LOC2); //Ask for location permission again
+                }
+            });
+        }
+        else {
+            //Permission refused twice so send user to settings
+            Log.i(TAG, "PJH - Location permission NOT granted");
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);               //Create Intent to open the app settings page
+            Uri uri = Uri.fromParts("package", getPackageName(), null);            //Identify the package for the settings
+            intent.setData(uri);                                                                    //Add the package to the Intent
+            startActivity(intent);                                                                  //Start the settings activity
+        }
+    }
+
+    /******************************************************************************************************************
+     * Methods for handling Intents.
+     */
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Method to create and return an IntentFilter with Intent Actions that will be broadcast by the BleService to the bleServiceReceiver BroadcastReceiver
+    private static IntentFilter bleServiceIntentFilter() {                                          //Method to create and return an IntentFilter
+        final IntentFilter intentFilter = new IntentFilter();                                       //Create a new IntentFilter
+        intentFilter.addAction(BleService.ACTION_BLE_CONNECTED);                                    //Add filter for receiving an Intent from BleService announcing a new connection
+        intentFilter.addAction(BleService.ACTION_BLE_DISCONNECTED);                                 //Add filter for receiving an Intent from BleService announcing a disconnection
+        intentFilter.addAction(BleService.ACTION_BLE_DISCOVERY_DONE);                               //Add filter for receiving an Intent from BleService announcing a service discovery
+        intentFilter.addAction(BleService.ACTION_BLE_DISCOVERY_FAILED);                             //Add filter for receiving an Intent from BleService announcing failure of service discovery
+        intentFilter.addAction(BleService.ACTION_BLE_NEW_DATA_RECEIVED);                            //Add filter for receiving an Intent from BleService announcing new data received
+        intentFilter.addAction(BleService.ACTION_BLE_CONFIG_READY);                            //Add filter for receiving an Intent from BleService announcing new data received
+        intentFilter.addAction(BleService.ACTION_BLE_FETCH_CAL);  // PJH - just to update display
+        return intentFilter;                                                                        //Return the new IntentFilter
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // BroadcastReceiver handles various Intents sent by the BleService service.
+    private final BroadcastReceiver bleServiceReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {                                     //Intent received
+            final String action = intent.getAction();                                               //Get the action String from the Intent
+            switch (action) {                                                                       //See which action was in the Intent
+                case BleService.ACTION_BLE_CONNECTED: {                                             //Have connected to BLE device
+                    Log.d(TAG, "Received Intent  ACTION_BLE_CONNECTED");
+                    initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
+                    transparentUartData.reset();   // PJH remove                                                 //Also clear any buffered incoming data
+                    stateConnection = StateConnection.DISCOVERING;                                  //BleService automatically starts service discovery after connecting
+                    updateConnectionState();                                                        //Update the screen and menus
+                    break;
+                }
+                case BleService.ACTION_BLE_DISCONNECTED: {                                          //Have disconnected from BLE device
+                    Log.d(TAG, "Received Intent ACTION_BLE_DISCONNECTED");
+                    initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
+                    transparentUartData.reset();                                                    //Also clear any buffered incoming data
+                    //if (stateConnection == StateConnection.CONNECTED) {                             //See if we were connected before
+                    //    showAlert.showLostConnectionDialog(new Runnable() {                         //Show the AlertDialog for a lost connection
+                    //        @Override
+                    //        public void run() {                                                     //Runnable to execute if OK button pressed
+                    //            startBleScanActivity();                                             //Launch the BleScanActivity to scan for BLE devices
+                    //        }
+                    //    });
+                    //}
+                    stateConnection = StateConnection.DISCONNECTED;                                 //Are disconnected
+
+                    // but we want to reconnect automatically - TODO add retry counter then give up
+                    if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                        // attempt a reconnection
+                        stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                        connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+                    }
+
+                    updateConnectionState();                                                        //Update the screen and menus
+                    break;
+                }
+                case BleService.ACTION_BLE_DISCOVERY_DONE: {                                        //Have completed service discovery
+                    Log.d(TAG, "PJH - Received Intent  ACTION_BLE_DISCOVERY_DONE");
+                    connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
+                    stateConnection = StateConnection.CONNECTED;                                    //Were already connected but showing discovering, not connected
+                    updateConnectionState();                                                        //Update the screen and menus
+                    Log.i(TAG, "PJH - about to request Ezy config");
+                    bleService.requestEzyConfig();                                                         //Ask the BleService to connect to start interrogating the device for its configuration
+                    break;
+                }
+                case BleService.ACTION_BLE_DISCOVERY_FAILED: {                                      //Service discovery failed to find the right service and characteristics
+                    Log.d(TAG, "Received Intent  ACTION_BLE_DISCOVERY_FAILED");
+                    stateConnection = StateConnection.DISCONNECTING;                                //Were already connected but showing discovering, so are now disconnecting
+                    connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
+                    bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
+                    updateConnectionState();                                                        //Update the screen and menus
+                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
+                        @Override
+                        public void run() {                                                         //Runnable to execute if OK button pressed
+                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+                        }
+                    });
+                    break;
+                }
+                case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
+                    Log.d(TAG, "Received Intent  ACTION_BLE_CONFIG_READY");
+                    progressBar.setVisibility(ProgressBar.INVISIBLE);
+                    //initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
+                    //transparentUartData.reset();                                                    //Also clear any buffered incoming data
+// PJH - ideally, want to change the state to READY, to tell app the probe is ready to go
+// but concerned that changing from CONNECTED will break other stuff
+// MAYBE use another flag
+                    //stateConnection = StateConnection.READY;  remains as CONNECTED                                //BleService automatically starts service discovery after connecting
+                    //updateConnectionState();                                                        //Update the screen and menus
+
+                    //String verString = String.format("%d", bleService.getRollingShotInterval());
+                    String verString = bleService.getFirmwareVersionString();
+//                    textDeviceStatus.setText(R.string.ready);  // PJH - hack - shouldn't be here!
+                    labelFirmwareVersion.setVisibility(View.VISIBLE);
+//                    textFirmwareVersion.setText(verString);
+                    textFirmwareVersion.setVisibility(View.VISIBLE);
+/*
+                    byte[] binaryCalData = bleService.getBinaryCalData();
+                    // we know this is only the first 16 bytes
+                    // PJH - HACK to get out first date
+                    int len = binaryCalData[5];
+                    if ((len == 4) || (len==8)) {
+                        long unix_tick = 0;
+                        //for (byte b : bytes) {
+                        for (int i=(6+len-1); i>=6; i--) {
+                            unix_tick = (unix_tick << 8) + (binaryCalData[i] & 0xFF);
+                        }
+
+                        Date date = new Date(unix_tick*1000L);
+                        SimpleDateFormat jdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+                        jdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+                        String java_date = jdf.format(date);
+
+ */
+                    bleService.parseBinaryCalibration();   // process thr calibration data just retrieved
+// PJH - HACK HACK HACK   - BEWARE BLE has no queueing yet!!!!
+                    bleService.setNotifications(true);   // PJH - HACK - find place where this write doesn't kill something else
+                    // this seems to be working, but it REALLY needs to be incorporated into the config state machine PJH IMPORTANT
+                    // (and duplicate for coreshot)
+                    String java_date = bleService.getCalibratedDateString();
+                    labelCalibratedDate.setVisibility(View.VISIBLE);
+//                    textCalibratedDate.setText(java_date);
+                    textCalibratedDate.setVisibility(View.VISIBLE);
+                    //}
+
+                    int probeShotInterval = bleService.getShotInterval();
+//                    textInterval.setText(Integer.toString(probeShotInterval));
+                    int probeDebug1 = bleService.getDebug1();
+//                    editBoxDebug1.setText(Integer.toString(probeDebug1));
+                    int probeDebug2 = bleService.getDebug2();
+//                    editBoxDebug1.setText(Integer.toString(probeDebug2));
+
+                    haveSuitableProbeConnected = true;   // this enables the test stuff
+                    // PJH - TODO - need to invalidate this if there is any problems encountered
+                    // (initially just set it false when scan is run)
+                    break;
+                }
+                case BleService.ACTION_BLE_FETCH_CAL: {                                        //Have completed service discovery
+                    Log.d(TAG, "PJH - Received Intent  ACTION_BLE_FETCH_CAL");
+                    // PJH - HACK - should be in updateConnectionState
+//                    textDeviceStatus.setText("Fetching calibration");                            //Show "Discovering"
+                    progressBar.setVisibility(ProgressBar.VISIBLE);
+                    break;
+                }
+                case BleService.ACTION_BLE_NEW_DATA_RECEIVED: {                                     //Have received data (characteristic notification) from BLE device
+                    Log.i(TAG, "PJH - Received Intent ACTION_BLE_NEW_DATA_RECEIVED");
+                    //    final byte[] newBytes = bleService.readFromTransparentUART();
+                    //    processIncomingData(newBytes);
+                    processNewReading();
+                    break;
+                }
+                //case BleService.ACTION_BLE_CHARACTERISTIC_READ: {                                     //Have received data (characteristic notification) from BLE device
+                //    Log.d(TAG, "Received Intent ACTION_BLE_CHARACTERISTIC_READ");
+                //    final byte[] newBytes = bleService.getCharacteristicReadResults();
+                //    processCharacteristicRead(newBytes);
+                //    break;
+                //}
+                default: {
+                    Log.w(TAG, "Received Intent with invalid action: " + action);
+                }
+            }
+        }
+    };
+
+    /******************************************************************************************************************
+     * Method for processing incoming data and updating the display
+     */
+
+    private void initializeDisplay() {
+        try {
+//            textDeviceStatus.setText("Not Connected");  // PJH - hack - shouldn't be here!
+            labelFirmwareVersion.setVisibility(View.INVISIBLE);
+//            textFirmwareVersion.setText("");
+            textFirmwareVersion.setVisibility(View.INVISIBLE);
+
+            labelCalibratedDate.setVisibility(View.INVISIBLE);
+//            textCalibratedDate.setText("");
+            textCalibratedDate.setVisibility(View.INVISIBLE);
+
+            // PJH - not sure if setting to a null string will fully overwrite any existing numbers
+//            textAccX.setText("");
+//            textAccY.setText("");
+//            textAccZ.setText("");
+//            textAccMag.setText("");
+
+//            textMagX.setText("");
+//            textMagY.setText("");
+//            textMagZ.setText("");
+//            textMagMag.setText("");
+
+//            textRoll.setText("");
+//            textRoll360.setText("");
+//            textDip.setText("");
+//            textAz.setText("");
+//            textAzErr.setText("");
+
+
+//            textAlignCount.setText("0");
+//            textAlignAvgDip.setText("");
+//            textAlignAvgAz.setText("");
+
+//            textAcceptComment.setText("Select Location and press Start\n(in -50 tray, at 0 roll, az should be 283.26)");
+//            textAcceptDip.setText("");
+//            textAcceptAz.setText("");
+
+//            buttonAlignStart.setText("START");  // was having issues with first click not working
+//            buttonAcceptStart.setText("START");
+
+//            textAcceptResultAz.setText("");
+//            textAcceptResultDip.setText("");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
+    }
+
+    public static Integer toInteger(Object value) {
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof Number) {
+            return ((Number) value).intValue();
+        } else if (value instanceof String) {
+            try {
+                return (int) Double.parseDouble((String) value);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return null;
+    }
+
+
+    // a new shot has been received, so retrieve and display it
+    private void processNewReading() {
+        try {
+            int count = 1;//toInteger(editBoxAverage.getText().toString());
+//            if (count < 1) {
+//                count = 1;
+//                editBoxAverage.setText(Integer.toString(count));  // only update if it is invalid
+//            }
+//            if (count > 120) {   // this value is set by ringBufferSize in bleService
+//                count = 120;
+//                editBoxAverage.setText(Integer.toString(count));  // only update if it is invalid
+//            }
+
+            //textFirmwareVersion.setText(Integer.toString(count));  // hack
+            double newVal[] = bleService.getLatestBoreshot(count);
+
+            recordCount = bleService.getSensorDataCount();
+            if (bleService.isRecordingSensorDataEnabled() && (recordCount > 0)) {
+//                buttonRecord.setText(String.format("Save: %d", recordCount));
+            }
+
+
+//            textAccX.setText(String.format("%7.4f", newVal[1])); //TODO @Anna - will need to be changed to some kind of save thing
+//            textAccY.setText(String.format("%7.4f", newVal[2]));
+//            textAccZ.setText(String.format("%7.4f", newVal[3]));
+            boolean accValid = true;
+            double accMag = Math.sqrt(newVal[1]*newVal[1] + newVal[2]*newVal[2] + newVal[3]*newVal[3]);
+            if (Math.abs(accMag-1.0)>0.03) { accValid = false; }
+//            textAccMag.setText(String.format("(%7.4f)", accMag));
+            if (accValid) {
+//                textAccMag.setTextColor(Color.BLACK);
+            }
+            else {
+//                textAccMag.setTextColor(Color.RED);
+            }
+
+            double magMag = Math.sqrt(newVal[4]*newVal[4] + newVal[5]*newVal[5] + newVal[6]*newVal[6]);
+
+            //
+//            textMagX.setText(String.format("%7.4f", newVal[4])); //TODO - @ANNA - add back in as a record or smth
+//            textMagY.setText(String.format("%7.4f", newVal[5]));
+//            textMagZ.setText(String.format("%7.4f", newVal[6]));
+//
+//            textMagMag.setText(String.format("(%7.4f)", magMag));
+//
+//            textRoll.setText(String.format("%7.4f", newVal[7]));
+//            textRoll360.setText(String.format("(%7.4f)", newVal[7]+180));
+//            textDip.setText(String.format("%7.4f", newVal[8]));
+//            textAz.setText(String.format("%7.4f", newVal[9]));
+//            textAzErr.setText("");  // just in case we are out of accept mode - will this flicker?
+
+//            textTempUc.setText(String.format("%7.4f", newVal[10]));
+
+            //
+            // Check if taking reading for alignment
+            //
+            if (newAlignCountRemaining > 0) {
+                //Log.i(TAG, String.format("PJH - align sample %d (remaining)", newAlignCountRemaining));
+                newAlignReadingDipSum += newVal[8];
+                newAlignReadingAzSum += newVal[9];
+                newAlignCountRemaining -= 1;
+//                textAlignCountdown.setText(String.format("(%d)",newAlignCountRemaining));
+
+                if (newAlignCountRemaining == 0) {
+                    // ok, we just took te last sample for this reading
+                    if (switchRecord.isChecked()) {  // do we have a race condition here
+                        // we have recorded the last of the shots
+                        bleService.stopRecordingSensorData();
+                    }
+
+                    // now update the totals
+                    alignDipTotal += newAlignReadingDipSum;
+                    alignAzTotal  += newAlignReadingAzSum;
+                    alignCount += 1;
+                    // and update the display
+//                    textAlignCount.setText(String.format("%d", alignCount));
+//                    textAlignAvgDip.setText(String.format("%7.4f", (alignDipTotal / alignCount / alignSamplesPerReading)));
+//                    textAlignAvgAz.setText(String.format("%7.4f", (alignAzTotal / alignCount / alignSamplesPerReading)));
+
+                    ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);   // beep
+                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
+
+//                    textAlignCountdown.setText("");
+                }
+            }
+
+            if (acceptShowLiveError) {
+                acceptCurrentLiveDipError = Math.abs(newVal[8] - acceptTestPointDip[acceptState - 1]);
+                acceptCurrentLiveRoll360Error = Math.abs(newVal[7] + 180 - acceptTestPointRoll[acceptState - 1]);
+                //textFirmwareVersion.setText(String.format("Acc DipErr=%3.2f RollErr=%3.2f", acceptCurrentLiveDipError, acceptCurrentLiveRoll360Error));// PJH TODO DEBUG HACK
+                double azIdeal = 0;
+                if ((acceptState >= 1) && (acceptState <=4)) { azIdeal = acceptIdeal50Az; }
+                if ((acceptState >= 5) && (acceptState <=8)) { azIdeal = acceptIdeal60Az; }
+                if ((acceptState >= 9) && (acceptState <=12)) { azIdeal = acceptIdeal30Az; }
+                acceptCurrentLiveAzError = Math.abs(newVal[9] - azIdeal);
+
+
+
+                // if current dip is more than 4 degrees from the desired position, show live dip in red
+                if (acceptCurrentLiveDipError < acceptAcceptableLiveError) {
+//                    textDip.setTextColor(Color.BLACK);
+                } else {
+//                    textDip.setTextColor(Color.RED);
+                }
+                // if current roll is more than 4 degrees from the desired position, show live roll360 in red
+                if (acceptCurrentLiveRoll360Error < 4) {
+//                    textRoll360.setTextColor(Color.BLACK);
+                } else {
+//                    textRoll360.setTextColor(Color.RED);
+                }
+
+//                textAzErr.setText(String.format("(err:%7.4f)", acceptCurrentLiveAzError));
+            }
+            else {
+                // this should never be required, but just in case...
+                acceptCurrentLiveDipError = 0;
+                acceptCurrentLiveRoll360Error = 0;
+                acceptCurrentLiveAzError = 0;
+            }
+
+            //
+            // Check if taking reading for acceptance test
+            //
+            if (newAcceptCountRemaining > 0) {
+                //Log.i(TAG, String.format("PJH - accept sample %d (remaining)", newAcceptCountRemaining));
+                newAcceptReadingDipSum += newVal[8];
+                newAcceptReadingAzSum += newVal[9];
+                newAcceptCountRemaining -= 1;
+//                textAlignCountdown.setText(String.format("(%d)",newAcceptCountRemaining));  // yes, I know it is in the wrong area
+
+                if (acceptState > 0) {
+//                    textAcceptResultAz.setText("");
+//                    textAcceptResultDip.setText("");
+                }
+
+                if (newAcceptCountRemaining == 0) {
+                    // ok, we just took te last sample for this reading
+
+                    if (switchRecord.isChecked()) {  // do we have a race condition here
+                        // we have recorded the last of the shots
+                        bleService.stopRecordingSensorData();
+                    }
+
+                    if ((acceptState>0) && (acceptState<=12)) {
+                        acceptDip[acceptState-1]  = newAcceptReadingDipSum / acceptSamplesPerReading;
+                        acceptAz[acceptState-1]   = newAcceptReadingAzSum  / acceptSamplesPerReading;
+                        acceptRoll[acceptState-1] = newVal[7];
+                        acceptState += 1;
+                    }
+                    // now update the totals
+                    //alignDipTotal += newAlignReadingDipSum;
+                    //alignAzTotal  += newAlignReadingAzSum;
+                    //alignCount += 1;
+                    // and update the display
+                    //textAlignCount.setText(String.format("%d", alignCount));
+//                    textAcceptDip.setText(String.format("%7.4f", (newAcceptReadingDipSum / acceptSamplesPerReading)));
+//                    textAcceptAz.setText(String.format("%7.4f", (newAcceptReadingAzSum  / acceptSamplesPerReading)));
+
+                    if (acceptState >= 13) {
+                        // Ok, have taken all 12 readings
+//                        textAcceptComment.setText(String.format("Test complete"));
+//                        buttonAcceptStart.setText("START");
+
+                        acceptShowLiveError = false;  // turn off error display and make sure everything back to normal
+//                        textDip.setTextColor(Color.BLACK);
+//                        textRoll360.setTextColor(Color.BLACK);
+                        textRoll.setVisibility(View.VISIBLE);
+
+                        bleService.setProbeIdle();
+                        // now generate results file
+                        String nowDate = new SimpleDateFormat("yyyy-MM-dd_hh-mm", Locale.getDefault()).format(new Date());
+                        String safeBleDeviceAddress = bleDeviceAddress.replace(':','-');
+                        String safeBleDeviceName = bleDeviceName.replace(':','-');
+                        String filename = String.format("AcceptTest_%s_%s_%s.csv", nowDate, safeBleDeviceAddress, safeBleDeviceName);
+                        Log.i(TAG, String.format("PJH - Accept filename: %s", filename));
+                        writeAcceptReadingsToFile(getExternalFilesDir("/").getAbsolutePath() + "/"+filename);
+                        // and do calculations
+                        double sqAzDeltaSum = 0;
+                        double sqDipDeltaSum = 0;
+                        double err = 0;
+                        for (int i=0; i<4; i++) {
+                            err = acceptAz[i]-acceptIdeal50Az;
+                            if (err > 180) { err -= 360; }
+                            if (err < -180) { err += 360; }
+                            sqAzDeltaSum += (err * err );
+
+                            //sqDipDeltaSum += ((acceptDip[i]-acceptIdeal50Dip) * (acceptDip[i]-acceptIdeal50Dip) );
+                            err = acceptDip[i]-acceptIdeal50Dip;
+                            if (err > 180) { err -= 360; }
+                            if (err < -180) { err += 360; }
+                            sqDipDeltaSum += (err * err );
+
+                        }
+                        for (int i=4; i<8; i++) {
+                            //sqAzDeltaSum += ((acceptAz[i]-acceptIdeal60Az) * (acceptAz[i]-acceptIdeal60Az) );
+                            err = acceptAz[i]-acceptIdeal60Az;
+                            if (err > 180) { err -= 360; }
+                            if (err < -180) { err += 360; }
+                            sqAzDeltaSum += (err * err );
+
+                            //sqDipDeltaSum += ((acceptDip[i]-acceptIdeal60Dip) * (acceptDip[i]-acceptIdeal60Dip) );
+                            err = acceptDip[i]-acceptIdeal60Dip;
+                            if (err > 180) { err -= 360; }
+                            if (err < -180) { err += 360; }
+                            sqDipDeltaSum += (err * err );
+
+                        }
+                        for (int i=8; i<12; i++) {
+                            //sqAzDeltaSum += ((acceptAz[i]-acceptIdeal30Az) * (acceptAz[i]-acceptIdeal30Az) );
+                            err = acceptAz[i]-acceptIdeal30Az;
+                            if (err > 180) { err -= 360; }
+                            if (err < -180) { err += 360; }
+                            sqAzDeltaSum += (err * err );
+
+                            //sqDipDeltaSum += ((acceptDip[i]-acceptIdeal30Dip) * (acceptDip[i]-acceptIdeal30Dip) );
+                            err = acceptDip[i]-acceptIdeal30Dip;
+                            if (err > 180) { err -= 360; }
+                            if (err < -180) { err += 360; }
+                            sqDipDeltaSum += (err * err );
+
+                        }
+                        acceptRmsAz = Math.sqrt(sqAzDeltaSum/12);
+                        acceptRmsDip = Math.sqrt(sqDipDeltaSum/12);
+
+//                        textAcceptResultAz.setText(String.format("%5.3f", acceptRmsAz));     // show the result (summary) of the test
+//                        textAcceptResultDip.setText(String.format("%5.3f", acceptRmsDip));
+//                        textAcceptComment.setText(String.format("Test complete\nPress Start to begin a new test."));
+                        acceptState = 0;
+                    }
+                    else {
+                        // more readings to take...
+//                        textAcceptComment.setText(String.format("%dof12 Place probe in '%d' tray, adjust roll to %d degrees, step back and press 'Take Reading'",
+//                                acceptState, acceptTestPointDip[acceptState - 1], acceptTestPointRoll[acceptState - 1]));
+                    }
+
+                    ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
+
+//                    textAlignCountdown.setText("");   // hide the countdown
+
+                }
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
+    }
+
+
+    public void writeAcceptReadingsToFile(final String filename) {
+        File file = new File(filename);
+        try {
+
+            // generate the original acceptance report
+            String csvBody = "";
+            csvBody += "Reading,Roll,Dip,Azimuth\n";
+            for (int i = 0; i < 12; i++) {
+                csvBody += String.format("%d,%f,%f,%f\n", i + 1, acceptRoll[i], acceptDip[i], acceptAz[i]);
+            }
+            csvBody += "\n\n\n";
+
+            csvBody += String.format("Location, %s\n\n", acceptLocation);
+
+            csvBody += String.format("Tray, IdealDip, IdealAzimuth\n");
+            csvBody += String.format("-60, %f, %f\n", acceptIdeal60Dip, acceptIdeal60Az);
+            csvBody += String.format("-50, %f, %f\n", acceptIdeal50Dip, acceptIdeal50Az);
+            csvBody += String.format("-30, %f, %f\n", acceptIdeal30Dip, acceptIdeal30Az);
+            csvBody += "\n\n\n";
+
+            FileOutputStream stream = new FileOutputStream(file);
+            stream.write(csvBody.getBytes());
+            stream.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    public void writeSensorDataToFile(final String filename) {
+        File file = new File(filename);
+        try {
+            // generate the original SensorData report
+            String csvBody = "";
+
+            Log.i(TAG, "PJH - about to save");
+            //buttonRecord.setText("Saving data");
+            //bleService.stopRecordingSensorData();
+            recordCount = bleService.getSensorDataCount();
+
+            //Log.i(TAG, String.format("PJH - about to save %d sensorData records", recordCount);
+            Log.i(TAG, "PJH - about to get header");
+            String header = bleService.sensorDataReportGetReportHeader();
+            csvBody += header+"\n";
+
+            String record;
+            for (int i=0; i<recordCount; i++) {
+                record = bleService.sensorDataReportGetReportLine(i);
+                csvBody += record+"\n";
+            }
+
+
+            FileOutputStream stream = new FileOutputStream(file);
+            stream.write(csvBody.getBytes());
+            stream.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+    private void processIncomingData(byte[] newBytes) {
+        try {
+            /*
+            transparentUartData.write(newBytes);                                                    //Add new data to any previous bytes left over
+            boolean search = (transparentUartData.size() >= 8);                                     //Need at least 8 bytes for a complete message
+            while (search) {                                                                        //Keep searching until the code has worked through all the bytes
+                final byte[] allBytes = transparentUartData.toByteArray();                          //Put all the bytes into a byte array
+                search = false;                                                                     //Assume there is no termination byte, and update to repeat the search if we find one
+                for (int i = 0; i < allBytes.length; i++) {                                         //Loop through all the bytes
+                    if (allBytes[i] == (byte)']') {                                                 // to look for termination byte
+                        byte[] newLine = Arrays.copyOf(allBytes, i);                                //Get all the bytes up to the termination byte
+                        byte[] leftOver = Arrays.copyOfRange(allBytes, i + 1, allBytes.length); //Get all the remaining bytes after the termination byte
+                        transparentUartData.reset();                                                //Clear out the original data
+                        transparentUartData.write(leftOver);                                        // and save the remaining bytes for later
+                        final String newLineStr = new String(newLine, StandardCharsets.UTF_8);      //Create a string from the bytes up to the termination byte
+                        int ledIndex = newLineStr.indexOf("L02");                                   //Search for the text for the LED state
+                        int tempIndex = newLineStr.indexOf("T04");                                  //Search for the text for the temperature reading
+                        int accelIndex = newLineStr.indexOf("X0C");                                 //Search for the text for the accelerometer readings
+                        //Got LED packet
+                        if (ledIndex != -1) {                                                       //See if the LED text was found
+                            if (newLineStr.charAt(ledIndex + 3) == '0') {                           //See if the status is for the green LED (LED0)
+                                if (newLineStr.charAt(ledIndex + 4) == '0' && switchGreenLed.isChecked()) { //See if the LED is off and should be on
+                                    bleService.writeToTransparentUART("[0L0201]".getBytes());       //Write command to the Transparent UART to light the green LED (LED0)
+                                }
+                                else if (newLineStr.charAt(ledIndex + 4) == '1' && !switchGreenLed.isChecked()) { //See if the LED is on and should be off
+                                    bleService.writeToTransparentUART("[0L0200]".getBytes());       //Write command to the Transparent UART to turn off the green LED (LED0)
+                                }
+                            }
+                            else if (newLineStr.charAt(ledIndex + 3) == '1') {                      //See if the status is for the red LED (LED1)
+                                if (newLineStr.charAt(ledIndex + 4) == '0' && switchRedLed.isChecked()) { //See if the LED is off and should be on
+                                    bleService.writeToTransparentUART("[0L0211]".getBytes());       //Write command to the Transparent UART to light the red LED (LED1)
+                                }
+                                else if (newLineStr.charAt(ledIndex + 4) == '1' && !switchRedLed.isChecked()) { //See if the LED is on and should be off
+                                    bleService.writeToTransparentUART("[0L0210]".getBytes());       //Write command to the Transparent UART to turn off the red LED (LED1)
+                                }
+                            }
+                        }
+                        //Got temperature packet
+                        if (tempIndex != -1) {                                                      //See if the temperature text was found
+                            int rawTemp = (Character.digit(newLineStr.charAt(tempIndex + 5), 16) << 12) //Pull out the ascii characters for the temperature reading
+                                    + (Character.digit(newLineStr.charAt(tempIndex + 6), 16) << 8)
+                                    + (Character.digit(newLineStr.charAt(tempIndex + 3), 16) << 4)
+                                    + Character.digit(newLineStr.charAt(tempIndex + 4), 16);
+                            double temperature = (rawTemp > 32767) ? ((double)(rawTemp - 65536)) / 16 : ((double)(rawTemp)) / 16; //Convert unsigned left shifted to signed
+                            textTemperature.setText(String.format("%s%s", temperature, getString(R.string.degrees_celcius)));     //Display the temperature on the screen
+                        }
+                        //Got accelerometer packet
+                        if (accelIndex != -1) {                                                     //See if the accelerometer text was found
+                            int rawX = (Character.digit(newLineStr.charAt(accelIndex + 5), 16) << 12) //Pull out the ascii characters for the accelerometer X readings
+                                    + (Character.digit(newLineStr.charAt(accelIndex + 6), 16) << 8)
+                                    + (Character.digit(newLineStr.charAt(accelIndex + 3), 16) << 4)
+                                    + Character.digit(newLineStr.charAt(accelIndex + 4), 16);
+                            int accelX = (rawX > 2047) ? (rawX - 4096) : rawX;                      //Convert unsigned 12-bit to signed
+                            int rawY = (Character.digit(newLineStr.charAt(accelIndex + 9), 16) << 12) //Pull out the ascii characters for the accelerometer Y readings
+                                    + (Character.digit(newLineStr.charAt(accelIndex + 10), 16) << 8)
+                                    + (Character.digit(newLineStr.charAt(accelIndex + 7), 16) << 4)
+                                    + Character.digit(newLineStr.charAt(accelIndex + 8), 16);
+                            int accelY = (rawY > 2047) ? (rawY - 4096) : rawY;                      //Convert unsigned 12-bit to signed
+                            int rawZ = (Character.digit(newLineStr.charAt(accelIndex + 13), 16) << 12) //Pull out the ascii characters for the accelerometer Z readings
+                                    + (Character.digit(newLineStr.charAt(accelIndex + 14), 16) << 8)
+                                    + (Character.digit(newLineStr.charAt(accelIndex + 11), 16) << 4)
+                                    + Character.digit(newLineStr.charAt(accelIndex + 12), 16);
+                            int accelZ = (rawZ > 2047) ? (rawZ - 4096) : rawZ;                      //Convert unsigned 12-bit to signed
+                            textAccelerometerX.setText(String.format("%s%d", getString(R.string.accelerometer_x), accelX));        //Display the accelerometer X readings
+                            textAccelerometerY.setText(String.format("%s%d", getString(R.string.accelerometer_y), accelY));        //Display the accelerometer Y readings
+                            textAccelerometerZ.setText(String.format("%s%d", getString(R.string.accelerometer_z), accelZ));        //Display the accelerometer Z readings
+                            accelXSeries.appendData(new DataPoint(accelGraphHorizontalPoint, accelX), true, 100); //Update the graph with the new accelerometer readings
+                            accelYSeries.appendData(new DataPoint(accelGraphHorizontalPoint, accelY), true, 100);
+                            accelZSeries.appendData(new DataPoint(accelGraphHorizontalPoint, accelZ), true, 100);
+                            accelGraphHorizontalPoint += 1d;                                        //Increment the index for the next point on the horizontal axis of the graph
+                        }
+                        search = true;                                                              //Found a termination byte during this search so repeat the search to see if there are any more
+                        break;
+                    }
+                }
+
+
+            }
+        */
+        } catch (Exception e) {
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
+    }
+
+/*
+    private void processCharacteristicRead(byte[] newBytes) {
+        try {
+
+        } catch (Exception e) {
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
+    }
+ */
+
+
+
+
+    /******************************************************************************************************************
+     * Methods for scanning, connecting, and showing event driven dialogs
+     */
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Start the BleScanActivity that scans for available Bluetooth devices and lets the user select one
+    private void startBleScanActivity() {
+        try {
+            bleService.invalidateCalibration();  // to force a full connect and reread of the calibration data
+            if (stateApp == StateApp.RUNNING) {                                                     //Only do a scan if we got through startup (permission granted, service started, Bluetooth enabled)
+                stateConnection = StateConnection.DISCONNECTING;                                    //Are disconnecting prior to doing a scan
+                haveSuitableProbeConnected = false;
+                bleService.disconnectBle();                                                         //Disconnect an existing Bluetooth connection or cancel a connection attempt
+                final Intent bleScanActivityIntent = new Intent(TakeMeasurements.this, BleScanActivity.class); //Create Intent to start the BleScanActivity
+                startActivityForResult(bleScanActivityIntent, REQ_CODE_SCAN_ACTIVITY);              //Start the BleScanActivity
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Attempt to connect to a Bluetooth device given its address and time out after CONNECT_TIMEOUT milliseconds
+    private void connectWithAddress(String address) {
+        try {
+            updateConnectionState();                                                                //Update the screen and menus (stateConnection is either CONNECTING or AUTO_CONNECT
+            connectTimeoutHandler.postDelayed(abandonConnectionAttempt, CONNECT_TIMEOUT);           //Start a delayed runnable to time out if connection does not occur
+            bleService.connectBle(address);                                                         //Ask the BleService to connect to the device
+        } catch (Exception e) {
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Runnable used by the connectTimeoutHandler to stop the connection attempt
+    private Runnable abandonConnectionAttempt = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (stateConnection == StateConnection.CONNECTING) {                                //See if still trying to connect
+                    stateConnection = StateConnection.DISCONNECTING;                                //Are now disconnecting
+                    bleService.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
+                    updateConnectionState();                                                        //Update the screen and menus
+                    showAlert.showFailedToConnectDialog(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
+                        @Override
+                        public void run() {                                                         //Runnable to execute if OK button pressed
+                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            }
+        }
+    };
+
+    /******************************************************************************************************************
+     * Methods for updating connection state on the screen
+     */
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Update the text showing what Bluetooth device is connected, connecting, discovering, disconnecting, or not connected
+    private void updateConnectionState() {
+        runOnUiThread(new Runnable() {                                                              //Always do display updates on UI thread
             @Override
             public void run() {
-                //setText to resource ID to display connection status
-                if (resourceId.equals("Connected")) {
-                    Log.d(TAG, "DEVICE CONNECTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                    connectionStatus.setText("Connected");
-                    connectionStatusImg.setImageResource(R.drawable.ready);
-                    mConnectionStatus = "Connected";
-
-                } else if (resourceId.equals("Disconnected")) {
-                    Log.d(TAG, "DEVICE DISCONNECTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                    connectionStatus.setText("Disconnected");
-                    connectionStatusImg.setImageResource(R.drawable.unconnected);
-                    mConnectionStatus = "Disconnected";
-                    registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-                    if (mBluetoothLeService != null) {
-                        final boolean result = mBluetoothLeService.connect(mDeviceAddress);
-                        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-                        Log.d(TAG, "Connection request result=" + result);
+                switch (stateConnection) {
+                    case CONNECTING: {
+//                        textDeviceStatus.setText(R.string.waiting_to_connect);                             //Show "Connecting"
+                        progressBar.setVisibility(ProgressBar.VISIBLE);                             //Show the circular progress bar
+                        break;
                     }
-                } else {
-//                    connectionStatus.setText("No probe selected");
-                    Log.e(TAG, "Error no probe selected");
+                    case CONNECTED: {
+//                        textDeviceStatus.setText(R.string.interrogating_configuration);
+                        //if (bleDeviceName != null) {                                                //See if there is a device name
+                        //    textDeviceNameAndAddress.setText(bleDeviceName);                        //Display the name
+                        //} else {
+                        //    textDeviceNameAndAddress.setText(R.string.unknown_device);                     //or display "Unknown Device"
+                        //}
+                        //if (bleDeviceAddress != null) {                                             //See if there is an address
+                        //    textDeviceNameAndAddress.append(" - " + bleDeviceAddress);              //Display the address
+                        //}
+                        progressBar.setVisibility(ProgressBar.INVISIBLE);                           //Hide the circular progress bar
+                        break;
+                    }
+                    case DISCOVERING: {
+                        //textDeviceStatus.setText(R.string.discovering);                            //Show "Discovering"
+//                        textDeviceStatus.setText(R.string.interrogating_features);                            //Show "Discovering"
+                        progressBar.setVisibility(ProgressBar.VISIBLE);                             //Show the circular progress bar
+                        break;
+                    }
+                    case DISCONNECTING: {
+//                        textDeviceStatus.setText(R.string.disconnecting);                          //Show "Disconnectiong"
+                        progressBar.setVisibility(ProgressBar.INVISIBLE);                           //Hide the circular progress bar
+                        break;
+                    }
+                    case DISCONNECTED:
+                    default: {
+                        stateConnection = StateConnection.DISCONNECTED;                             //Default, in case state is unknown
+//                        textDeviceStatus.setText(R.string.not_connected);                          //Show "Not Connected"
+                        progressBar.setVisibility(ProgressBar.INVISIBLE);                           //Hide the circular progress bar
+                        break;
+                    }
                 }
+                invalidateOptionsMenu();                                                            //Update the menu to reflect the connection state stateConnection
             }
         });
     }
 
-    private static IntentFilter makeGattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        return intentFilter;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_take_measurements, menu);
-        this.menu = menu;
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.back_button) {
-            Log.d(TAG, "back button pressed, going back to main acitivity");
-            back();
-            return true;
-        }
-        return true;
-    }
-
-    public void back() {
-//        if (!collectingData) {
-            Intent intent = new Intent(this, MainActivity.class);
-            Log.d(TAG, "Device name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
-//            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-//            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-            startActivity(intent);
-//        }
-    }
-
-    public void measurementClick(View view) {
-        if (!collectingData && collect) {
-            Log.d(TAG, "Take measurement at: " + seconds);
-            shotsToCollect.add(seconds); //Get current time and add it to the list of shots to be collected later
-            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy G");
-            String currentDate = sdf.format(new Date());
-            dateData.add(currentDate);
-            SimpleDateFormat stf = new SimpleDateFormat("HH:mm:ss z");
-            String currentTime = stf.format(new Date());
-            timeData.add(currentTime);
-            Log.e(TAG, "Date: " + currentDate + ", Time: " + currentTime);
-
-            //wait 15 seconds, just don't do anything
-            starttime = seconds;
-            collectingData = true;
-            Log.e(TAG, "Start time = " + starttime );
-        }
-    }
-
-    public void writeProbe(int mode) {
-        if (!collectingData && !collect) {
-            loadingSection.setVisibility(View.VISIBLE);
-            boolean status = false;
-            do {
-                status = mBluetoothLeService.writeToProbeMode(00);
-                Log.e(TAG, "STATUS OF WRITE: " + status);
-                try {
-                    Thread.sleep(1000);
-                } catch (Exception e) {
-                    Log.e(TAG, "Could not sleep" + e);
-                }
-                if (status) {
-                    dataToBeRead = 0;
-                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
-
-                    //                if (currentOp == null) {
-                    //                    Log.e(TAG, "2nd");
-                    //                    dataToBeRead = 0;
-                    //                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                    //                }
-                } else {
-                    try {
-                        if (mConnectionStatus.equals("Connected")) {
-                            updateConnectionState("Connected");
-                        } else {
-                            Log.e(TAG, "Device disconnected");
-                            updateConnectionState("Disconnected");
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error setting connection state: " + e);
-                    }
-
-                }
-                new CountDownTimer(700, 1) { //definetly inefficicent, but if it works dont touch it lol
-
-                    public void onTick(long millisUntilFinished) {
-                        //                mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-                    }
-
-                    public void onFinish() {
-                        //                    dataToBeRead = 0;
-                        //                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                    }
-                }.start();
-
-                new CountDownTimer(3000, 1) { //definetly inefficicent, but if it works dont touch it lol
-
-                    public void onTick(long millisUntilFinished) {
-                        //                mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-                    }
-
-                    public void onFinish() {
-                        //                    dataToBeRead = 0;
-                        //                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                    }
-                }.start();
-
-            } while (!status);
-            }else{
-                //            collectingData = false;
-            }
+    LinkedList<Double> measurementTime = new LinkedList<>();
+    public static LinkedList<double[]> savedProbeData = new LinkedList<double[]>();
+    double measurementStartTime = 0;
+    boolean collectingDataMeasurement = false;
 
 
-            secondCollect = true;
-
-            Log.e(TAG, "Start-time is: " + starttime);
-
-    }
-
+    //when "withdrawing" the probe, it must be connected so that data can be retreived
     public void withdrawClick(View view) {
-        Log.e(TAG, "WITHDRAW PROBE");
-        if (mConnectionStatus.equals("Connected")) {
-            if (!viewMeasurements) {
-                //end! Save data page
-                try {
-                    if (!collectingData) {
-                        int recordsCollected = shotsToCollect.size();
-                        Log.e(TAG, "Shots collected size: " + recordsCollected);
-                        for (int i = 0; i < recordsCollected; i++) {
-                            int j = 0;
-                            while (j < 2) {
-                                finished = false;
-                                returning = true;
-                                if (!finished) {
-                                    int firstByte = 0, secondByte = 0;
-                                    int record = shotsToCollect.get(i);
-                                    Log.e(TAG, "Record collected: " + record);
-                                    record = record / 10;
-                                    if (record <= 255) {
-                                        firstByte = record;
-                                        secondByte = 00;
-                                    } else if (record > 255 && record >= 510) {
-                                        firstByte = -(255 - (record - 255));
-                                        secondByte = 00;
-                                    } else {
-                                        secondByte = record / 255;
-                                        record = record - (255 * secondByte);
-                                        if (record <= 255) {
-                                            firstByte = record;
-                                        } else if (record > 255 && record >= 510) {
-                                            firstByte = -(255 - (record - 255));
-                                        }
-                                    }
-                                    resetQueue();
-                                    Log.e(TAG, "Attempting to collect shot information by writing to shot request and reading a bore/core notification");
+        //Take all time currently recorded and ask for those shots back
+        //this is the hard shit
+        //Need to write the shot number to shot request: FFF5
+        int shotInterval = bleService.getShotInterval(); //supprisingly works
+        LinkedList<Integer> shotsToCollect = new LinkedList<>(); //need to transfer time into shots
 
-                                    boolean status = false;
-                                    do {
-                                        status = mBluetoothLeService.writeToShotRequest(firstByte, secondByte);
-                                        Log.e(TAG, "STATUS OF WRITE: " + status);
-                                        try {
-                                            Thread.sleep(1000);
-                                        } catch (Exception e) {
-                                            Log.e(TAG, "Could not sleep");
-                                        }
+        for (int i = 0; i < measurementTime.size(); i++) {
+            shotsToCollect.add((int) (measurementTime.get(i) / shotInterval));
+        }
+        Log.i(TAG, "Shots to collect: " + shotsToCollect.toString());
 
-                                        new CountDownTimer(700, 1) { //efficiency? never heard of her
-                                            public void onTick(long millisUntilFinished) {
-                                                //                      mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-                                            }
+        for (int i = 0; i < shotsToCollect.size(); i++) {
+            Log.e(TAG, "Getting shot for: " + shotsToCollect.get(i));
+            bleService.setShotRequest(shotsToCollect.get(i));
 
-                                            public void onFinish() {
-                                                //                          dataToBeRead = 0;
-//                                                                      displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                                            }
-                                        }.start();
-                                    } while (!status);
-                                }
-                                j++;
-                            }
-                        }
-                        //EXPORT DATA - change the text to View Measurements and display how many measurements taken
-                        withdrawButton.setText("View Measurements[" + Integer.valueOf(shotsToCollect.size()) + "]");
-                        try {
-                            Log.e(TAG, "Num of measurements: " + Integer.valueOf(shotsToCollect.size()));
-                        } catch (Exception e) {
-                            Log.e(TAG, "Exception thrown getting the number of measurements: " + e);
-                        }
-                        viewMeasurements = true;
-                    } else {
-                        Log.e(TAG, "Error still collecting data");
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Someone fucked up " + e); //Keeps throwing exceptions
+            //return of the terrible programming practices:
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                Log.e(TAG, "Could not sleep");
+            }
+
+            new CountDownTimer(700, 1) { //efficiency? never heard of her
+                public void onTick(long millisUntilFinished) {
+                    //                      mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
                 }
-            } else {
-                // go to page to view measurements TODO HERE
-                Intent intent = new Intent(this, ViewMeasurements.class);
-                intent.putExtra(ViewMeasurements.EXTRA_DEVICE_NAME, mDeviceName);
-                intent.putExtra(ViewMeasurements.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-                intent.putExtra(ViewMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
-                intent.putExtra(ViewMeasurements.EXTRA_PREV_DEPTH, mPrevDepth);
-                intent.putExtra(ViewMeasurements.EXTRA_NEXT_DEPTH, mNextDepth);
-                Log.e(TAG, "Depth Data: " + depthData);
-                startActivity(intent);
 
+                public void onFinish() {
+                    //                          dataToBeRead = 0;
+//                                                                      displayGattServices(mBluetoothLeService.getSupportedGattServices());
+                }
+            }.start();
+
+            double[] boreShotReturned = bleService.getLatestBoreshot(1);
+            for (int j = 0; j < boreShotReturned.length; j++) {
+                Log.e(TAG, String.valueOf(boreShotReturned[j]));
             }
-        } else {
-            Log.e(TAG, "NOT CONNECTED");
+            //Save probe data to a LinkedList
+            savedProbeData.add(boreShotReturned);
         }
+
+        //need to go to ViewMeasurements and give all the savedProbeData
+        Intent intent = new Intent(this, ViewMeasurements.class);
+        startActivity(intent);
     }
 
-    public void changeDirection(View view) {
-        if (!collectingData) {
-            if (directionButton.getText().toString().equals("IN")) {
-                directionButton.setText("OUT");
-                double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
-                nextDepth.setText("NEXT DEPTH: " + (nextDepthNum - (depthInterval * 2)));
-            } else {
-                directionButton.setText("IN");
-                double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
-                nextDepth.setText("NEXT DEPTH: " + (nextDepthNum + depthInterval * 2));
-            }
-        }
-    }
-    private void setUncalibratedX(String core_ax_value) {
-        double uncalibratedAccX = 0;
-//        Log.d(TAG, "Core AX value: " + core_ax_value);
-        uncalibratedAccX = ((double)Integer.valueOf(core_ax_value) / (double)0x7FFF);
-        DecimalFormat numberFormat = new DecimalFormat("0.00000");
-        try {
-//            accelerometer_x_data.setText(numberFormat.format(uncalibratedAccX) + " G");
-            accX = Double.parseDouble(numberFormat.format(uncalibratedAccX));
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting uncalibrated x: " + e);
-        }
-        core_ax = Double.toString(uncalibratedAccX); //Bad
-        accXData.add(Double.parseDouble(core_ax));
-    }
+    public void measurementClick(View view) throws InterruptedException {
+            elapsedTime = System.currentTimeMillis() - startTime;
+            elapsedSeconds = elapsedTime / 1000;
+            secondsDisplay = elapsedSeconds % 60;
+            elapsedMinutes = elapsedSeconds / 60;
+//        if (!collectingDataMeasurement) {
+            Log.i(TAG, "Time added to measurement collection list: " + elapsedSeconds);
+            measurementTime.add((double) elapsedSeconds); //add this elapsed time to a linked list
+            measurementStartTime = elapsedSeconds;
+//            collectingDataMeasurement = true;
 
-    private void setUncalibratedY(String core_ay_value) {
-        double uncalibratedAccY = 0;
-//        Log.d(TAG, "Core AY value: " + core_ay_value);
-        uncalibratedAccY = ((double)Integer.valueOf(core_ay_value) / (double)0x7FFF);
-        DecimalFormat numberFormat = new DecimalFormat("0.00000");
-        try {
-//            accelerometer_y_data.setText(numberFormat.format(uncalibratedAccY) + " G");
-            accY = Double.parseDouble(numberFormat.format(uncalibratedAccY));
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting uncalibrated y: " + e);
-        }
-        core_ay = Double.toString(uncalibratedAccY); //Bad
-        accYData.add(Double.parseDouble(core_ay));
-
-    }
-
-    private void setUncalibratedZ(String core_az_value) {
-        double uncalibratedAccZ = 0;
-//        Log.d(TAG, "Core AZ value: " + core_az_value);
-        uncalibratedAccZ = ((double)Integer.valueOf(core_az_value) / (double)0x7FFF);
-        DecimalFormat numberFormat = new DecimalFormat("0.00000");
-        try {
-//            accelerometer_z_data.setText(numberFormat.format(uncalibratedAccZ) + " G");
-            accZ = Double.parseDouble(numberFormat.format(uncalibratedAccZ));
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting uncalibrated z: " + e);
-        }
-        core_az = Double.toString(uncalibratedAccZ); //Bad
-        accZData.add(Double.parseDouble(core_az));
-    }
-
-    //ISSUE pretty sure this is returning incorrect results
-    private void calculateRoll(double ay, double az) {
-        try {
-//            Log.d(TAG, "calculating roll from ay: " + ay + " az: " + az);
-            double _roll = 0;
-            _roll = Math.atan((ay / az));
-            _roll = Math.toDegrees(_roll);
-            DecimalFormat numberFormat = new DecimalFormat("#.00");
-//            orientation_roll_data.setText(numberFormat.format(roll) + " °");
-            roll = Double.parseDouble(numberFormat.format(_roll));
-        } catch (Exception e) {
-            Log.e(TAG, "Exception thrown when calculating roll: " + e);
-        }
-    }
-
-    private void calculateDip(double ax, double ay, double az) {
-        try {
-//            Log.d(TAG, "calculating dip from ax: " + ax + " ay: " + ay +" az: " + az);
-            double _dip = 0;
-            _dip = Math.atan((-ax) / (Math.sqrt((ay * ay) + (az * az))));
-            _dip = Math.toDegrees(_dip);
-            DecimalFormat numberFormat = new DecimalFormat("#.00");
-//            orientation_dip_data.setText(numberFormat.format(dip) + " °");
-            dip = Double.parseDouble(numberFormat.format(_dip));
-        } catch (Exception e) {
-            Log.e(TAG, "Exception thrown when calculating dip: " + e);
-        }
-    }
-
-    private void calculateMeanMaxAccX() {
-        double meanMaxValue = 0;
-        double maxValue = 0;
-
-        for (int i = 0; i < accXData.size(); i++) {
-            meanMaxValue = meanMaxValue + accXData.get(i);
-            if (accXData.get(i) > maxValue) {
-                maxValue = accXData.get(i);
-            }
-        }
-
-        meanMaxValue = meanMaxValue / accXData.size();
-
-        if (false) {
-            meanMaxValue = maxValue - meanMaxValue;
-        }
-        Log.e(TAG, "MAX / MEAN OF ACC X is: " + meanMaxValue);
-//        maxDev_accX_data.setText(Double.toString(meanMaxValue));
-        mdAccX = meanMaxValue;
-    }
-
-    private void calculateMeanMaxAccY() {
-        double meanMaxValue = 0;
-        double maxValue = 0;
-
-        for (int i = 0; i < accYData.size(); i++) {
-            meanMaxValue = meanMaxValue + accYData.get(i);
-            if (accYData.get(i) > maxValue) {
-                maxValue = accYData.get(i);
-            }
-        }
-
-        meanMaxValue = meanMaxValue / accYData.size();
-
-        if (false) { //todo change this to a preference
-            meanMaxValue = maxValue - meanMaxValue;
-        }
-        Log.e(TAG, "MAX / MEAN OF ACC Y is: " + meanMaxValue);
-//        maxDev_accY_data.setText(Double.toString(meanMaxValue));
-        mdAccY = meanMaxValue;
-    }
-
-    private void calculateMeanMaxZ() { //i LOVE inconsistent naming schemes!
-        double meanMaxValue = 0;
-        double maxValue = 0;
-
-        for (int i = 0; i < accZData.size(); i++) {
-            meanMaxValue = meanMaxValue + accZData.get(i);
-            if (accZData.get(i) > maxValue) {
-                maxValue = accZData.get(i);
-            }
-        }
-
-        meanMaxValue = meanMaxValue / accZData.size();
-
-        if (false) { //todo change this to a preference
-            meanMaxValue = maxValue - meanMaxValue;
-        }
-        Log.e(TAG, "MAX / MEAN OF ACC Z is: " + meanMaxValue);
-//        maxDev_accZ_data.setText(Double.toString(meanMaxValue));
-        mdAccZ = meanMaxValue;
-    }
-
-    public void setUncalibratedMagX(String mag_x_value) {
-        double uncalibratedMagX = 0;
-        uncalibratedMagX = ((double)Integer.valueOf(mag_x_value) / (double)0x7FFF);
-        DecimalFormat numberFormat = new DecimalFormat("0.00000");
-        try {
-//            magnetometer_x_data.setText(uncalibratedMagX + " µT");
-            magX = Double.parseDouble(Double.toString(uncalibratedMagX));
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting uncalibrated mag x: " + e);
-        }
-        mag_x = Double.toString(uncalibratedMagX);
-        magXData.add(Double.parseDouble(mag_x));
-    }
-
-    public void calculateMeanMaxMagX() {
-        double meanMaxValue = 0;
-        double maxValue = 0;
-
-        for (int i = 0; i < magXData.size(); i++ ) {
-            meanMaxValue = meanMaxValue + magXData.get(i);
-            if (magXData.get(i) > maxValue) {
-                maxValue = magXData.get(i);
-            }
-        }
-        meanMaxValue = meanMaxValue / magXData.size();
-
-        if (false) {
-            meanMaxValue = maxValue - meanMaxValue;
-        }
-//        maxDev_magX_data.setText(Double.toString(meanMaxValue));
-    }
-
-    public void setUncalibratedMagY(String mag_y_value) {
-        double uncalibratedMagY = 0;
-        uncalibratedMagY = ((double)Integer.valueOf(mag_y_value) / (double)0x7FFF);
-        DecimalFormat numberFormat = new DecimalFormat("0.00000");
-        try {
-//            magnetometer_y_data.setText(uncalibratedMagY + " µT");
-            magY = Double.parseDouble(Double.toString(uncalibratedMagY));
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting uncalibrated mag y: " + e);
-        }
-        mag_y = Double.toString(uncalibratedMagY);
-        magYData.add(Double.parseDouble(mag_y));
-    }
-
-    public void calculateMeanMaxMagY() {
-        double meanMaxValue = 0;
-        double maxValue = 0;
-
-        for (int i = 0; i < magYData.size(); i++ ) {
-            meanMaxValue = meanMaxValue + magYData.get(i);
-            if (magYData.get(i) > maxValue) {
-                maxValue = magYData.get(i);
-            }
-        }
-        meanMaxValue = meanMaxValue / magYData.size();
-
-        if (false) {
-            meanMaxValue = maxValue - meanMaxValue;
-        }
-//        maxDev_magY_data.setText(Double.toString(meanMaxValue));
-    }
-
-    private void setUncalibratedMagZ(String mag_z_value) {
-        Log.e(TAG, "YASSSS");
-        double uncalibratedMagZ = 0;
-        uncalibratedMagZ = ((double)Integer.valueOf(mag_z_value) / (double)0x7FFF);
-        DecimalFormat numberFormat = new DecimalFormat("0.00000");
-        Log.e(TAG, "YESSSS");
-
-        try {
-            Log.e(TAG, "SETTING Z VELU");
-//            magnetometer_z_data.setText(uncalibratedMagZ + " µT");
-            magZ = Double.parseDouble(Double.toString(uncalibratedMagZ));
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting uncalibrated mag z: " + e);
-        }
-        mag_z = Double.toString(uncalibratedMagZ);
-        magZData.add(Double.parseDouble(mag_z));
-    }
-
-    private void calculateMeanMaxMagZ() {
-        double meanMaxValue = 0;
-        double maxValue = 0;
-
-        for (int i = 0; i < magZData.size(); i++ ) {
-            meanMaxValue = meanMaxValue + magZData.get(i);
-            if (magZData.get(i) > maxValue) {
-                maxValue = magZData.get(i);
-            }
-        }
-        meanMaxValue = meanMaxValue / magZData.size();
-
-        if (false) {
-            meanMaxValue = maxValue - meanMaxValue;
-        }
-//        maxDev_magZ_data.setText(Double.toString(meanMaxValue));
-
+//        } else {
+//            //make the user wait 15 seconds (could also be set to 10 but less accurate) before being able to ask for another measurement
+//            //make the wait time a variable collected from the probe in the future - TODO
+//            Log.i(TAG, "COLLECTING? ");
+//            int timePassed = (int)elapsedTime;
+//            switch (timePassed) {
+//                case 0:
+//                    collectionNumImg.setImageResource(R.drawable.s0);
+//                    break;
+//                    case 1:
+//                        collectionNumImg.setImageResource(R.drawable.s1);
+//                        break;
+//                    case 2:
+//                        collectionNumImg.setImageResource(R.drawable.s2);
+//                        break;
+//                    case 3:
+//                        collectionNumImg.setImageResource(R.drawable.s3);
+//                        break;
+//                    case 4:
+//                        collectionNumImg.setImageResource(R.drawable.s4);
+//                        break;
+//                    case 5:
+//                        collectionNumImg.setImageResource(R.drawable.s5);
+//                        break;
+//                    case 6:
+//                        collectionNumImg.setImageResource(R.drawable.s6);
+//                        break;
+//                    case 7:
+//                        collectionNumImg.setImageResource(R.drawable.s7);
+//                        break;
+//                    case 8:
+//                        collectionNumImg.setImageResource(R.drawable.s8);
+//                        break;
+//                    case 9:
+//                        collectionNumImg.setImageResource(R.drawable.s9);
+//                        break;
+//                    case 10:
+//                        collectionNumImg.setImageResource(R.drawable.s10);
+//                        break;
+//                    case 11:
+//                        collectionNumImg.setImageResource(R.drawable.s11);
+//                        break;
+//                    case 12:
+//                        collectionNumImg.setImageResource(R.drawable.s12);
+//                        break;
+//                    case 13:
+//                        collectionNumImg.setImageResource(R.drawable.s13);
+//                        break;
+//                    case 14:
+//                        collectionNumImg.setImageResource(R.drawable.s14);
+//                        break;
+//                    case 15:
+//                        collectionNumImg.setImageResource(R.drawable.s15);
+//                        break;
+//                }
+//            }
+//        }
     }
 }

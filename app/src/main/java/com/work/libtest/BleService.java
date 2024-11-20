@@ -105,6 +105,7 @@ public class BleService extends Service {
     private BluetoothGattCharacteristic rollingShotIntervalCharacteristic = null;                              //Characteristic used to send data from the Android device to the BM7x or RN487x module
     private BluetoothGattCharacteristic debugCharacteristic = null;                              //Characteristic used to send data from the Android device to the BM7x or RN487x module
     private BluetoothGattCharacteristic debug2Characteristic = null;                              //Characteristic used to send data from the Android device to the BM7x or RN487x module
+    private BluetoothGattCharacteristic probeShotRequestCharacteristic = null;                    // Characteristic used to request a specific shot from the probe after it has been set to the recording phase
 
     private BluetoothGattCharacteristic boreShotCharacteristic = null;                              //Characteristic used to send data from the Android device to the BM7x or RN487x module
     private BluetoothGattCharacteristic coreShotCharacteristic = null;                              //Characteristic used to send data from the Android device to the BM7x or RN487x module
@@ -148,6 +149,7 @@ public class BleService extends Service {
     private int     shotInterval = -1;
 
     private int     probeMode = -1;
+    private int shotRequest = -1;
 
     //
     // Probe modes
@@ -473,6 +475,9 @@ public class BleService extends Service {
 
                         probeModeCharacteristic = gattCameraService.getCharacteristic(UUID_PROBE_MODE_CHAR);
                         if (initWritableCharacteristic(probeModeCharacteristic, "Probe Mode") == true) { discoveryFailed = true; }
+
+                        probeShotRequestCharacteristic = gattCameraService.getCharacteristic(UUID_SHOT_REQUEST_CHAR);
+                        if (initWritableCharacteristic(probeShotRequestCharacteristic, "Shot request") == true) { discoveryFailed = true; }
 
                         shotIntervalCharacteristic = gattCameraService.getCharacteristic(UUID_SHOT_INTERVAL_CHAR);
                         if (initWritableCharacteristic(shotIntervalCharacteristic, "Shot Interval") == true) { discoveryFailed = true; }
@@ -2219,10 +2224,53 @@ public class BleService extends Service {
         }
     }
 
+    /**
+     * This requires 2 bytes, if it doesnt recevie 2 bytes, low byte first it wont return anything from the core/bore shot
+     * @param shot
+     */
+    public boolean setShotRequest(int shot) {
+        try {
+            Log.i(TAG, String.format("PJH - setting shot: (%d)", shot));
 
-    // ----------------------------------------------------------------------------------------------------------------
-    // Start interrogateConfig - Initiate a read of ProbeMode, which cascades into the other reads:
-    // - FirmwareVersionMajor, FirmwareVersionMinor, ShotInterval, SurveyMaxShots, RollingShotInterval, etc
+            int firstByte = 0, secondByte = 0;
+            int record = shot + 1; //indexes from 1 instead of 0.....
+//            record = record / 10;
+            if (record <= 255) {
+                firstByte = record;
+                secondByte = 00;
+            } else if (record > 255 && record >= 510) {
+                firstByte = -(255 - (record - 255));
+                secondByte = 00;
+            } else {
+                secondByte = record / 255;
+                record = record - (255 * secondByte);
+                if (record <= 255) {
+                    firstByte = record;
+                } else if (record > 255 && record >= 510) {
+                    firstByte = -(255 - (record - 255));
+                }
+            }
+
+            headRB = 0;
+            countRB = 0;
+            byte[] value = new byte[2];
+            value[0] = (byte) (firstByte & 0xFF); //change this to take in input about what the byte needs to be set to
+            value[1] = (byte) (secondByte & 0xFF);
+            Log.e(TAG, "First Byte: " + firstByte + "Second Byte: " + secondByte);
+            probeShotRequestCharacteristic.setValue(value);
+            if (!btGatt.writeCharacteristic(probeShotRequestCharacteristic)) {           //Request the BluetoothGatt to do the Write
+                Log.w(TAG, "PJH - Failed to set shot");                      //Warning that write request was not accepted by the BluetoothGatt
+            }
+            shotRequest = shot;   // assuming success
+            Log.i(TAG, String.format("PJH - Set shot to %d", shotRequest));
+        }
+        catch (Exception e) {
+            Log.e(TAG, "Exception caught: " + e);
+        }
+        return true;
+    }
+
+
     public void setProbeIdle() {
         try {
             Log.i(TAG, "PJH - setting probe back to Idle mode");
@@ -2506,7 +2554,6 @@ public class BleService extends Service {
             if (tmp > 360)  { tmp -= 360; }
             result[9] = tmp;  // Az
 
-
             i = headRB;
             c = count;
             tally = 0;
@@ -2520,11 +2567,7 @@ public class BleService extends Service {
             if (tmp < 0) { tmp += 360; }
             if (tmp > 360)  { tmp -= 360; }
             result[10] = tmp;  // Az
-
-
         }
-
-
         return result;
     }
 

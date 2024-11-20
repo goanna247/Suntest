@@ -60,7 +60,6 @@ public class MeasurementArrayAdapter extends ArrayAdapter<Measurement> {
             viewHolder.date = (TextView) row.findViewById(R.id._date);
             viewHolder.time = (TextView) row.findViewById(R.id._time);
             viewHolder.temp = (TextView) row.findViewById(R.id._temp);
-            viewHolder.nanotesla = (TextView) row.findViewById(R.id._nanotesla);
             viewHolder.depth = (TextView) row.findViewById(R.id._depth);
             viewHolder.dip = (TextView) row.findViewById(R.id._dip);
             viewHolder.roll = (TextView) row.findViewById(R.id._roll);
@@ -74,7 +73,6 @@ public class MeasurementArrayAdapter extends ArrayAdapter<Measurement> {
         viewHolder.date.setText(measurement.getDate());
         viewHolder.time.setText(measurement.getTime());
         viewHolder.temp.setText(measurement.getTemp());
-        viewHolder.nanotesla.setText(measurement.getNanotesla());
         viewHolder.depth.setText(measurement.getDepth());
         viewHolder.dip.setText(measurement.getDip());
         viewHolder.roll.setText(measurement.getRoll());

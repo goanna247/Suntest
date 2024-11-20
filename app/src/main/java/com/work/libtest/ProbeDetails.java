@@ -501,6 +501,7 @@ public class ProbeDetails extends AppCompatActivity {
         Intent intent = new Intent(this, OrientationActivity.class);
         intent.putExtra(OrientationActivity.EXTRA_DEVICE_NAME, mDeviceName);
         intent.putExtra(OrientationActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+        intent.putExtra(OrientationActivity.EXTRA_PARENT_ACTIVITY, "ProbeDetails");
         startActivity(intent);
     }
 
