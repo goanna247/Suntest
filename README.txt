@@ -1,5 +1,15 @@
 # Boreline probe app
 
+RECENT UPDATES: 
+- now calibrates in less than 5 seconds for a new probe
+- reconnects quicker and more reliably 
+- remove duplicate data bug when accessing surveys
+
+CURRENTLY FIXING: 
+- Alot (changed bluetooth methods slightly which has cause some small bugs i am working through) 
+- The orientation page sometimes doesnt display clicked on result. 
+- adding a physical reconnect button which will hopefully fix any last drop-out issues
+
 ## App overview:
 There are 2 different types of readings, core and bore shots that different probes return. Currently all probes used only return 1 of these types however there is discussion that probe that are being developed will return both in order to fit more information while still working in the "existing" structure. IMO this isnt must easier than adding a type of reading, however it would have to be at the end of the information returned so as to not mess with the current order.
 
