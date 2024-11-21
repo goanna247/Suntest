@@ -1262,7 +1262,7 @@ public class OrientationActivity extends AppCompatActivity {
     public static final String EXTRA_DEVICE_ADDRESS = "Device_address";
     public static final String EXTRA_DEVICE_CONNECTION_STATUS = "Connection_status";
     public static final String EXTRA_DEVCE_DEVICE_ADDRESS = "not relevant";
-    public static final String EXTRA_PARENT_ACTIVITY = "null";
+    public static final String EXTRA_PARENT_ACTIVITY = "parent_activity";
     public static final String EXTRA_MEASUREMENT_DATA = "null";
     public static final String EXTRA_NEXT_DEPTH = "null";
     public static final String EXTRA_PREV_DEPTH = "null";
@@ -1301,7 +1301,7 @@ public class OrientationActivity extends AppCompatActivity {
 
     boolean writtenCalibrationIndex = false;
 
-    private String TAG = "Sensor Activity";
+    private String TAG = "Orientation Activity";
 
     private TextView probeNumber;
     private TextView connectionStatus;
@@ -1457,8 +1457,7 @@ public class OrientationActivity extends AppCompatActivity {
             setSupportActionBar(toolbar);
             showAlert = new ShowAlertDialogs(this);
 
-
-            Log.i(TAG, "==========SENSOR ACTIVITY ON CREATE==============");
+            Log.i(TAG, "==========ORIENTATION ACTIVITY ON CREATE==============");
             stateConnection = StateConnection.DISCONNECTED;
             stateApp = StateApp.STARTING_SERVICE;
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) { //Check whether we have location permission, required to scan
@@ -1486,10 +1485,16 @@ public class OrientationActivity extends AppCompatActivity {
             //TODO - @ANNA - add after view measurement page is less mucky
             if (parentActivity != null) {
                 if (parentActivity.equals("MEASUREMENT")) {
-                    probePosition = Integer.parseInt(intent.getStringExtra(EXTRA_MEASUREMENT_DATA));
-                    probeRoll.setText(String.valueOf(TakeMeasurements.savedProbeData.get(probePosition)[7]));
-                    probeDip.setText(String.valueOf(TakeMeasurements.savedProbeData.get(probePosition)[8]));
-                    probeAz.setText(String.valueOf(TakeMeasurements.savedProbeData.get(probePosition)[9]));
+                    Log.e(TAG, "Entered setting stuff");
+                    try {
+                        probePosition = Integer.valueOf(intent.getStringExtra(EXTRA_MEASUREMENT_DATA));
+                        DecimalFormat numberFormat = new DecimalFormat("#.0000");
+                        probeRoll.setText(String.valueOf(numberFormat.format(TakeMeasurements.savedProbeData.get(probePosition)[7])));
+                        probeDip.setText(String.valueOf(numberFormat.format(TakeMeasurements.savedProbeData.get(probePosition)[8])));
+                        probeAz.setText(String.valueOf(numberFormat.format(TakeMeasurements.savedProbeData.get(probePosition)[9])));
+                    } catch (Exception e) {
+                        Log.e(TAG, "error setting measurement data collected from survey: " + e);
+                    }
                 } else {
 
                 }
@@ -1586,7 +1591,7 @@ public class OrientationActivity extends AppCompatActivity {
          * hence this is not bad programming practice
          */
         if (item.getItemId() == R.id.back_button) {
-            if (parentActivity.equals("Measurement")) { //this should really be a global variable or smth
+            if (parentActivity.equals("MEASUREMENT")) { //this should really be a global variable or smth
                 Intent intent = new Intent(this, ViewMeasurements.class);
                 intent.putExtra(ViewMeasurements.EXTRA_DEVICE_NAME, mDeviceName);
                 intent.putExtra(ViewMeasurements.EXTRA_DEVICE_ADDRESS, mDeviceAddress);

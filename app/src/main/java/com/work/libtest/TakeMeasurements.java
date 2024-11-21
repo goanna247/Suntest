@@ -24,6 +24,8 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -447,29 +449,50 @@ public class TakeMeasurements extends AppCompatActivity {
     // Show Disconnect option if we are connected or show Connect option if not connected and have a device address
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.ble_main_menu, menu);                                      //Show the menu
-        if (stateApp == StateApp.RUNNING) {                                                         //See if we have permission, service started and Bluetooth enabled
-            menu.findItem(R.id.menu_scan).setVisible(true);                                         //Scan menu item
-            if (stateConnection == StateConnection.CONNECTED) {                                     //See if we are connected
-                menu.findItem(R.id.menu_disconnect).setVisible(true);                               //Are connected so show Disconnect menu
-                menu.findItem(R.id.menu_connect).setVisible(false);                                 //and hide Connect menu
-            }
-            else {                                                                                  //Else are not connected so
-                menu.findItem(R.id.menu_disconnect).setVisible(false);                              // hide the disconnect menu
-                if (bleDeviceAddress != null) {                                                     //See if we have a device address
-                    menu.findItem(R.id.menu_connect).setVisible(true);                              // then show the connect menu
-                }
-                else {                                                                              //Else no device address so
-                    menu.findItem(R.id.menu_connect).setVisible(false);                             // hide the connect menu
-                }
-            }
-        }
-        else {
-            menu.findItem(R.id.menu_scan).setVisible(false);                                        //No permission so hide scan menu item
-            menu.findItem(R.id.menu_connect).setVisible(false);                                     //and hide Connect menu
-            menu.findItem(R.id.menu_disconnect).setVisible(false);                                  //Are not connected so hide the disconnect menu
+        MenuInflater inflater = getMenuInflater();
+        getMenuInflater().inflate(R.menu.menu_take_measurements, menu);                                      //Show the menu
+        this.menu = menu;
+//        if (stateApp == StateApp.RUNNING) {                                                         //See if we have permission, service started and Bluetooth enabled
+//            menu.findItem(R.id.menu_scan).setVisible(true);                                         //Scan menu item
+//            if (stateConnection == StateConnection.CONNECTED) {                                     //See if we are connected
+//                menu.findItem(R.id.menu_disconnect).setVisible(true);                               //Are connected so show Disconnect menu
+//                menu.findItem(R.id.menu_connect).setVisible(false);                                 //and hide Connect menu
+//            }
+//            else {                                                                                  //Else are not connected so
+//                menu.findItem(R.id.menu_disconnect).setVisible(false);                              // hide the disconnect menu
+//                if (bleDeviceAddress != null) {                                                     //See if we have a device address
+//                    menu.findItem(R.id.menu_connect).setVisible(true);                              // then show the connect menu
+//                }
+//                else {                                                                              //Else no device address so
+//                    menu.findItem(R.id.menu_connect).setVisible(false);                             // hide the connect menu
+//                }
+//            }
+//        }
+//        else {
+//            menu.findItem(R.id.menu_scan).setVisible(false);                                        //No permission so hide scan menu item
+//            menu.findItem(R.id.menu_connect).setVisible(false);                                     //and hide Connect menu
+//            menu.findItem(R.id.menu_disconnect).setVisible(false);                                  //Are not connected so hide the disconnect menu
+//        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.back_button) {
+            Log.d(TAG, "back button pressed, going back to main acitivity");
+            back();
+            return true;
         }
         return true;
+    }
+
+    public void back() {
+        Intent intent = new Intent(this, MainActivity.class);
+        Log.d(TAG, "Device name: " + bleDeviceName + ", Device Address: " +bleDeviceAddress);
+        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, bleDeviceName);
+        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "TakeMeasurements");
+        startActivity(intent);
     }
 
     // ----------------------------------------------------------------------------------------------------------------

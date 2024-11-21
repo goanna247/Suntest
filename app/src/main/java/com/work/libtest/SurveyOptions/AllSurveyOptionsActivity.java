@@ -213,6 +213,9 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
 //        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
 //        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
 //        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, "Connected");
+        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "AllSurveyOptions");
         startActivity(intent);
     }
 }

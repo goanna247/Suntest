@@ -1392,6 +1392,7 @@ import androidx.core.content.ContextCompat;
 //import com.jjoe64.graphview.series.LineGraphSeries;
 
 import com.work.libtest.Preferences.Preferences;
+import com.work.libtest.SurveyOptions.SurveyOptions;
 import com.work.libtest.SurveyOptions.SurveyOptionsActivity;
 
 import java.io.ByteArrayOutputStream;
@@ -1401,6 +1402,7 @@ import java.io.IOException;
 //import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 //import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.Date;
 //import java.util.List;
 import java.util.Locale;
@@ -1410,6 +1412,12 @@ import java.util.Locale;
  */
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();                        //Activity name for logging messages on the ADB
+
+    public static final String EXTRA_DEVICE_NAME = "DEVICE_NAME";
+    public static final String EXTRA_DEVICE_ADDRESS = "DEVICE_ADDRESS";
+    public static final String EXTRA_CONNECTION_STATUS = "CONNECTION_STATUS";
+    public static final String EXTRA_PARENT_ACTIVITY = "Parent_Activity";
+
 
     private static final int REQ_CODE_ENABLE_BT =     1;                                            //Codes to identify activities that return results such as enabling Bluetooth
     private static final int REQ_CODE_SCAN_ACTIVITY = 2;                                            //or scanning for bluetooth devices
@@ -1443,6 +1451,11 @@ public class MainActivity extends AppCompatActivity {
 
     public static Preferences preferences = new Preferences();
 
+    //Survey information stuff:
+    public static int surveySize = 0;
+    public static ArrayList<Survey> surveys = new ArrayList<Survey>();
+    public static int surveyNum = 0;
+
     /******************************************************************************************************************
      * Methods for handling life cycle events of the activity.
      */
@@ -1472,6 +1485,8 @@ public class MainActivity extends AppCompatActivity {
             }
             Log.i(TAG, "PJH - ========== onCreate2 ============");    // just as a separator in hte logcat window (to distinguish this run from the previous run)
             connectTimeoutHandler = new Handler(Looper.getMainLooper());                                //Create a handler for a delayed runnable that will stop the connection attempt after a timeout
+
+
 
             textDeviceNameAndAddress = findViewById(R.id.BlackProbeTxt);                     //Get a reference to the TextView that will display the device name and address
             textDeviceStatus = findViewById(R.id.BlackProbeStatusTxt);                     //Get a reference to the TextView that will display the device name and address
@@ -1508,7 +1523,9 @@ public class MainActivity extends AppCompatActivity {
     // Register the receiver for Intents from the BleService
     @Override
     protected void onResume() {
-        super.onResume();                                                                           //Call superclass (AppCompatActivity) onResume method
+        super.onResume();
+
+        //Call superclass (AppCompatActivity) onResume method
         try {
             registerReceiver(bleServiceReceiver, bleServiceIntentFilter());                         //Register receiver to handles events fired by the BleService
             if (bleService != null && !bleService.isBluetoothRadioEnabled()) {                      //Check if Bluetooth radio was turned off while app was paused
@@ -1519,6 +1536,46 @@ public class MainActivity extends AppCompatActivity {
                     Log.i(TAG, "Requesting user to enable Bluetooth radio");
                 }
             }
+            final Intent intent = getIntent();
+            try {
+                String parentActivityValue = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
+                Log.e(TAG, intent.getStringExtra(EXTRA_PARENT_ACTIVITY) + "," + intent.getStringExtra(EXTRA_DEVICE_NAME) + "," + intent.getStringExtra(EXTRA_DEVICE_ADDRESS));
+                if (parentActivityValue != null) {
+                    if (parentActivityValue.equals("SurveyOptions") || parentActivityValue.equals("ProbeDetails") || parentActivityValue.equals("TakeMeasurement") || parentActivityValue.equals("AllSurveyOptions")) {
+                        stateApp = StateApp.RUNNING;
+                        bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+                        bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+
+                        if (bleDeviceName != null) {
+                            textDeviceNameAndAddress.setText(bleDeviceName);
+                        } else {
+                            textDeviceNameAndAddress.setText(R.string.unknown_device);
+                        }
+                        if (bleDeviceAddress != null) {
+                            textDeviceNameAndAddress.append(" - " + bleDeviceAddress);
+                        }
+
+                        if (bleDeviceAddress == null) {
+                            stateConnection = StateConnection.DISCONNECTED;
+                        } else {
+                            stateConnection = StateConnection.CONNECTING;
+                            connectWithAddress(bleDeviceAddress);
+                        }
+                        updateConnectionState();
+                    } else if (parentActivityValue.equals(Globals.ActivityName.AllSurveyOptions)) {
+                        bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+                        bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+                    } else if (parentActivityValue.equals(Globals.ActivityName.ProbeDetails)) {
+                        bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+                        bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+                    } else {
+                        Log.e(TAG, "Impossible"); //error as these are the only activities which lead back to the main activity
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Exception thrown in getting intent: " + e);
+            }
+
             if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
                 // attempt a reconnection
                 stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting

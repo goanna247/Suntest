@@ -125,7 +125,8 @@ public class ViewMeasurements extends AppCompatActivity {
     private void goToOrientation(int position) {
         Intent intent = new Intent(this, OrientationActivity.class);
         intent.putExtra(OrientationActivity.EXTRA_PARENT_ACTIVITY, "MEASUREMENT");
-        intent.putExtra(OrientationActivity.EXTRA_MEASUREMENT_DATA, position);
+        String positionToSend = String.valueOf(position);
+        intent.putExtra(OrientationActivity.EXTRA_MEASUREMENT_DATA, positionToSend);
         startActivity(intent);
     }
 

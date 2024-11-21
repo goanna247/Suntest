@@ -481,17 +481,16 @@ public class ProbeDetails extends AppCompatActivity {
 
     public void backProbeDetailClick(View view) {
         Intent intent = new Intent(this, MainActivity.class);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
-        Log.e(TAG, "CONNECTION STATUS: " + mDeviceConnectionStatus);
+        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "ProbeDetails");
         startActivity(intent);
     }
     public void backProbeDetailClick() {
         Intent intent = new Intent(this, MainActivity.class);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
+        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "ProbeDetails");
         Log.e(TAG, "CONNECTION STATUS: " + mDeviceConnectionStatus);
         startActivity(intent);
     }

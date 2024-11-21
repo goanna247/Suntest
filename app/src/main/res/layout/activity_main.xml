@@ -9,7 +9,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="fill_parent">
         <!--TODO this is kinda ugly, fix-->
 
         <ImageView
@@ -254,6 +254,9 @@
         <!--        app:layout_constraintTop_toTopOf="parent">-->
         <!--    </FrameLayout>-->
         <!--</androidx.constraintlayout.widget.ConstraintLayout>-->
+
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 
 </ScrollView>

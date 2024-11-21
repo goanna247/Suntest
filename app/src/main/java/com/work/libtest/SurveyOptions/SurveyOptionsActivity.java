@@ -10,6 +10,7 @@ import android.widget.EditText;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.work.libtest.Globals;
 import com.work.libtest.MainActivity;
 import com.work.libtest.R;
 import com.work.libtest.Survey;
@@ -28,6 +29,9 @@ public class SurveyOptionsActivity extends AppCompatActivity {
     public static final String EXTRA_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRA_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String EXTRA_DEVICE_CONNECTION = "DEVICE_CONNECTION_STATUS";
+
+    public static final String EXTRA_SCAN_ADDRESS = "BLE_SCAN_DEVICE_ADDRESS";                      //Identifier for Bluetooth device address attached to Intent that returns a result
+    public static final String EXTRA_SCAN_NAME = "BLE_SCAN_DEVICE_NAME";
 
     private String mDeviceName;
     private String mDeviceAddress;
@@ -53,15 +57,6 @@ public class SurveyOptionsActivity extends AppCompatActivity {
         Log.e(TAG, "Passed in device name: " + mDeviceName);
 
         setSupportActionBar(toolbar);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-//        OnBackPressedCallback callback = new OnBackPressedCallback(true /* enabled by default */) {
-//            @Override
-//            public void handleOnBackPressed() {
-//                // Handle the back button event
-//                Log.e(TAG, "HELLO WTF");
-//            }
-//        };
     }
 
     public void surveyOptionsSubmit(View v) {
@@ -71,22 +66,21 @@ public class SurveyOptionsActivity extends AppCompatActivity {
                 || CompanyNameEditTxt != null || CompanyNameEditTxt.equals(" ") || Integer.valueOf(CompanyNameEditTxt.getText().toString()) != 0)
             {
                 SurveyOptions newSurveyOptions = new SurveyOptions(Integer.valueOf(HoleIDEditTxt.getText().toString()), OperatorNameEditTxt.getText().toString(), CompanyNameEditTxt.getText().toString());
-//                if (MainActivity.surveySize == MainActivity.surveyNum) {
-//                    //no survey options saved, create a new entire survey
-//                    Survey newSurvey = new Survey(newSurveyOptions);
-//                    MainActivity.surveys.add(newSurvey);
-//                    MainActivity.surveySize++;
-//                } else {
-//                    //survey already created, overwrite options
-//                    MainActivity.surveys.get(MainActivity.surveyNum).setSurveyOptions(newSurveyOptions);
-//                }
-//                Intent returnToMain = new Intent(this, MainActivity.class);
-//                returnToMain.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-//                returnToMain.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-//                returnToMain.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
-//                Log.e(TAG, "Name being passed back through are: " + returnToMain.toString());
-//                startActivity(returnToMain);
-
+                if (MainActivity.surveySize == MainActivity.surveyNum) {
+                    //no survey options saved, create a new entire survey
+                    Survey newSurvey = new Survey(newSurveyOptions);
+                    MainActivity.surveys.add(newSurvey);
+                    MainActivity.surveySize++;
+                } else {
+                    //survey already created, overwrite options
+                    MainActivity.surveys.get(MainActivity.surveyNum).setSurveyOptions(newSurveyOptions);
+                }
+                Intent returnToMain = new Intent(this, MainActivity.class);
+                returnToMain.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+                returnToMain.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+                returnToMain.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
+                Log.e(TAG, "Name being passed back through are: " + returnToMain.toString());
+                startActivity(returnToMain);
             } else {
                 Log.d(TAG, "Please ensure all values are valid");
             }
@@ -97,10 +91,9 @@ public class SurveyOptionsActivity extends AppCompatActivity {
 
     public void backButtonClick(View view) {
         Intent intent = new Intent(this, MainActivity.class);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
-//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, "Connected");
+        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
         startActivity(intent);
     }
 }
