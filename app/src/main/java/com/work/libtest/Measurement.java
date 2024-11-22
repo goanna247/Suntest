@@ -9,6 +9,8 @@
  */
 package com.work.libtest;
 
+import android.util.Log;
+
 public class Measurement {
     private static final String TAG = "Measurement";
 
@@ -99,4 +101,9 @@ public class Measurement {
     }
 
 
+    public void printMeasurement() {
+        Log.i(TAG, "Measurement name: " + this.measurementName + ", date: " + this.date + ", time: " + this.time +
+                ", temp: " + this.temp + ", depth: " + this.depth + ", roll: " + this.roll + ", dip: " + this.dip + ",azimuth: "
+                + this.azimuth);
+    }
 }

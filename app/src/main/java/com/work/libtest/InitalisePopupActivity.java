@@ -93,12 +93,6 @@ public class InitalisePopupActivity extends AppCompatActivity {
             Log.d(TAG, "Exit initalise activity");
             back();
         }
-//        switch (item.getItemId()) {
-//            case R.id.back_button:
-//                Log.d(TAG, "Exit initalise activity");
-//                back();
-//                return true;
-//        }
         return true;
     }
 
@@ -108,9 +102,9 @@ public class InitalisePopupActivity extends AppCompatActivity {
     public void back() {
         Intent intent = new Intent(this, MainActivity.class);
         Log.d(TAG, "Device name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, "Connected");
+        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
         startActivity(intent);
     }
 

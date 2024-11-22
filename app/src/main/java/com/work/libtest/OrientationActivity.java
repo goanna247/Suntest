@@ -1489,9 +1489,9 @@ public class OrientationActivity extends AppCompatActivity {
                     try {
                         probePosition = Integer.valueOf(intent.getStringExtra(EXTRA_MEASUREMENT_DATA));
                         DecimalFormat numberFormat = new DecimalFormat("#.0000");
-                        probeRoll.setText(String.valueOf(numberFormat.format(TakeMeasurements.savedProbeData.get(probePosition)[7])));
-                        probeDip.setText(String.valueOf(numberFormat.format(TakeMeasurements.savedProbeData.get(probePosition)[8])));
-                        probeAz.setText(String.valueOf(numberFormat.format(TakeMeasurements.savedProbeData.get(probePosition)[9])));
+                        probeRoll.setText(TakeMeasurements.recordedShots.get(probePosition).getRoll());
+                        probeDip.setText(TakeMeasurements.recordedShots.get(probePosition).getDip());
+                        probeAz.setText(TakeMeasurements.recordedShots.get(probePosition).getAzimuth());
                     } catch (Exception e) {
                         Log.e(TAG, "error setting measurement data collected from survey: " + e);
                     }

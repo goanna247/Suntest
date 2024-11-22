@@ -10,8 +10,11 @@ CURRENTLY FIXING:
 - Connected probe name and address not saved between activities - now semi works however does not immediately re-connect.
 - The orientation page sometimes doesnt display clicked on result.
 - Fixing stack overflow error in the viewMeasurement page which makes the first measurement display incorrect data
+    - line 2424 in BleService seems to be the problem, returns the value 283 consistently while it should be returning the record number
 - sometimes when requesting a bore shot it returns null -> maybe need to up the timer?
 - fill in all data on sensor activity page
+- need to double check full functionality for the small probes (which return a core shot instead of a bore shot)
+- Survey details set on the main page dont save
 
 LATER PROBLEMS:
 - Resume previous survey option
@@ -19,6 +22,7 @@ LATER PROBLEMS:
 - roll offset
 - make probe ID able to take a string instead of an integer
 - adding a physical reconnect button which will hopefully fix any last drop-out issues
+- not all preferences actually do anything
 
 
 ## App overview:

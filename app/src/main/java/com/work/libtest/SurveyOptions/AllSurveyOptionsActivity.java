@@ -75,53 +75,54 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
             Log.e(TAG, "Exception thrown: " + e);
         }
 
+        try {
 
-//        Log.d(TAG, "Device Name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
-//
-//
-////        if (MainActivity.surveys.size() > 0) {
-//            Log.d(TAG, MainActivity.surveys.get(0).getSurveyOptions().toString());
-//            if (resumePosition != 128) {
-////                holeIDInput.setText(Integer.toString(MainActivity.surveys.get(resumePosition).getSurveyOptions().getHoleID()));
-////                operatorName.setText(MainActivity.surveys.get(resumePosition).getSurveyOptions().getOperatorName());
-////                companyName.setText(MainActivity.surveys.get(resumePosition).getSurveyOptions().getCompanyName());
-//                try {
-////                    initialDepth.setText((int) MainActivity.surveys.get(resumePosition).getSurveyOptions().getInitialDepth());
-////                    depthInterval.setText((int) MainActivity.surveys.get(resumePosition).getSurveyOptions().getDepthInterval());
-//                } catch (Exception e) {
-//                    Log.e(TAG, "Exception thrown in getting the initial depth and depth interval: " + e);
-//                }
-//            } else {
-//                holeIDInput.setText(Integer.toString(MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getHoleID() + 1));
-//                operatorName.setText(MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getOperatorName());
-//                companyName.setText(MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getCompanyName());
-//                try {
-//                    initialDepth.setText((int) MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth());
-//                    depthInterval.setText((int) MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getDepthInterval());
-//                } catch (Exception e) {
-//                    Log.e(TAG, "Exception thrown in getting the initial depth and depth interval: " + e);
-//                }
-//            }
-//        }
-//        setSupportActionBar(toolbar);
+            if (MainActivity.surveys.size() > 0) {
+                Log.d(TAG, MainActivity.surveys.get(0).getSurveyOptions().toString());
+                if (resumePosition != 128) {
+                    holeIDInput.setText(Integer.toString(MainActivity.surveys.get(resumePosition).getSurveyOptions().getHoleID()));
+                    operatorName.setText(MainActivity.surveys.get(resumePosition).getSurveyOptions().getOperatorName());
+                    companyName.setText(MainActivity.surveys.get(resumePosition).getSurveyOptions().getCompanyName());
+                    try {
+                        initialDepth.setText((int) MainActivity.surveys.get(resumePosition).getSurveyOptions().getInitialDepth());
+                        depthInterval.setText((int) MainActivity.surveys.get(resumePosition).getSurveyOptions().getDepthInterval());
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception thrown in getting the initial depth and depth interval: " + e);
+                    }
+                } else {
+                    holeIDInput.setText(Integer.toString(MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getHoleID() + 1));
+                    operatorName.setText(MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getOperatorName());
+                    companyName.setText(MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getCompanyName());
+                    try {
+                        initialDepth.setText((int) MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth());
+                        depthInterval.setText((int) MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getDepthInterval());
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception thrown in getting the initial depth and depth interval: " + e);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown in OnCreate in AllSurveyOptionsActivity: " + e);
+        }
+        setSupportActionBar(toolbar);
     }
 
     public void allSurveyOptionsSubmit(View v) {
         try {
             if (resumePosition != 128) {
                 Log.d(TAG, "Hole ID: " + holeIDInput.getText().toString() + " Operator Name: " + operatorName.getText().toString() + " Company Name: " + companyName.getText().toString() + " Initial depth: " + initialDepth.getText().toString() + " Depth Interval: " + depthInterval.getText().toString());
-//                if (MainActivity.surveySize > 0) {
-//                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setHoleID(Integer.valueOf(holeIDInput.getText().toString()));
-//                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setOperatorName(operatorName.getText().toString());
-//                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setCompanyName(companyName.getText().toString());
-//                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setInitialDepth(Double.parseDouble(initialDepth.getText().toString()));
-//                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setDepthInterval(Double.parseDouble(depthInterval.getText().toString()));
-//                } else {
-//                    SurveyOptions newSurveyOptions = new SurveyOptions(Integer.valueOf(holeIDInput.getText().toString()), operatorName.getText().toString(), companyName.getText().toString(), Double.parseDouble(initialDepth.getText().toString()), Double.parseDouble(depthInterval.getText().toString()));
-//                    Survey newSurvey = new Survey(newSurveyOptions);
-////                    MainActivity.surveys.add(newSurvey);
-////                    MainActivity.surveySize++;
-//                }
+                if (MainActivity.surveySize > 0) {
+                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setHoleID(Integer.valueOf(holeIDInput.getText().toString()));
+                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setOperatorName(operatorName.getText().toString());
+                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setCompanyName(companyName.getText().toString());
+                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setInitialDepth(Double.parseDouble(initialDepth.getText().toString()));
+                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setDepthInterval(Double.parseDouble(depthInterval.getText().toString()));
+                } else {
+                    SurveyOptions newSurveyOptions = new SurveyOptions(Integer.valueOf(holeIDInput.getText().toString()), operatorName.getText().toString(), companyName.getText().toString(), Double.parseDouble(initialDepth.getText().toString()), Double.parseDouble(depthInterval.getText().toString()));
+                    Survey newSurvey = new Survey(newSurveyOptions);
+//                    MainActivity.surveys.add(newSurvey);
+//                    MainActivity.surveySize++;
+                }
 
                 if (!holeIDInput.getText().toString().equals("") && !operatorName.getText().toString().equals("") && !companyName.getText().toString().equals("") && !initialDepth.getText().toString().equals("") && !depthInterval.getText().toString().equals("")) {
                     //move to taking measurements
@@ -133,18 +134,18 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
                 }
             } else {
                 Log.d(TAG, "Hole ID: " + holeIDInput.getText().toString() + " Operator Name: " + operatorName.getText().toString() + " Company Name: " + companyName.getText().toString() + " Initial depth: " + initialDepth.getText().toString() + " Depth Interval: " + depthInterval.getText().toString());
-//                if (MainActivity.surveySize > 0) {
-//                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setHoleID(Integer.valueOf(holeIDInput.getText().toString()));
-//                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setOperatorName(operatorName.getText().toString());
-//                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setCompanyName(companyName.getText().toString());
-//                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setInitialDepth(Double.parseDouble(initialDepth.getText().toString()));
-//                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setDepthInterval(Double.parseDouble(depthInterval.getText().toString()));
-//                } else {
-//                    SurveyOptions newSurveyOptions = new SurveyOptions(Integer.valueOf(holeIDInput.getText().toString()), operatorName.getText().toString(), companyName.getText().toString(), Double.parseDouble(initialDepth.getText().toString()), Double.parseDouble(depthInterval.getText().toString()));
-//                    Survey newSurvey = new Survey(newSurveyOptions);
-//                    MainActivity.surveys.add(newSurvey);
-//                    MainActivity.surveySize++;
-//                }
+                if (MainActivity.surveySize > 0) {
+                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setHoleID(Integer.valueOf(holeIDInput.getText().toString()));
+                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setOperatorName(operatorName.getText().toString());
+                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setCompanyName(companyName.getText().toString());
+                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setInitialDepth(Double.parseDouble(initialDepth.getText().toString()));
+                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setDepthInterval(Double.parseDouble(depthInterval.getText().toString()));
+                } else {
+                    SurveyOptions newSurveyOptions = new SurveyOptions(Integer.valueOf(holeIDInput.getText().toString()), operatorName.getText().toString(), companyName.getText().toString(), Double.parseDouble(initialDepth.getText().toString()), Double.parseDouble(depthInterval.getText().toString()));
+                    Survey newSurvey = new Survey(newSurveyOptions);
+                    MainActivity.surveys.add(newSurvey);
+                    MainActivity.surveySize++;
+                }
 
                 if (!holeIDInput.getText().toString().equals("") && !operatorName.getText().toString().equals("") && !companyName.getText().toString().equals("") && !initialDepth.getText().toString().equals("") && !depthInterval.getText().toString().equals("")) {
                     //move to taking measurements
@@ -198,24 +199,15 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
             back();
             return true;
         }
-//        switch (item.getItemId()) {
-//            case R.id.back_button:
-//                Log.d(TAG, "Exit all survey options activity to main activity");
-//                back();
-//                return true;
-//        }
         return true;
     }
 
     public void back() {
         Intent intent = new Intent(this, MainActivity.class);
         Log.d(TAG, "Device name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-//        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-//        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, "Connected");
         intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
         intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "AllSurveyOptions");
+        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
         startActivity(intent);
     }
 }

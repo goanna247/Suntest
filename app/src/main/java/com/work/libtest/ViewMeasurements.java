@@ -1,6 +1,7 @@
 package com.work.libtest;
 
 import android.content.Intent;
+import android.icu.util.Measure;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
@@ -78,31 +79,23 @@ public class ViewMeasurements extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
 
         //WORKS
-        LinkedList<double[]> savedProbeData = TakeMeasurements.savedProbeData;
-
-        for (int i = 0; i < savedProbeData.size(); i++) {
-            for (int j = 0; j < savedProbeData.get(i).length; j++) {
-                Log.e(TAG, String.valueOf(savedProbeData.get(i)[j]));
-            }
-        }
+        LinkedList<Measurement> savedProbeData = TakeMeasurements.recordedShots;
 
         listView = (ListView) findViewById(R.id.listView);
         measurementArrayAdapter = new MeasurementArrayAdapter(getApplicationContext(), R.layout.listview_row_layout);
         listView.setAdapter(measurementArrayAdapter);
 
-        //@ANNA - COME BACK TO
-        LinkedList<double[]> measurementList = savedProbeData;
-        for (double[] measurementDatas:measurementList) {
+        for (int i = 0; i < savedProbeData.size(); i++) {
             DecimalFormat numberFormat = new DecimalFormat("#.0000");
-            String measurementName = String.valueOf(measurementDatas[0]);
+            String measurementName = savedProbeData.get(i).getName();
             String date = "blank";
             String time = "blank";
             String depth = "blank"; //do next
-            String roll = String.valueOf(numberFormat.format(measurementDatas[7]));
-            String dip = String.valueOf(numberFormat.format(measurementDatas[8]));
-            String azimuth = String.valueOf(numberFormat.format(measurementDatas[9]));
-            String temp = String.valueOf(numberFormat.format(measurementDatas[10]));
-            Measurement measurement = new Measurement(measurementName, date, time, temp, depth, dip, roll, azimuth);
+            String roll = savedProbeData.get(i).getRoll();//String.valueOf(numberFormat.format(measurementDatas[7]));
+            String dip = savedProbeData.get(i).getDip();//String.valueOf(numberFormat.format(measurementDatas[8]));
+            String azimuth = savedProbeData.get(i).getAzimuth();//String.valueOf(numberFormat.format(measurementDatas[9]));
+            String temp = savedProbeData.get(i).getTemp();//String.valueOf(numberFormat.format(measurementDatas[10]));
+            Measurement measurement = new Measurement(measurementName, date, time, temp, depth, dip, roll, azimuth); // i feel like this is a bad way of doing things...
             measurementArrayAdapter.add(measurement);
         }
 

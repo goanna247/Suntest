@@ -2421,6 +2421,7 @@ public class BleService extends Service {
 
         if (count == 1) {
             result[0] = recNum_RingBuffer[headRB];
+            Log.e(TAG, "NAME: " + recNum_RingBuffer[headRB]); //BUG HERE
 
             result[1] = acc_X_RingBuffer[headRB];
             result[2] = acc_Y_RingBuffer[headRB];
@@ -2437,7 +2438,7 @@ public class BleService extends Service {
         }
         else {
             result[0] = count;  // HACK, as this field no longer makes sense
-
+            Log.e(TAG, "NAME: (from else) : " + count);
 
             i = headRB;
             c = count;

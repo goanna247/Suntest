@@ -1456,6 +1456,10 @@ public class MainActivity extends AppCompatActivity {
     public static ArrayList<Survey> surveys = new ArrayList<Survey>();
     public static int surveyNum = 0;
 
+    //survey information details
+    private TextView HoleIDDisplayTxt;
+    private TextView OperatorNameDisplayTxt;
+
     /******************************************************************************************************************
      * Methods for handling life cycle events of the activity.
      */
@@ -1486,7 +1490,8 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, "PJH - ========== onCreate2 ============");    // just as a separator in hte logcat window (to distinguish this run from the previous run)
             connectTimeoutHandler = new Handler(Looper.getMainLooper());                                //Create a handler for a delayed runnable that will stop the connection attempt after a timeout
 
-
+            HoleIDDisplayTxt = findViewById(R.id.HoleIDDisplayTxt);
+            OperatorNameDisplayTxt = findViewById(R.id.OperatorNameDisplayTxt);
 
             textDeviceNameAndAddress = findViewById(R.id.BlackProbeTxt);                     //Get a reference to the TextView that will display the device name and address
             textDeviceStatus = findViewById(R.id.BlackProbeStatusTxt);                     //Get a reference to the TextView that will display the device name and address
@@ -1501,6 +1506,24 @@ public class MainActivity extends AppCompatActivity {
                 WhiteProbeContainer.setVisibility(View.GONE);
             } else {
                 Log.e(TAG, "Probe mode is invalid?!");
+            }
+
+            try {
+                if (surveys.size() > 0) { //array has begun to be populated
+                    if (surveys.get(0).getSurveyOptions().getHoleID() != 0 && surveys.get(0).getSurveyOptions() != null) {
+                        HoleIDDisplayTxt.setText(Integer.toString(surveys.get(0).getSurveyOptions().getHoleID()));
+                        OperatorNameDisplayTxt.setText(surveys.get(0).getSurveyOptions().getOperatorName());
+
+                    } else {
+                        HoleIDDisplayTxt.setText("Not set");
+                        OperatorNameDisplayTxt.setText("Not set");
+                    }
+                } else {
+                    HoleIDDisplayTxt.setText("Not set");
+                    OperatorNameDisplayTxt.setText("Not set");
+                }
+            } catch (Exception e) {
+                Log.d(TAG, "Exception thrown: " + e);
             }
 
             initializeDisplay();
