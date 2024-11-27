@@ -4,6 +4,7 @@ RECENT UPDATES:
 - now calibrates in less than 5 seconds for a new probe
 - reconnects quicker and more reliably 
 - remove duplicate data bug when accessing surveys
+- Save data from the sensor page or when doing a survey
 
 CURRENTLY FIXING: 
 - Alot (changed bluetooth methods slightly which has cause some small bugs i am working through) 

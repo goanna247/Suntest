@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -134,7 +135,8 @@ public class TakeMeasurements extends AppCompatActivity {
 
     String shot_format = "", record_number = "", probe_temp = "", core_ax = "", core_ay = "", core_az = "", acc_temp = "";
     String record_number_binary = "", core_ax_binary = "", core_ay_binary, core_az_binary, mag_x_binary = "", mag_y_binary = "", mag_z_binary = "";
-    String mag_x = "", mag_y = "", mag_z = ""; String shot_interval = "";
+    String mag_x = "", mag_y = "", mag_z = "";
+    String shot_interval = "";
 
     String highByte, lowByte;
     boolean hold = false;
@@ -142,10 +144,10 @@ public class TakeMeasurements extends AppCompatActivity {
     private ShowAlertDialogs showAlert;
 
     private Button directionButton;
-    private Button takeMeasurement;
+    //    private Button takeMeasurement;
     private TextView prevDepth;
     private TextView nextDepth;
-//    private CheckBox exportAllData;
+    //    private CheckBox exportAllData;
     private Button withdrawButton;
     private TextView connectionStatusText;
     private ImageView connectionStatusImage;
@@ -175,19 +177,22 @@ public class TakeMeasurements extends AppCompatActivity {
     double secondsDisplay;
     double elapsedMinutes;
 
-//    private long startTime = 0; //for timer
+    //    private long startTime = 0; //for timer
     public int seconds;
     private int starttime = 0;
 
-    private static final int REQ_CODE_ENABLE_BT =     1;                                            //Codes to identify activities that return results such as enabling Bluetooth
+    private static final int REQ_CODE_ENABLE_BT = 1;                                            //Codes to identify activities that return results such as enabling Bluetooth
     private static final int REQ_CODE_SCAN_ACTIVITY = 2;                                            //or scanning for bluetooth devices
-    private static final int REQ_CODE_ACCESS_LOC1 =   3;                                            //or requesting location access.
-    private static final int REQ_CODE_ACCESS_LOC2 =   4;                                            //or requesting location access a second time.
-    private static final long CONNECT_TIMEOUT =       10000;
+    private static final int REQ_CODE_ACCESS_LOC1 = 3;                                            //or requesting location access.
+    private static final int REQ_CODE_ACCESS_LOC2 = 4;                                            //or requesting location access a second time.
+    private static final long CONNECT_TIMEOUT = 10000;
 
     private enum StateConnection {DISCONNECTED, CONNECTING, DISCOVERING, CONNECTED, DISCONNECTING}
+
     private StateConnection stateConnection;
+
     private enum StateApp {STARTING_SERVICE, REQUEST_PERMISSION, ENABLING_BLUETOOTH, RUNNING}
+
     private StateApp stateApp;
 
     private BleService bleService;
@@ -207,7 +212,7 @@ public class TakeMeasurements extends AppCompatActivity {
     private String bleDeviceName, bleDeviceAddress;
 
     private ProgressBar progressBar;                                                                //Progress bar (indeterminate circular) to show that activity is busy connecting to BLE device
-                                                           //Service that handles all interaction with the Bluetooth radio and remote device
+    //Service that handles all interaction with the Bluetooth radio and remote device
     private ByteArrayOutputStream transparentUartData = new ByteArrayOutputStream();                //Stores all the incoming byte arrays received from BLE device in bleService
 
     private boolean haveSuitableProbeConnected = false;
@@ -262,9 +267,9 @@ public class TakeMeasurements extends AppCompatActivity {
     private int acceptState = 0;  // 0=idle, 1-12=sample points
 
     private boolean acceptShowLiveError = false;
-    private double  acceptCurrentLiveDipError = 0;
-    private double  acceptCurrentLiveAzError = 0;
-    private double  acceptCurrentLiveRoll360Error = 0;
+    private double acceptCurrentLiveDipError = 0;
+    private double acceptCurrentLiveAzError = 0;
+    private double acceptCurrentLiveRoll360Error = 0;
     private static final int acceptAcceptableLiveError = 4;
 
     private static int acceptSamplesPerReading = 5; //10; //5;   // currenlt overriden by average edit box
@@ -278,16 +283,109 @@ public class TakeMeasurements extends AppCompatActivity {
     private double acceptRmsDip = 0;
     private double acceptRmsAz = 0;
 
-    int acceptTestPointDip[]  = { -50, -50, -50, -50, -60, -60, -60, -60, -30, -30, -30, -30 };
-    int acceptTestPointRoll[] = { 355,  80, 170, 260, 355,  80, 170, 260, 355,  80, 170, 260 };
+    private Button takeMeasurement;
+
+
+    int acceptTestPointDip[] = {-50, -50, -50, -50, -60, -60, -60, -60, -30, -30, -30, -30};
+    int acceptTestPointRoll[] = {355, 80, 170, 260, 355, 80, 170, 260, 355, 80, 170, 260};
 
     int recordCount = 0;  // number of shots recorded so far
     String recordFilename = "SensorData-Auto-yyyyMMdd-HHmmss.csv";
 
+    /******************************************************************************
+     * A semi-terrible timer:
+     */
+
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            long millis = System.currentTimeMillis() - startTime;
+            seconds = (int) (millis / 1000);
+
+            int timePassed = seconds - starttime;
+            switch (timePassed) {
+                case 0:
+                    collectionNumImg.setImageResource(R.drawable.s0);
+                    break;
+                case 1:
+                    collectionNumImg.setImageResource(R.drawable.s1);
+                    break;
+                case 2:
+                    collectionNumImg.setImageResource(R.drawable.s2);
+                    break;
+                case 3:
+                    collectionNumImg.setImageResource(R.drawable.s3);
+                    break;
+                case 4:
+                    collectionNumImg.setImageResource(R.drawable.s4);
+                    break;
+                case 5:
+                    collectionNumImg.setImageResource(R.drawable.s5);
+                    break;
+                case 6:
+                    collectionNumImg.setImageResource(R.drawable.s6);
+                    break;
+                case 7:
+                    collectionNumImg.setImageResource(R.drawable.s7);
+                    break;
+                case 8:
+                    collectionNumImg.setImageResource(R.drawable.s8);
+                    break;
+                case 9:
+                    collectionNumImg.setImageResource(R.drawable.s9);
+                    break;
+                case 10:
+                    collectionNumImg.setImageResource(R.drawable.s10);
+                    break;
+                case 11:
+                    collectionNumImg.setImageResource(R.drawable.s11);
+                    break;
+                case 12:
+                    collectionNumImg.setImageResource(R.drawable.s12);
+                    break;
+                case 13:
+                    collectionNumImg.setImageResource(R.drawable.s13);
+                    break;
+                case 14:
+                    collectionNumImg.setImageResource(R.drawable.s14);
+                    measurementNum++;
+                    takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
+                    Log.e(TAG, "MEASUREMENT TAKEN");
+                    takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
+                    try {
+                        if (directionButton.getText().equals("IN")) {
+                            takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
+                            double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
+                            prevDepth.setText("PREV DEPTH: " + (nextDepthNum));
+                            nextDepth.setText("NEXT DEPTH: " + (nextDepthNum + depthInterval));
+                        } else if (directionButton.getText().equals("OUT")) {
+                            takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
+                            double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
+                            prevDepth.setText("PREV DEPTH: " + (nextDepthNum));
+                            nextDepth.setText("NEXT DEPTH: " + (nextDepthNum - depthInterval));
+                        } else {
+                            Log.e(TAG, "ERROR, direction button has invalid text");
+                        }
+                        break;
+                    } catch (Exception e) {
+                        Log.e(TAG, "exception thrown when changing direction of measurement: " + e);
+                    }
+                case 15:
+                    collectionNumImg.setImageResource(R.drawable.s15);
+                    break;
+            }
+
+            timerHandler.postDelayed(this, 1000);
+        }
+    };
 
     /******************************************************************************************************************
      * Methods for handling life cycle events of the activity.
      */
+
+    private String mPrevDepth;
+    private String mNextDepth;
 
     // ----------------------------------------------------------------------------------------------------------------
     // Activity launched
@@ -315,22 +413,45 @@ public class TakeMeasurements extends AppCompatActivity {
             }
             connectTimeoutHandler = new Handler(Looper.getMainLooper());                                //Create a handler for a delayed runnable that will stop the connection attempt after a timeout
 
+            prevDepth = findViewById(R.id.previous_depth_txt);
+            nextDepth = findViewById(R.id.next_depth_txt);
+            directionButton = findViewById(R.id.direction_button);
+
+            //Works
+            try {
+                initialDepth = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth();
+                depthInterval = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getDepthInterval();
+                Log.e(TAG, "initial depth: " + initialDepth);
+                Log.e(TAG, "depth interval: " + depthInterval);
+            } catch (Exception e) {
+                Log.e(TAG, "Exception thrown in getting initial depth and the depth interval");
+            }
+
+
+            try {
+                nextDepth.setText("NEXT DEPTH: " + (initialDepth + depthInterval * measurementNum));
+            } catch (Exception e) {
+                Log.e(TAG, "Exception in setting the next depth: " + e);
+            }
+
+
             connectionStatusText = findViewById(R.id.connection_status_text);
             connectionStatusImage = findViewById(R.id.connection_status_img);
+
 
             connectionStatusText.setText("Connected");
             connectionStatusImage.setImageResource(R.drawable.ready);
             collectionNumImg = findViewById(R.id.collection_num);
 
+            takeMeasurement = findViewById(R.id.take_measurement_button);
+
             buttonLive = (Button) findViewById(R.id.probeOn);
             buttonLive.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    // Do something in response to button click - start rolling shots
                     Log.i(TAG, "PJH - processing Live Data button press");
-                    if (buttonLive.getText() == "PAUSE"){ //TODO - @ANNA remove ability to pause the session once started, makes life a pain
+                    if (buttonLive.getText().equals("PAUSE")) { //TODO - @ANNA remove ability to pause the session once started, makes life a pain
                         bleService.setProbeIdle();
-                    }
-                    else {
+                    } else {
                         bleService.setProbeMode(1); //TODO - @ANNA needs to also start the timer here
                         connectionStatusText.setText("Collecting Data");
                         connectionStatusImage.setImageResource(R.drawable.calibrating);
@@ -388,6 +509,7 @@ public class TakeMeasurements extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();                                                                            //Call superclass (AppCompatActivity) onPause method
+        timerHandler.removeCallbacks(timerRunnable);
         try {
             unregisterReceiver(bleServiceReceiver);                                                     //Unregister receiver that was registered in onResume()
         } catch (Exception e) {
@@ -446,7 +568,7 @@ public class TakeMeasurements extends AppCompatActivity {
 
     public void back() {
         Intent intent = new Intent(this, MainActivity.class);
-        Log.d(TAG, "Device name: " + bleDeviceName + ", Device Address: " +bleDeviceAddress);
+        Log.d(TAG, "Device name: " + bleDeviceName + ", Device Address: " + bleDeviceAddress);
         intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, bleDeviceName);
         intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
         intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "TakeMeasurements");
@@ -470,8 +592,7 @@ public class TakeMeasurements extends AppCompatActivity {
                 if (bleService.isBluetoothRadioEnabled()) {                                         //See if the Bluetooth radio is on
                     stateApp = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
                     //startBleScanActivity();                                                         //Launch the BleScanActivity to scan for BLE devices
-                }
-                else {                                                                              //Radio needs to be enabled
+                } else {                                                                              //Radio needs to be enabled
                     stateApp = StateApp.ENABLING_BLUETOOTH;                                         //Are requesting Bluetooth to be turned on
                     Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);     //Create an Intent asking the user to grant permission to enable Bluetooth
                     startActivityForResult(enableBtIntent, REQ_CODE_ENABLE_BT);                     //Send the Intent to start the Activity that will return a result based on user input
@@ -551,8 +672,7 @@ public class TakeMeasurements extends AppCompatActivity {
             stateApp = StateApp.STARTING_SERVICE;                                                   //Are going to start the BleService service
             Intent bleServiceIntent = new Intent(this, BleService.class);             //Create Intent to start the BleService
             this.bindService(bleServiceIntent, bleServiceConnection, BIND_AUTO_CREATE);             //Create and bind the new service to bleServiceConnection object that handles service connect and disconnect
-        }
-        else if (requestCode == REQ_CODE_ACCESS_LOC1) {                                             //Not granted so see if first refusal and need to ask again
+        } else if (requestCode == REQ_CODE_ACCESS_LOC1) {                                             //Not granted so see if first refusal and need to ask again
             showAlert.showLocationPermissionDialog(new Runnable() {                                 //Show the AlertDialog that scan cannot be performed without permission
                 @TargetApi(Build.VERSION_CODES.M)
                 @Override
@@ -560,8 +680,7 @@ public class TakeMeasurements extends AppCompatActivity {
                     requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_CODE_ACCESS_LOC2); //Ask for location permission again
                 }
             });
-        }
-        else {
+        } else {
             //Permission refused twice so send user to settings
             Log.i(TAG, "PJH - Location permission NOT granted");
             Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);               //Create Intent to open the app settings page
@@ -775,21 +894,48 @@ public class TakeMeasurements extends AppCompatActivity {
 
             Log.e(TAG, "Measurement name: " + String.valueOf(newVal[0]));
             DecimalFormat numberFormat = new DecimalFormat("#.0000");
-            if (newVal[0] >= 283) {
-                newMeasurementBeingCollected = new Measurement(String.valueOf(newVal[0]-283), null, null, //HACK
-                        String.valueOf(numberFormat.format(newVal[10])), null, String.valueOf(numberFormat.format(newVal[8])),
-                        String.valueOf(numberFormat.format(newVal[7])), String.valueOf(numberFormat.format(newVal[9]))); //names a bit of a mouthful...
+
+            Date c = Calendar.getInstance().getTime();
+            System.out.println("Current time => " + c);
+
+            SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
+            String date = df.format(c);
+
+            SimpleDateFormat dfer = new SimpleDateFormat("h:mm:ss a");
+            String time = dfer.format(Calendar.getInstance().getTime());
+
+            String depthRecorded = (String) nextDepth.getText();
+            depthRecorded = depthRecorded.replace("NEXT DEPTH: ", "");
+
+            if (depthRecorded != null) {
+                if (newVal[0] >= 283) {
+                    newMeasurementBeingCollected = new Measurement(String.valueOf(newVal[0] - 283), date, time, //HACK
+                            String.valueOf(numberFormat.format(newVal[10])), depthRecorded, String.valueOf(numberFormat.format(newVal[8])),
+                            String.valueOf(numberFormat.format(newVal[7])), String.valueOf(numberFormat.format(newVal[9]))); //names a bit of a mouthful...
+                } else {
+                    newMeasurementBeingCollected = new Measurement(String.valueOf(newVal[0]), date, time, //HACK
+                            String.valueOf(numberFormat.format(newVal[10])), depthRecorded, String.valueOf(numberFormat.format(newVal[8])),
+                            String.valueOf(numberFormat.format(newVal[7])), String.valueOf(numberFormat.format(newVal[9]))); //names a bit of a mouthful...
+                }
             } else {
-                newMeasurementBeingCollected = new Measurement(String.valueOf(newVal[0]), null, null, //HACK
-                        String.valueOf(numberFormat.format(newVal[10])), null, String.valueOf(numberFormat.format(newVal[8])),
-                        String.valueOf(numberFormat.format(newVal[7])), String.valueOf(numberFormat.format(newVal[9]))); //names a bit of a mouthful...
+                if (newVal[0] >= 283) {
+                    newMeasurementBeingCollected = new Measurement(String.valueOf(newVal[0] - 283), date, time, //HACK
+                            String.valueOf(numberFormat.format(newVal[10])), null, String.valueOf(numberFormat.format(newVal[8])),
+                            String.valueOf(numberFormat.format(newVal[7])), String.valueOf(numberFormat.format(newVal[9]))); //names a bit of a mouthful...
+                } else {
+                    newMeasurementBeingCollected = new Measurement(String.valueOf(newVal[0]), date, time, //HACK
+                            String.valueOf(numberFormat.format(newVal[10])), null, String.valueOf(numberFormat.format(newVal[8])),
+                            String.valueOf(numberFormat.format(newVal[7])), String.valueOf(numberFormat.format(newVal[9]))); //names a bit of a mouthful...
+                }
             }
 
             boolean accValid = true;
-            double accMag = Math.sqrt(newVal[1]*newVal[1] + newVal[2]*newVal[2] + newVal[3]*newVal[3]);
-            if (Math.abs(accMag-1.0)>0.03) { accValid = false; }
+            double accMag = Math.sqrt(newVal[1] * newVal[1] + newVal[2] * newVal[2] + newVal[3] * newVal[3]);
+            if (Math.abs(accMag - 1.0) > 0.03) {
+                accValid = false;
+            }
 
-            double magMag = Math.sqrt(newVal[4]*newVal[4] + newVal[5]*newVal[5] + newVal[6]*newVal[6]);
+            double magMag = Math.sqrt(newVal[4] * newVal[4] + newVal[5] * newVal[5] + newVal[6] * newVal[6]);
 
             //
 //            textMagX.setText(String.format("%7.4f", newVal[4])); //TODO - @ANNA - add back in as a record or smth
@@ -818,7 +964,7 @@ public class TakeMeasurements extends AppCompatActivity {
 
                     // now update the totals
                     alignDipTotal += newAlignReadingDipSum;
-                    alignAzTotal  += newAlignReadingAzSum;
+                    alignAzTotal += newAlignReadingAzSum;
                     alignCount += 1;
                     // and update the display
 //                    textAlignCount.setText(String.format("%d", alignCount));
@@ -826,7 +972,7 @@ public class TakeMeasurements extends AppCompatActivity {
 //                    textAlignAvgAz.setText(String.format("%7.4f", (alignAzTotal / alignCount / alignSamplesPerReading)));
 
                     ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);   // beep
-                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
+                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP, 150);
 
 //                    textAlignCountdown.setText("");
                 }
@@ -837,11 +983,16 @@ public class TakeMeasurements extends AppCompatActivity {
                 acceptCurrentLiveRoll360Error = Math.abs(newVal[7] + 180 - acceptTestPointRoll[acceptState - 1]);
                 //textFirmwareVersion.setText(String.format("Acc DipErr=%3.2f RollErr=%3.2f", acceptCurrentLiveDipError, acceptCurrentLiveRoll360Error));// PJH TODO DEBUG HACK
                 double azIdeal = 0;
-                if ((acceptState >= 1) && (acceptState <=4)) { azIdeal = acceptIdeal50Az; }
-                if ((acceptState >= 5) && (acceptState <=8)) { azIdeal = acceptIdeal60Az; }
-                if ((acceptState >= 9) && (acceptState <=12)) { azIdeal = acceptIdeal30Az; }
+                if ((acceptState >= 1) && (acceptState <= 4)) {
+                    azIdeal = acceptIdeal50Az;
+                }
+                if ((acceptState >= 5) && (acceptState <= 8)) {
+                    azIdeal = acceptIdeal60Az;
+                }
+                if ((acceptState >= 9) && (acceptState <= 12)) {
+                    azIdeal = acceptIdeal30Az;
+                }
                 acceptCurrentLiveAzError = Math.abs(newVal[9] - azIdeal);
-
 
 
                 // if current dip is more than 4 degrees from the desired position, show live dip in red
@@ -858,8 +1009,7 @@ public class TakeMeasurements extends AppCompatActivity {
                 }
 
 //                textAzErr.setText(String.format("(err:%7.4f)", acceptCurrentLiveAzError));
-            }
-            else {
+            } else {
                 // this should never be required, but just in case...
                 acceptCurrentLiveDipError = 0;
                 acceptCurrentLiveRoll360Error = 0;
@@ -889,10 +1039,10 @@ public class TakeMeasurements extends AppCompatActivity {
                         bleService.stopRecordingSensorData();
                     }
 
-                    if ((acceptState>0) && (acceptState<=12)) {
-                        acceptDip[acceptState-1]  = newAcceptReadingDipSum / acceptSamplesPerReading;
-                        acceptAz[acceptState-1]   = newAcceptReadingAzSum  / acceptSamplesPerReading;
-                        acceptRoll[acceptState-1] = newVal[7];
+                    if ((acceptState > 0) && (acceptState <= 12)) {
+                        acceptDip[acceptState - 1] = newAcceptReadingDipSum / acceptSamplesPerReading;
+                        acceptAz[acceptState - 1] = newAcceptReadingAzSum / acceptSamplesPerReading;
+                        acceptRoll[acceptState - 1] = newVal[7];
                         acceptState += 1;
                     }
                     // now update the totals
@@ -917,72 +1067,94 @@ public class TakeMeasurements extends AppCompatActivity {
                         bleService.setProbeIdle();
                         // now generate results file
                         String nowDate = new SimpleDateFormat("yyyy-MM-dd_hh-mm", Locale.getDefault()).format(new Date());
-                        String safeBleDeviceAddress = bleDeviceAddress.replace(':','-');
-                        String safeBleDeviceName = bleDeviceName.replace(':','-');
+                        String safeBleDeviceAddress = bleDeviceAddress.replace(':', '-');
+                        String safeBleDeviceName = bleDeviceName.replace(':', '-');
                         String filename = String.format("AcceptTest_%s_%s_%s.csv", nowDate, safeBleDeviceAddress, safeBleDeviceName);
                         Log.i(TAG, String.format("PJH - Accept filename: %s", filename));
-                        writeAcceptReadingsToFile(getExternalFilesDir("/").getAbsolutePath() + "/"+filename);
+                        writeAcceptReadingsToFile(getExternalFilesDir("/").getAbsolutePath() + "/" + filename);
                         // and do calculations
                         double sqAzDeltaSum = 0;
                         double sqDipDeltaSum = 0;
                         double err = 0;
-                        for (int i=0; i<4; i++) {
-                            err = acceptAz[i]-acceptIdeal50Az;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqAzDeltaSum += (err * err );
+                        for (int i = 0; i < 4; i++) {
+                            err = acceptAz[i] - acceptIdeal50Az;
+                            if (err > 180) {
+                                err -= 360;
+                            }
+                            if (err < -180) {
+                                err += 360;
+                            }
+                            sqAzDeltaSum += (err * err);
 
                             //sqDipDeltaSum += ((acceptDip[i]-acceptIdeal50Dip) * (acceptDip[i]-acceptIdeal50Dip) );
-                            err = acceptDip[i]-acceptIdeal50Dip;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqDipDeltaSum += (err * err );
+                            err = acceptDip[i] - acceptIdeal50Dip;
+                            if (err > 180) {
+                                err -= 360;
+                            }
+                            if (err < -180) {
+                                err += 360;
+                            }
+                            sqDipDeltaSum += (err * err);
 
                         }
-                        for (int i=4; i<8; i++) {
+                        for (int i = 4; i < 8; i++) {
                             //sqAzDeltaSum += ((acceptAz[i]-acceptIdeal60Az) * (acceptAz[i]-acceptIdeal60Az) );
-                            err = acceptAz[i]-acceptIdeal60Az;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqAzDeltaSum += (err * err );
+                            err = acceptAz[i] - acceptIdeal60Az;
+                            if (err > 180) {
+                                err -= 360;
+                            }
+                            if (err < -180) {
+                                err += 360;
+                            }
+                            sqAzDeltaSum += (err * err);
 
                             //sqDipDeltaSum += ((acceptDip[i]-acceptIdeal60Dip) * (acceptDip[i]-acceptIdeal60Dip) );
-                            err = acceptDip[i]-acceptIdeal60Dip;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqDipDeltaSum += (err * err );
+                            err = acceptDip[i] - acceptIdeal60Dip;
+                            if (err > 180) {
+                                err -= 360;
+                            }
+                            if (err < -180) {
+                                err += 360;
+                            }
+                            sqDipDeltaSum += (err * err);
 
                         }
-                        for (int i=8; i<12; i++) {
+                        for (int i = 8; i < 12; i++) {
                             //sqAzDeltaSum += ((acceptAz[i]-acceptIdeal30Az) * (acceptAz[i]-acceptIdeal30Az) );
-                            err = acceptAz[i]-acceptIdeal30Az;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqAzDeltaSum += (err * err );
+                            err = acceptAz[i] - acceptIdeal30Az;
+                            if (err > 180) {
+                                err -= 360;
+                            }
+                            if (err < -180) {
+                                err += 360;
+                            }
+                            sqAzDeltaSum += (err * err);
 
                             //sqDipDeltaSum += ((acceptDip[i]-acceptIdeal30Dip) * (acceptDip[i]-acceptIdeal30Dip) );
-                            err = acceptDip[i]-acceptIdeal30Dip;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqDipDeltaSum += (err * err );
+                            err = acceptDip[i] - acceptIdeal30Dip;
+                            if (err > 180) {
+                                err -= 360;
+                            }
+                            if (err < -180) {
+                                err += 360;
+                            }
+                            sqDipDeltaSum += (err * err);
 
                         }
-                        acceptRmsAz = Math.sqrt(sqAzDeltaSum/12);
-                        acceptRmsDip = Math.sqrt(sqDipDeltaSum/12);
+                        acceptRmsAz = Math.sqrt(sqAzDeltaSum / 12);
+                        acceptRmsDip = Math.sqrt(sqDipDeltaSum / 12);
 
 //                        textAcceptResultAz.setText(String.format("%5.3f", acceptRmsAz));     // show the result (summary) of the test
 //                        textAcceptResultDip.setText(String.format("%5.3f", acceptRmsDip));
 //                        textAcceptComment.setText(String.format("Test complete\nPress Start to begin a new test."));
                         acceptState = 0;
-                    }
-                    else {
+                    } else {
                         // more readings to take...
 //                        textAcceptComment.setText(String.format("%dof12 Place probe in '%d' tray, adjust roll to %d degrees, step back and press 'Take Reading'",
 //                                acceptState, acceptTestPointDip[acceptState - 1], acceptTestPointRoll[acceptState - 1]));
                     }
                 }
             }
-
 
 
         } catch (Exception e) {
@@ -1052,7 +1224,6 @@ public class TakeMeasurements extends AppCompatActivity {
     }
 
 
-
     public void writeSensorDataToFile(final String filename) {
         File file = new File(filename);
         try {
@@ -1067,12 +1238,12 @@ public class TakeMeasurements extends AppCompatActivity {
             //Log.i(TAG, String.format("PJH - about to save %d sensorData records", recordCount);
             Log.i(TAG, "PJH - about to get header");
             String header = bleService.sensorDataReportGetReportHeader();
-            csvBody += header+"\n";
+            csvBody += header + "\n";
 
             String record;
-            for (int i=0; i<recordCount; i++) {
+            for (int i = 0; i < recordCount; i++) {
                 record = bleService.sensorDataReportGetReportLine(i);
-                csvBody += record+"\n";
+                csvBody += record + "\n";
             }
 
 
@@ -1084,8 +1255,6 @@ public class TakeMeasurements extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
-
 
 
 //    private void processIncomingData(byte[] newBytes) {
@@ -1289,9 +1458,10 @@ public class TakeMeasurements extends AppCompatActivity {
 
     //when "withdrawing" the probe, it must be connected so that data can be retreived
     LinkedList<Integer> shotsToCollect = new LinkedList<>(); //need to transfer time into shots
+
     public void withdrawClick(View view) {
         try {
-            int shotInterval = bleService.getShotInterval(); //supprisingly works
+            int shotInterval = bleService.getShotInterval();
             for (int i = 0; i < measurementTime.size(); i++) {
                 shotsToCollect.add((int) (measurementTime.get(i) / shotInterval));
             }
@@ -1306,72 +1476,32 @@ public class TakeMeasurements extends AppCompatActivity {
     }
 
     public void measurementClick(View view) throws InterruptedException {
-            elapsedTime = System.currentTimeMillis() - startTime;
-            elapsedSeconds = elapsedTime / 1000;
-            secondsDisplay = elapsedSeconds % 60;
-            elapsedMinutes = elapsedSeconds / 60;
-//        if (!collectingDataMeasurement) {
-            Log.i(TAG, "Time added to measurement collection list: " + elapsedSeconds);
-            measurementTime.add((double) elapsedSeconds); //add this elapsed time to a linked list
-            measurementStartTime = elapsedSeconds;
-//            collectingDataMeasurement = true;
+        elapsedTime = System.currentTimeMillis() - startTime;
+        elapsedSeconds = elapsedTime / 1000;
+        secondsDisplay = elapsedSeconds % 60;
+        elapsedMinutes = elapsedSeconds / 60;
 
-//        } else {
-//            //make the user wait 15 seconds (could also be set to 10 but less accurate) before being able to ask for another measurement
-//            //make the wait time a variable collected from the probe in the future - TODO
-//            Log.i(TAG, "COLLECTING? ");
-//            int timePassed = (int)elapsedTime;
-//            switch (timePassed) {
-//                case 0:
-//                    collectionNumImg.setImageResource(R.drawable.s0);
-//                    break;
-//                    case 1:
-//                        collectionNumImg.setImageResource(R.drawable.s1);
-//                        break;
-//                    case 2:
-//                        collectionNumImg.setImageResource(R.drawable.s2);
-//                        break;
-//                    case 3:
-//                        collectionNumImg.setImageResource(R.drawable.s3);
-//                        break;
-//                    case 4:
-//                        collectionNumImg.setImageResource(R.drawable.s4);
-//                        break;
-//                    case 5:
-//                        collectionNumImg.setImageResource(R.drawable.s5);
-//                        break;
-//                    case 6:
-//                        collectionNumImg.setImageResource(R.drawable.s6);
-//                        break;
-//                    case 7:
-//                        collectionNumImg.setImageResource(R.drawable.s7);
-//                        break;
-//                    case 8:
-//                        collectionNumImg.setImageResource(R.drawable.s8);
-//                        break;
-//                    case 9:
-//                        collectionNumImg.setImageResource(R.drawable.s9);
-//                        break;
-//                    case 10:
-//                        collectionNumImg.setImageResource(R.drawable.s10);
-//                        break;
-//                    case 11:
-//                        collectionNumImg.setImageResource(R.drawable.s11);
-//                        break;
-//                    case 12:
-//                        collectionNumImg.setImageResource(R.drawable.s12);
-//                        break;
-//                    case 13:
-//                        collectionNumImg.setImageResource(R.drawable.s13);
-//                        break;
-//                    case 14:
-//                        collectionNumImg.setImageResource(R.drawable.s14);
-//                        break;
-//                    case 15:
-//                        collectionNumImg.setImageResource(R.drawable.s15);
-//                        break;
-//                }
-//            }
-//        }
+        startTime = System.currentTimeMillis();
+        timerHandler.removeCallbacks(timerRunnable);
+        timerHandler.postDelayed(timerRunnable, 0);
+
+//        if (!collectingDataMeasurement) {
+        Log.i(TAG, "Time added to measurement collection list: " + elapsedSeconds);
+        measurementTime.add((double) elapsedSeconds); //add this elapsed time to a linked list
+        measurementStartTime = elapsedSeconds;
+    }
+
+    public void changeDirection(View view) {
+        if (!collectingData) {
+            if (directionButton.getText().toString().equals("IN")) {
+                directionButton.setText("OUT");
+                double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
+                nextDepth.setText("NEXT DEPTH: " + (nextDepthNum - (depthInterval * 2)));
+            } else {
+                directionButton.setText("IN");
+                double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
+                nextDepth.setText("NEXT DEPTH: " + (nextDepthNum + depthInterval * 2));
+            }
+        }
     }
 }

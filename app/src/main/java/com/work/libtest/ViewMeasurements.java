@@ -88,13 +88,13 @@ public class ViewMeasurements extends AppCompatActivity {
         for (int i = 0; i < savedProbeData.size(); i++) {
             DecimalFormat numberFormat = new DecimalFormat("#.0000");
             String measurementName = savedProbeData.get(i).getName();
-            String date = "blank";
-            String time = "blank";
-            String depth = "blank"; //do next
-            String roll = savedProbeData.get(i).getRoll();//String.valueOf(numberFormat.format(measurementDatas[7]));
-            String dip = savedProbeData.get(i).getDip();//String.valueOf(numberFormat.format(measurementDatas[8]));
-            String azimuth = savedProbeData.get(i).getAzimuth();//String.valueOf(numberFormat.format(measurementDatas[9]));
-            String temp = savedProbeData.get(i).getTemp();//String.valueOf(numberFormat.format(measurementDatas[10]));
+            String date = savedProbeData.get(i).getDate();
+            String time = savedProbeData.get(i).getTime();
+            String depth = savedProbeData.get(i).getDepth();
+            String roll = savedProbeData.get(i).getRoll();
+            String dip = savedProbeData.get(i).getDip();
+            String azimuth = savedProbeData.get(i).getAzimuth();
+            String temp = savedProbeData.get(i).getTemp();
             Measurement measurement = new Measurement(measurementName, date, time, temp, depth, dip, roll, azimuth); // i feel like this is a bad way of doing things...
             measurementArrayAdapter.add(measurement);
         }

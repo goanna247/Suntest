@@ -35,6 +35,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Parcelable;
 import android.provider.Settings;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -63,6 +64,7 @@ import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -560,8 +562,18 @@ public class SensorActivity extends AppCompatActivity {
     private void saveData() {
         try {
             //need to add all current data to a measurement and save to a linkedList
-            Measurement currentData = new Measurement((String) dev_record_number.getText(), (String) null,
-                    (String) null, (String) textTempUc.getText(), (String) null, (String) textDip.getText(),
+            Date c = Calendar.getInstance().getTime();
+            System.out.println("Current time => " + c);
+
+            SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
+            String formattedDate = df.format(c);
+
+            SimpleDateFormat dfer = new SimpleDateFormat("h:mm:ss a");
+            String time = dfer.format(Calendar.getInstance().getTime());
+
+
+            Measurement currentData = new Measurement((String) dev_record_number.getText(), (String) formattedDate,
+                    (String) time, (String) textTempUc.getText(), (String) null, (String) textDip.getText(),
                     (String) textRoll.getText(), (String) textAz.getText());
             //increase the value on the save menu button by 1
             MenuItem saveMenuItem = menu.findItem(R.id.sensor_save_button);
