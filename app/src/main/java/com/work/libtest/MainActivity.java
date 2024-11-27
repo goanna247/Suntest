@@ -2091,6 +2091,11 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         } else {
             //TODO make a popup that says device not connected cannot get data
+            Intent intent = new Intent(this, ProbeDetails.class);
+            intent.putExtra(ProbeDetails.EXTRA_DEVICE_NAME, bleDeviceName);
+            intent.putExtra(ProbeDetails.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+            intent.putExtra(ProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableProbeConnected);
+            startActivity(intent);
         }
     }
 

@@ -29,22 +29,14 @@
             android:layout_width="match_parent"
             android:layout_height="1393dp">
 
-            <TextView
-                android:id="@+id/orientation_title_txt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
-                android:text="ORIENTATION"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
             <LinearLayout
                 android:id="@+id/linearLayout2"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="50dp"
                 android:orientation="horizontal"
                 android:weightSum="3"
-                app:layout_constraintTop_toBottomOf="@+id/orientation_title_txt">
+                app:layout_constraintTop_toTopOf="parent">
 
                 <Button
                     android:id="@+id/shot_request_button"

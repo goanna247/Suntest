@@ -1598,6 +1598,7 @@ public class OrientationActivity extends AppCompatActivity {
                 intent.putExtra(ViewMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
 //                intent.putExtra(ViewMeasurements.EXTRA_NEXT_DEPTH, mNextDepth);
 //                intent.putExtra(ViewMeasurements.EXTRA_PREV_DEPTH, mPrevDepth);
+                bleService.setProbeMode(0);
                 startActivity(intent);
             } else {
                 Intent intent = new Intent(this, ProbeDetails.class);

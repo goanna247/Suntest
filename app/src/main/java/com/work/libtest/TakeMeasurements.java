@@ -775,9 +775,15 @@ public class TakeMeasurements extends AppCompatActivity {
 
             Log.e(TAG, "Measurement name: " + String.valueOf(newVal[0]));
             DecimalFormat numberFormat = new DecimalFormat("#.0000");
-            newMeasurementBeingCollected = new Measurement(String.valueOf(newVal[0]-283), null, null, //HACK
-                    String.valueOf(numberFormat.format(newVal[10])), null, String.valueOf(numberFormat.format(newVal[8])),
-                    String.valueOf(numberFormat.format(newVal[7])), String.valueOf(numberFormat.format(newVal[9]))); //names a bit of a mouthful...
+            if (newVal[0] >= 283) {
+                newMeasurementBeingCollected = new Measurement(String.valueOf(newVal[0]-283), null, null, //HACK
+                        String.valueOf(numberFormat.format(newVal[10])), null, String.valueOf(numberFormat.format(newVal[8])),
+                        String.valueOf(numberFormat.format(newVal[7])), String.valueOf(numberFormat.format(newVal[9]))); //names a bit of a mouthful...
+            } else {
+                newMeasurementBeingCollected = new Measurement(String.valueOf(newVal[0]), null, null, //HACK
+                        String.valueOf(numberFormat.format(newVal[10])), null, String.valueOf(numberFormat.format(newVal[8])),
+                        String.valueOf(numberFormat.format(newVal[7])), String.valueOf(numberFormat.format(newVal[9]))); //names a bit of a mouthful...
+            }
 
             boolean accValid = true;
             double accMag = Math.sqrt(newVal[1]*newVal[1] + newVal[2]*newVal[2] + newVal[3]*newVal[3]);
@@ -1284,16 +1290,19 @@ public class TakeMeasurements extends AppCompatActivity {
     //when "withdrawing" the probe, it must be connected so that data can be retreived
     LinkedList<Integer> shotsToCollect = new LinkedList<>(); //need to transfer time into shots
     public void withdrawClick(View view) {
-        int shotInterval = bleService.getShotInterval(); //supprisingly works
-
-        for (int i = 0; i < measurementTime.size(); i++) {
-            shotsToCollect.add((int) (measurementTime.get(i) / shotInterval));
-        }
-        Log.i(TAG, "Shots to collect: " + shotsToCollect.toString());
+        try {
+            int shotInterval = bleService.getShotInterval(); //supprisingly works
+            for (int i = 0; i < measurementTime.size(); i++) {
+                shotsToCollect.add((int) (measurementTime.get(i) / shotInterval));
+            }
+            Log.i(TAG, "Shots to collect: " + shotsToCollect.toString());
 
             int shotToCollect = shotsToCollect.get(0);
             Log.e(TAG, "Getting shot for: " + shotToCollect);
             bleService.setShotRequest(shotToCollect);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown in withdraw click: " + e);
+        }
     }
 
     public void measurementClick(View view) throws InterruptedException {

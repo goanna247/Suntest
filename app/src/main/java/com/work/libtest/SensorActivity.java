@@ -151,6 +151,7 @@ public class SensorActivity extends AppCompatActivity {
     private TextView textAcceptDip, textAcceptAz;
     private Button buttonAcceptStart, buttonAcceptTakeReading;
     private TextView textAcceptResultAz, textAcceptResultDip;
+    private TextView dev_record_number;
 
     //Maximum deviations
     private TextView maxDev_title;
@@ -331,7 +332,7 @@ public class SensorActivity extends AppCompatActivity {
             connectionStatusImage = (ImageView) findViewById(R.id.orientation_connection_img);
 
 //            dev_shot_format = (TextView) findViewById(R.id.dev_format_info);
-//            dev_record_number = (TextView) findViewById(R.id.dev_record_number_info);
+            dev_record_number = (TextView) findViewById(R.id.dev_record_number_info);
 //
 //            orientation_roll_data = (TextView) findViewById(R.id.orientation_roll_data);
 //            orientation_dip_data = (TextView) findViewById(R.id.orientation_dip_data);
@@ -464,9 +465,9 @@ public class SensorActivity extends AppCompatActivity {
             intent.putExtra(ProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
             startActivity(intent);
         } else if (item.getItemId() == R.id.sensor_save_button) {
-//            saveData();
+            saveData();
         } else if (item.getItemId() == R.id.sensor_hold_button) {
-//            holdButton();
+            holdButton();
         } else if (item.getItemId() == R.id.sensor_options_button) {
 
         } else if (item.getItemId() == R.id.sensor_tools_autoSaveOn) {
@@ -505,6 +506,15 @@ public class SensorActivity extends AppCompatActivity {
         return true;
     }
     /**********************************************************************************************/
+
+    private void saveData() {
+
+    }
+
+    private void holdButton() {
+
+    }
+
 
     /**********************************************************************************************
      * Callback methods for handling Service connection events and Activity result events
@@ -560,12 +570,12 @@ public class SensorActivity extends AppCompatActivity {
                     bleDeviceName = intent.getStringExtra(BleScanActivity.EXTRA_SCAN_NAME);         //Get the name of the BLE device selected in the BleScanActivity
 
                     if (bleDeviceName != null) {                                                //See if there is a device name
-//                        textDeviceNameAndAddress.setText(bleDeviceName);                        //Display the name
+                        textDeviceNameAndAddress.setText(bleDeviceName);                        //Display the name
                     } else {
-//                        textDeviceNameAndAddress.setText(R.string.unknown_device);                     //or display "Unknown Device"
+                        textDeviceNameAndAddress.setText(R.string.unknown_device);                     //or display "Unknown Device"
                     }
                     if (bleDeviceAddress != null) {                                             //See if there is an address
-//                        textDeviceNameAndAddress.append(" - " + bleDeviceAddress);              //Display the address
+                        textDeviceNameAndAddress.append(" - " + bleDeviceAddress);              //Display the address
                     }
 
                     if (bleDeviceAddress == null) {                                                 //Check whether we were given a device address
@@ -683,22 +693,22 @@ public class SensorActivity extends AppCompatActivity {
 
                     String verString = bleService.getFirmwareVersionString();
                     textDeviceStatus.setText(R.string.ready);
-                    labelFirmwareVersion.setVisibility(View.VISIBLE);
-                    textFirmwareVersion.setText(verString);
-                    textFirmwareVersion.setVisibility(View.VISIBLE);
+//                    labelFirmwareVersion.setVisibility(View.VISIBLE);
+//                    textFirmwareVersion.setText(verString);
+//                    textFirmwareVersion.setVisibility(View.VISIBLE);
 
                     bleService.parseBinaryCalibration();
                     bleService.setNotifications(true);
                     String java_date = bleService.getCalibratedDateString();
-                    labelCalibratedDate.setVisibility(View.VISIBLE);
-                    textCalibratedDate.setText(java_date);
-                    textCalibratedDate.setVisibility(View.VISIBLE);
+//                    labelCalibratedDate.setVisibility(View.VISIBLE);
+//                    textCalibratedDate.setText(java_date);
+//                    textCalibratedDate.setVisibility(View.VISIBLE);
                     int probeShotInterval = bleService.getShotInterval();
-                    textInterval.setText(Integer.toString(probeShotInterval));
-                    int probeDebug1 = bleService.getDebug1();
-                    editBoxDebug1.setText(Integer.toString(probeDebug1));
-                    int probeDebug2 = bleService.getDebug2();
-                    editBoxDebug1.setText(Integer.toString(probeDebug2));
+//                    textInterval.setText(Integer.toString(probeShotInterval));
+//                    int probeDebug1 = bleService.getDebug1();
+//                    editBoxDebug1.setText(Integer.toString(probeDebug1));
+//                    int probeDebug2 = bleService.getDebug2();
+//                    editBoxDebug1.setText(Integer.toString(probeDebug2));
 
                     haveSuitableProbeConnected = true;
                     break;
@@ -728,13 +738,13 @@ public class SensorActivity extends AppCompatActivity {
     private void initializeDisplay() {
         try {
             textDeviceStatus.setText("Not Connected");  // PJH - hack - shouldn't be here!
-            labelFirmwareVersion.setVisibility(View.INVISIBLE);
-            textFirmwareVersion.setText("");
-            textFirmwareVersion.setVisibility(View.INVISIBLE);
-
-            labelCalibratedDate.setVisibility(View.INVISIBLE);
-            textCalibratedDate.setText("");
-            textCalibratedDate.setVisibility(View.INVISIBLE);
+//            labelFirmwareVersion.setVisibility(View.INVISIBLE);
+//            textFirmwareVersion.setText("");
+//            textFirmwareVersion.setVisibility(View.INVISIBLE);
+//
+//            labelCalibratedDate.setVisibility(View.INVISIBLE);
+//            textCalibratedDate.setText("");
+//            textCalibratedDate.setVisibility(View.INVISIBLE);
 
             textAccX.setText("");
             textAccY.setText("");
@@ -804,9 +814,10 @@ public class SensorActivity extends AppCompatActivity {
             double newVal[] = bleService.getLatestBoreshot(count);
 
             recordCount = bleService.getSensorDataCount();
-            if (bleService.isRecordingSensorDataEnabled() && (recordCount > 0)) {
+//            dev_record_number.setText(recordCount);
+//            if (bleService.isRecordingSensorDataEnabled() && (recordCount > 0)) {
 //                buttonRecord.setText(String.format("Save: %d", recordCount));
-            }
+//            }
 
 
             textAccX.setText(String.format("%7.4f", newVal[1]));
@@ -853,154 +864,171 @@ public class SensorActivity extends AppCompatActivity {
 
                     // now update the totals
                     alignDipTotal += newAlignReadingDipSum;
-                    alignAzTotal  += newAlignReadingAzSum;
+                    alignAzTotal += newAlignReadingAzSum;
                     alignCount += 1;
                     // and update the display
 //                    textAlignCount.setText(String.format("%d", alignCount));
 //                    textAlignAvgDip.setText(String.format("%7.4f", (alignDipTotal / alignCount / alignSamplesPerReading)));
 //                    textAlignAvgAz.setText(String.format("%7.4f", (alignAzTotal / alignCount / alignSamplesPerReading)));
-
-                    ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);   // beep
-                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-
-//                    textAlignCountdown.setText("");
-                }
-            }
-
-            if (acceptShowLiveError) {
-                acceptCurrentLiveDipError = Math.abs(newVal[8] - acceptTestPointDip[acceptState - 1]);
-                acceptCurrentLiveRoll360Error = Math.abs(newVal[7] + 180 - acceptTestPointRoll[acceptState - 1]);
-                //textFirmwareVersion.setText(String.format("Acc DipErr=%3.2f RollErr=%3.2f", acceptCurrentLiveDipError, acceptCurrentLiveRoll360Error));// PJH TODO DEBUG HACK
-                double azIdeal = 0;
-                if ((acceptState >= 1) && (acceptState <=4)) { azIdeal = acceptIdeal50Az; }
-                if ((acceptState >= 5) && (acceptState <=8)) { azIdeal = acceptIdeal60Az; }
-                if ((acceptState >= 9) && (acceptState <=12)) { azIdeal = acceptIdeal30Az; }
-                acceptCurrentLiveAzError = Math.abs(newVal[9] - azIdeal);
-
-                if (acceptCurrentLiveDipError < acceptAcceptableLiveError) {
-                    textDip.setTextColor(Color.BLACK);
-                } else {
-                    textDip.setTextColor(Color.RED);
-                }
-                if (acceptCurrentLiveRoll360Error < 4) {
-                    textRoll360.setTextColor(Color.BLACK);
-                } else {
-                    textRoll360.setTextColor(Color.RED);
                 }
 
-                textAzErr.setText(String.format("(err:%7.4f)", acceptCurrentLiveAzError));
-            }
-            else {
-                acceptCurrentLiveDipError = 0;
-                acceptCurrentLiveRoll360Error = 0;
-                acceptCurrentLiveAzError = 0;
-            }
-
-            if (newAcceptCountRemaining > 0) {
-                newAcceptReadingDipSum += newVal[8];
-                newAcceptReadingAzSum += newVal[9];
-                newAcceptCountRemaining -= 1;
-                textAlignCountdown.setText(String.format("(%d)",newAcceptCountRemaining));  // yes, I know it is in the wrong area
-
-                if (acceptState > 0) {
-                    textAcceptResultAz.setText("");
-                    textAcceptResultDip.setText("");
-                }
-
-                if (newAcceptCountRemaining == 0) {
-                    if (switchRecord.isChecked()) {  // do we have a race condition here
-                        // we have recorded the last of the shots
-                        bleService.stopRecordingSensorData();
+                if (acceptShowLiveError) {
+                    acceptCurrentLiveDipError = Math.abs(newVal[8] - acceptTestPointDip[acceptState - 1]);
+                    acceptCurrentLiveRoll360Error = Math.abs(newVal[7] + 180 - acceptTestPointRoll[acceptState - 1]);
+                    //textFirmwareVersion.setText(String.format("Acc DipErr=%3.2f RollErr=%3.2f", acceptCurrentLiveDipError, acceptCurrentLiveRoll360Error));// PJH TODO DEBUG HACK
+                    double azIdeal = 0;
+                    if ((acceptState >= 1) && (acceptState <= 4)) {
+                        azIdeal = acceptIdeal50Az;
                     }
-
-                    if ((acceptState>0) && (acceptState<=12)) {
-                        acceptDip[acceptState-1]  = newAcceptReadingDipSum / acceptSamplesPerReading;
-                        acceptAz[acceptState-1]   = newAcceptReadingAzSum  / acceptSamplesPerReading;
-                        acceptRoll[acceptState-1] = newVal[7];
-                        acceptState += 1;
+                    if ((acceptState >= 5) && (acceptState <= 8)) {
+                        azIdeal = acceptIdeal60Az;
                     }
-                    textAcceptDip.setText(String.format("%7.4f", (newAcceptReadingDipSum / acceptSamplesPerReading)));
-                    textAcceptAz.setText(String.format("%7.4f", (newAcceptReadingAzSum  / acceptSamplesPerReading)));
+                    if ((acceptState >= 9) && (acceptState <= 12)) {
+                        azIdeal = acceptIdeal30Az;
+                    }
+                    acceptCurrentLiveAzError = Math.abs(newVal[9] - azIdeal);
 
-                    if (acceptState >= 13) {
-                        // Ok, have taken all 12 readings
-                        textAcceptComment.setText(String.format("Test complete"));
-                        buttonAcceptStart.setText("START");
-
-                        acceptShowLiveError = false;  // turn off error display and make sure everything back to normal
+                    if (acceptCurrentLiveDipError < acceptAcceptableLiveError) {
                         textDip.setTextColor(Color.BLACK);
+                    } else {
+                        textDip.setTextColor(Color.RED);
+                    }
+                    if (acceptCurrentLiveRoll360Error < 4) {
                         textRoll360.setTextColor(Color.BLACK);
-                        textRoll.setVisibility(View.VISIBLE);
+                    } else {
+                        textRoll360.setTextColor(Color.RED);
+                    }
 
-                        bleService.setProbeIdle();
-                        // now generate results file
-                        String nowDate = new SimpleDateFormat("yyyy-MM-dd_hh-mm", Locale.getDefault()).format(new Date());
-                        String safeBleDeviceAddress = bleDeviceAddress.replace(':','-');
-                        String safeBleDeviceName = bleDeviceName.replace(':','-');
-                        String filename = String.format("AcceptTest_%s_%s_%s.csv", nowDate, safeBleDeviceAddress, safeBleDeviceName);
-                        Log.i(TAG, String.format("PJH - Accept filename: %s", filename));
+                    textAzErr.setText(String.format("(err:%7.4f)", acceptCurrentLiveAzError));
+                } else {
+                    acceptCurrentLiveDipError = 0;
+                    acceptCurrentLiveRoll360Error = 0;
+                    acceptCurrentLiveAzError = 0;
+                }
+
+                if (newAcceptCountRemaining > 0) {
+                    newAcceptReadingDipSum += newVal[8];
+                    newAcceptReadingAzSum += newVal[9];
+                    newAcceptCountRemaining -= 1;
+                    textAlignCountdown.setText(String.format("(%d)", newAcceptCountRemaining));  // yes, I know it is in the wrong area
+
+                    if (acceptState > 0) {
+                        textAcceptResultAz.setText("");
+                        textAcceptResultDip.setText("");
+                    }
+
+                    if (newAcceptCountRemaining == 0) {
+                        if (switchRecord.isChecked()) {  // do we have a race condition here
+                            // we have recorded the last of the shots
+                            bleService.stopRecordingSensorData();
+                        }
+
+                        if ((acceptState > 0) && (acceptState <= 12)) {
+                            acceptDip[acceptState - 1] = newAcceptReadingDipSum / acceptSamplesPerReading;
+                            acceptAz[acceptState - 1] = newAcceptReadingAzSum / acceptSamplesPerReading;
+                            acceptRoll[acceptState - 1] = newVal[7];
+                            acceptState += 1;
+                        }
+                        textAcceptDip.setText(String.format("%7.4f", (newAcceptReadingDipSum / acceptSamplesPerReading)));
+                        textAcceptAz.setText(String.format("%7.4f", (newAcceptReadingAzSum / acceptSamplesPerReading)));
+
+                        if (acceptState >= 13) {
+                            // Ok, have taken all 12 readings
+                            textAcceptComment.setText(String.format("Test complete"));
+                            buttonAcceptStart.setText("START");
+
+                            acceptShowLiveError = false;  // turn off error display and make sure everything back to normal
+                            textDip.setTextColor(Color.BLACK);
+                            textRoll360.setTextColor(Color.BLACK);
+                            textRoll.setVisibility(View.VISIBLE);
+
+                            bleService.setProbeIdle();
+                            // now generate results file
+                            String nowDate = new SimpleDateFormat("yyyy-MM-dd_hh-mm", Locale.getDefault()).format(new Date());
+                            String safeBleDeviceAddress = bleDeviceAddress.replace(':', '-');
+                            String safeBleDeviceName = bleDeviceName.replace(':', '-');
+                            String filename = String.format("AcceptTest_%s_%s_%s.csv", nowDate, safeBleDeviceAddress, safeBleDeviceName);
+                            Log.i(TAG, String.format("PJH - Accept filename: %s", filename));
 //                        writeAcceptReadingsToFile(getExternalFilesDir("/").getAbsolutePath() + "/"+filename);
-                        // and do calculations
-                        double sqAzDeltaSum = 0;
-                        double sqDipDeltaSum = 0;
-                        double err = 0;
-                        for (int i=0; i<4; i++) {
-                            err = acceptAz[i]-acceptIdeal50Az;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqAzDeltaSum += (err * err );
+                            // and do calculations
+                            double sqAzDeltaSum = 0;
+                            double sqDipDeltaSum = 0;
+                            double err = 0;
+                            for (int i = 0; i < 4; i++) {
+                                err = acceptAz[i] - acceptIdeal50Az;
+                                if (err > 180) {
+                                    err -= 360;
+                                }
+                                if (err < -180) {
+                                    err += 360;
+                                }
+                                sqAzDeltaSum += (err * err);
 
-                            err = acceptDip[i]-acceptIdeal50Dip;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqDipDeltaSum += (err * err );
+                                err = acceptDip[i] - acceptIdeal50Dip;
+                                if (err > 180) {
+                                    err -= 360;
+                                }
+                                if (err < -180) {
+                                    err += 360;
+                                }
+                                sqDipDeltaSum += (err * err);
 
+                            }
+                            for (int i = 4; i < 8; i++) {
+                                err = acceptAz[i] - acceptIdeal60Az;
+                                if (err > 180) {
+                                    err -= 360;
+                                }
+                                if (err < -180) {
+                                    err += 360;
+                                }
+                                sqAzDeltaSum += (err * err);
+
+                                err = acceptDip[i] - acceptIdeal60Dip;
+                                if (err > 180) {
+                                    err -= 360;
+                                }
+                                if (err < -180) {
+                                    err += 360;
+                                }
+                                sqDipDeltaSum += (err * err);
+
+                            }
+                            for (int i = 8; i < 12; i++) {
+                                err = acceptAz[i] - acceptIdeal30Az;
+                                if (err > 180) {
+                                    err -= 360;
+                                }
+                                if (err < -180) {
+                                    err += 360;
+                                }
+                                sqAzDeltaSum += (err * err);
+
+                                err = acceptDip[i] - acceptIdeal30Dip;
+                                if (err > 180) {
+                                    err -= 360;
+                                }
+                                if (err < -180) {
+                                    err += 360;
+                                }
+                                sqDipDeltaSum += (err * err);
+
+                            }
+                            acceptRmsAz = Math.sqrt(sqAzDeltaSum / 12);
+                            acceptRmsDip = Math.sqrt(sqDipDeltaSum / 12);
+
+                            textAcceptResultAz.setText(String.format("%5.3f", acceptRmsAz));     // show the result (summary) of the test
+                            textAcceptResultDip.setText(String.format("%5.3f", acceptRmsDip));
+                            textAcceptComment.setText(String.format("Test complete\nPress Start to begin a new test."));
+                            acceptState = 0;
+                        } else {
+                            // more readings to take...
+                            textAcceptComment.setText(String.format("%dof12 Place probe in '%d' tray, adjust roll to %d degrees, step back and press 'Take Reading'",
+                                    acceptState, acceptTestPointDip[acceptState - 1], acceptTestPointRoll[acceptState - 1]));
                         }
-                        for (int i=4; i<8; i++) {
-                            err = acceptAz[i]-acceptIdeal60Az;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqAzDeltaSum += (err * err );
-
-                            err = acceptDip[i]-acceptIdeal60Dip;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqDipDeltaSum += (err * err );
-
-                        }
-                        for (int i=8; i<12; i++) {
-                            err = acceptAz[i]-acceptIdeal30Az;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqAzDeltaSum += (err * err );
-
-                            err = acceptDip[i]-acceptIdeal30Dip;
-                            if (err > 180) { err -= 360; }
-                            if (err < -180) { err += 360; }
-                            sqDipDeltaSum += (err * err );
-
-                        }
-                        acceptRmsAz = Math.sqrt(sqAzDeltaSum/12);
-                        acceptRmsDip = Math.sqrt(sqDipDeltaSum/12);
-
-                        textAcceptResultAz.setText(String.format("%5.3f", acceptRmsAz));     // show the result (summary) of the test
-                        textAcceptResultDip.setText(String.format("%5.3f", acceptRmsDip));
-                        textAcceptComment.setText(String.format("Test complete\nPress Start to begin a new test."));
-                        acceptState = 0;
                     }
-                    else {
-                        // more readings to take...
-                        textAcceptComment.setText(String.format("%dof12 Place probe in '%d' tray, adjust roll to %d degrees, step back and press 'Take Reading'",
-                                acceptState, acceptTestPointDip[acceptState - 1], acceptTestPointRoll[acceptState - 1]));
-                    }
-
-                    ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
-
-                    textAlignCountdown.setText("");   // hide the countdown
                 }
             }
-
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }

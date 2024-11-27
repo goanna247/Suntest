@@ -38,6 +38,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedList;
 
 
 public class SaveData extends AppCompatActivity {
@@ -84,6 +85,7 @@ public class SaveData extends AppCompatActivity {
     private int saveNum;
 
     public static ArrayList<ProbeData> probeData = new ArrayList<ProbeData>();
+    public static LinkedList<Measurement> viewProbeData = new LinkedList<>();
 
     @Override
     protected void onDestroy() {
@@ -163,20 +165,6 @@ public class SaveData extends AppCompatActivity {
         final Intent intent = getIntent();
         parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
 
-        /**
-         * get all the probe data passed into the activity and log for backend checks
-         */
-        probeData = (ArrayList<ProbeData>) getIntent().getSerializableExtra(EXTRA_SAVED_DATA);
-        for (int i = 0; i < probeData.size(); i++) {
-            Log.e(TAG, "Probe Data " + i + " : " + probeData.get(i).returnData() + probeData.get(i).returnTitles());
-        }
-
-        /**
-         * If there is no data log this to a debugger
-         */
-        if (probeData.size() == 0) {
-            Log.e(TAG, "EMPTY DATA");
-        }
 
         /**
          * If the activity came from is a survey, ensure only the file name option
@@ -190,6 +178,24 @@ public class SaveData extends AppCompatActivity {
             exportTitlesTitle.setVisibility(View.INVISIBLE);
             exportAllDataTitle.setVisibility(View.INVISIBLE);
             saveNumberTitle.setVisibility(View.INVISIBLE);
+
+            viewProbeData = TakeMeasurements.recordedShots;
+        } else {
+            /**
+             * get all the probe data passed into the activity and log for backend checks
+             */
+            probeData = (ArrayList<ProbeData>) getIntent().getSerializableExtra(EXTRA_SAVED_DATA);
+            for (int i = 0; i < probeData.size(); i++) {
+                Log.e(TAG, "Probe Data " + i + " : " + probeData.get(i).returnData() + probeData.get(i).returnTitles());
+            }
+
+            /**
+             * If there is no data log this to a debugger
+             */
+            if (probeData.size() == 0) {
+                Log.e(TAG, "EMPTY DATA");
+            }
+
         }
     }
 
@@ -225,47 +231,35 @@ public class SaveData extends AppCompatActivity {
         int recordToBeSaved;
 
         /**
-         * Check data that is being saved is correct
-         */
-        if (probeData != null) {
-            for (int i = 0; i < probeData.size(); i++) {
-                Log.d(TAG, probeData.get(i).returnData());
-            }
-        } else {
-            Log.e(TAG, "ERROR PROBE DATA NULL");
-        }
-
-        /**
          * If we have come from taking a survey measurement then return titles
          * by default, if not check whether the checkbox is ticked.
          */
         if (parentActivity.equals("View")) {
-            try {
-                content = probeData.get(0).returnTitles();
-            } catch (Exception e) {
-                Log.e(TAG, "Probe data length: " + probeData.size() + "Exception thrown attempting to return titles: " + e);
-            }
-        } else {
-            if (exportTitles.isChecked()) {
-                try {
-                    content = probeData.get(0).returnTitles();
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception thrown attempting to return titles: " + e);
-                }
-            }
-        }
+            //Get the measurment data from the takeMeasurements/viewmeasurement activity, check validity then save locally
+            LinkedList<Measurement> gatheredMeasurements = null;
 
-        /**
-         * If we are coming from a survey then take all the data points, dont leave as an option for the user
-         */
-        if (parentActivity.equals("View")) {
-            //export all of the data points saved by adding them to the content string seperated by a new line
-            if (probeData != null) {
-                for (int i = 0; i < probeData.size(); i++) {
-                    content = content + "\n" + probeData.get(i).returnData();
+            try {
+                gatheredMeasurements = TakeMeasurements.recordedShots; //maybe it would be better to get from viewMeasurements ¯\_(ツ)_/¯
+                content = content + "Record Name,Date,Time,Temp,Depth,Dip,Roll,Azimuth\n"; //headings from measurement.java
+
+            } catch (Exception e) {
+                Log.e(TAG, "Exception thrown collecting data: " + e);
+            }
+
+            try {
+                for (int i = 0; i < gatheredMeasurements.size(); i++) {
+                    content = content + gatheredMeasurements.get(i).getName();
+                    content = content + "," +  gatheredMeasurements.get(i).getDate();
+                    content = content + "," +  gatheredMeasurements.get(i).getTime();
+                    content = content + "," +  gatheredMeasurements.get(i).getTemp();
+                    content = content + "," +  gatheredMeasurements.get(i).getDepth();
+                    content = content + "," +  gatheredMeasurements.get(i).getDip();
+                    content = content + "," +  gatheredMeasurements.get(i).getRoll();
+                    content = content + "," +  gatheredMeasurements.get(i).getAzimuth();
+                    content = content + "\n";
                 }
-            } else {
-                Log.e(TAG, "ERROR PROBE DATA NULL");
+            } catch (Exception e) {
+                Log.e(TAG, "Exception thrown in adding data to file to be saved: " + e);
             }
 
             try {
@@ -274,6 +268,25 @@ public class SaveData extends AppCompatActivity {
                 Log.e(TAG, "failed to save: " + e);
             }
         } else {
+            /**
+             * Check data that is being saved is correct
+             */
+            if (probeData != null) {
+                for (int i = 0; i < probeData.size(); i++) {
+                    Log.d(TAG, probeData.get(i).returnData());
+                }
+            } else {
+                Log.e(TAG, "ERROR PROBE DATA NULL");
+            }
+
+            if (exportTitles.isChecked()) {
+                try {
+                    content = probeData.get(0).returnTitles();
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception thrown attempting to return titles: " + e);
+                }
+            }
+
             if (exportAllData.isChecked()) {
                 //export all of the files
                 if (probeData != null) {
@@ -306,8 +319,15 @@ public class SaveData extends AppCompatActivity {
     public void saveTextAsFile(String content) {
         String filename;
         Log.e(TAG, "SAVING TEXT AS FILE");
-
         Log.e(TAG, "CONTENT: " + content);
+
+        askForPermissions();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Environment.isExternalStorageManager()) {
+                createDir();
+            }
+        }
 
         try {
             if (fileNameEdit.getText().equals("")) {
@@ -329,7 +349,25 @@ public class SaveData extends AppCompatActivity {
 
             back();
         } catch (IOException e) {
+            Log.e(TAG, "Exception thrown: " + e);
             e.printStackTrace();
+        }
+    }
+
+    public void askForPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                startActivity(intent);
+                return;
+            }
+            createDir();
+        }
+    }
+
+    public void createDir(){
+        if (!dir.exists()){
+            dir.mkdirs();
         }
     }
 

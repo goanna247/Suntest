@@ -2435,6 +2435,9 @@ public class BleService extends Service {
             result[8] = dip_RingBuffer[headRB];
             result[9] = az_RingBuffer[headRB];
             result[10] = temp_RingBuffer[headRB];
+
+            //CALLBACK
+            //NEED TO GET SHOT FORMAT
         }
         else {
             result[0] = count;  // HACK, as this field no longer makes sense

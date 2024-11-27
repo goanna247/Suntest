@@ -138,11 +138,18 @@ public class ViewMeasurements extends AppCompatActivity {
             back();
             return true;
         } else if (item.getItemId() == R.id.remove_button) {
-//            removeAll();
+            removeAll();
         } else if (item.getItemId() == R.id.fetch_button) {
-//            fetch();
+            fetch();
         }
         return true;
+    }
+
+    private void removeAll() {
+        LinkedList<Measurement> emptyList = new LinkedList<>();
+        TakeMeasurements.recordedShots = emptyList;
+        measurementArrayAdapter = new MeasurementArrayAdapter(getApplicationContext(), R.layout.listview_row_layout);
+        listView.setAdapter(measurementArrayAdapter);
     }
 
     private void back() {
@@ -157,30 +164,30 @@ public class ViewMeasurements extends AppCompatActivity {
 
 
     private void fetch() {
-        for (int i = 0; i < probeData.size(); i++) {
-            Log.e(TAG, "PROBE DATA BEING PASSED: " + probeData.get(i).returnData());
-        }
+//        for (int i = 0; i < probeData.size(); i++) {
+//            Log.e(TAG, "PROBE DATA BEING PASSED: " + probeData.get(i).returnData());
+//        }
 
         Intent saveIntent = new Intent(this, SaveData.class);
         saveIntent.putExtra(SaveData.EXTRA_DEVICE_NAME, mDeviceName);
         saveIntent.putExtra(SaveData.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        saveIntent.putExtra(SaveData.EXTRA_DEVICE_SERIAL_NUMBER, "lSerialNumber");
-        saveIntent.putExtra(SaveData.EXTRA_DEVICE_DEVICE_ADDRESS, "lDeviceAddress"); //seems stupid
-        saveIntent.putExtra(SaveData.EXTRA_DEVICE_VERSION, "lFirmwareVersion"); //seems stupid
-        saveIntent.putExtra(SaveData.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
+//        saveIntent.putExtra(SaveData.EXTRA_DEVICE_SERIAL_NUMBER, "lSerialNumber");
+//        saveIntent.putExtra(SaveData.EXTRA_DEVICE_DEVICE_ADDRESS, "lDeviceAddress"); //seems stupid
+//        saveIntent.putExtra(SaveData.EXTRA_DEVICE_VERSION, "lFirmwareVersion"); //seems stupid
+//        saveIntent.putExtra(SaveData.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
         saveIntent.putExtra(SaveData.EXTRA_PARENT_ACTIVITY, "View");
-        try {
-            if (probeData != null) {
-                saveIntent.putParcelableArrayListExtra(SaveData.EXTRA_SAVED_DATA, (ArrayList<? extends Parcelable>) probeData);
-                Log.d(TAG, "PRINTING PROBE DATA");
-                Log.d(TAG, probeData.get(0).returnData());
-            } else {
-                Log.e(TAG, "Probe Data is null!");
-            }
-
-        } catch (Exception e) {
-            Log.e(TAG, "Could not save correct data: " + e);
-        }
+//        try {
+//            if (probeData != null) {
+//                saveIntent.putParcelableArrayListExtra(SaveData.EXTRA_SAVED_DATA, (ArrayList<? extends Parcelable>) probeData);
+//                Log.d(TAG, "PRINTING PROBE DATA");
+//                Log.d(TAG, probeData.get(0).returnData());
+//            } else {
+//                Log.e(TAG, "Probe Data is null!");
+//            }
+//
+//        } catch (Exception e) {
+//            Log.e(TAG, "Could not save correct data: " + e);
+//        }
         startActivity(saveIntent);
     }
 
