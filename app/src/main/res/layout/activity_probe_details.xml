@@ -431,45 +431,6 @@
 
                 </LinearLayout>
 
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:scaleType="fitXY"
-                    android:layout_height="1dp"
-                    android:src="@drawable/black_rec"></ImageView>
-
-                <LinearLayout
-                    android:id="@+id/preferences_magnetic_deviation"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:clickable="true"
-                    android:onClick="preferences_magnetic_deviation_click"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/setup_calibration"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Calibration"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/setup_calibrationDate"
-                        android:layout_width="fill_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="10dp"
-                        android:gravity="right"
-                        android:paddingRight="20dp"
-                        android:text="Unknown Date"
-                        android:textSize="15sp" />
-                </LinearLayout>
-
 
                 <ImageView
                     android:layout_width="fill_parent"

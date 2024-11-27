@@ -302,8 +302,6 @@ public class ProbeDetails extends AppCompatActivity {
         deviceAddress = (TextView) findViewById(R.id.info_deviceAddressTxt_details);
         firmwareVersion = (TextView) findViewById(R.id.info_firmwareVersionTxt);
         connectionDetails = (TextView) findViewById(R.id.connectionDetails);
-        calibrationDate = (TextView) findViewById(R.id.setup_calibrationDate);
-
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -506,7 +504,7 @@ public class ProbeDetails extends AppCompatActivity {
 
     public void showRealTimeSensors(View view) {
         //TODO show sensor information
-
+        //TODO - clean up values being passed
         String saveNum = "0";
         Intent intent = new Intent(this, SensorActivity.class);
         intent.putExtra(SensorActivity.EXTRA_DEVICE_NAME, mDeviceName);
@@ -516,6 +514,7 @@ public class ProbeDetails extends AppCompatActivity {
         intent.putExtra(SensorActivity.EXTRA_DEVICE_VERSION, lFirmwareVersion);
         intent.putExtra(SensorActivity.EXTRA_DEVICE_CONNECTION_STATUS, mDeviceConnectionStatus);
         intent.putExtra(SensorActivity.EXTRA_SAVED_NUM, saveNum);
+//        intent.putExtra(SensorActivity.EXTRA_PARENT_ACTIVITY, "Sensor");
         startActivity(intent);
     }
 

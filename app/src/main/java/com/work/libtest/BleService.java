@@ -118,10 +118,6 @@ public class BleService extends Service {
     private int CharacteristicSize = 20;                                                            //To keep track of the maximum length of the characteristics (always 3 less than the real MTU size to fit in opcode and handle)
     private int connectionAttemptCountdown = 0;                                                     //To keep track of connection attempts for greater reliability
 
-    //
-    // Ezy stuff
-    //
-
     // status flags
     private boolean isFirmwareVersionValid = false;   // unused
     private boolean isCalibrated = false;
@@ -2411,7 +2407,7 @@ public class BleService extends Service {
 
     // could potentially get called, with the ring buffer empty (very unlikely)
     public double[] getLatestBoreshot(int count) {
-        double result[] = new double[11];
+        double result[] = new double[12];
         int i, c;
         double tally, tmp;
 
@@ -2435,6 +2431,8 @@ public class BleService extends Service {
             result[8] = dip_RingBuffer[headRB];
             result[9] = az_RingBuffer[headRB];
             result[10] = temp_RingBuffer[headRB];
+
+            result[11] = 03;
 
             //CALLBACK
             //NEED TO GET SHOT FORMAT

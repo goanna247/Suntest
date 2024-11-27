@@ -22,6 +22,7 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Sensor;
+import android.icu.util.Measure;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
@@ -80,6 +81,7 @@ public class SensorActivity extends AppCompatActivity {
     public static final String EXTRA_DEVICE_SERIAL_NUMBER = "Serial_number";
     public static final String EXTRA_DEVICE_DEVICE_ADDRESS = "Device_gathered_addresses";
     public static final String EXTRA_DEVICE_VERSION = "Device_firmware_version";
+    public static final String EXTRA_PARENT_ACTIVITY = "Device_parent_activity";
 
     private static final int REQ_CODE_ENABLE_BT = 1;
     private static final int REQ_CODE_SCAN_ACTIVITY = 2;
@@ -188,6 +190,9 @@ public class SensorActivity extends AppCompatActivity {
     private TextView relayOptions_info;
     private CheckBox relayOptions_check;
 
+    private TextView accTemp;
+    private TextView magTemp;
+
     //holds last known info
     private String lSerialNumber; //the l stands for looser
     private String lDeviceAddress;
@@ -247,6 +252,8 @@ public class SensorActivity extends AppCompatActivity {
     int acceptTestPointDip[]  = { -50, -50, -50, -50, -60, -60, -60, -60, -30, -30, -30, -30 };
     int acceptTestPointRoll[] = { 355,  80, 170, 260, 355,  80, 170, 260, 355,  80, 170, 260 };
 
+    private TextView shotFormat;
+
     /******************************************************************************************
      * Methods for handling the life cycle of the activity
      */
@@ -290,23 +297,24 @@ public class SensorActivity extends AppCompatActivity {
 //            textInterval = findViewById(R.id.intervalText);
 //            labelInterval = findViewById(R.id.labelInterval);
 
+            shotFormat = findViewById(R.id.dev_format_info);
+
             textAccX = findViewById(R.id.accelerometer_x_data);
             textAccY = findViewById(R.id.accelerometer_y_data);
             textAccZ = findViewById(R.id.accelerometer_z_data);
-            textAccMag = findViewById(R.id.accelerometer_magError_data);
+
+            magTemp = findViewById(R.id.magnetometer_temp_data);
+            accTemp = findViewById(R.id.accelerometer_temp_data);
 
             editBoxAverage = findViewById(R.id.maxDev_magX_data);
 
             textMagX = findViewById(R.id.magnetometer_x_data);
             textMagY = findViewById(R.id.magnetometer_y_data);
             textMagZ = findViewById(R.id.magnetometer_z_data);
-//            textMagMag = findViewById(R.id.magMagText);
 
             textRoll = findViewById(R.id.orientation_roll_data);
             textDip = findViewById(R.id.orientation_dip_data);
             textAz = findViewById(R.id.orientation_azimuth_data);
-//            textAzErr = findViewById(R.id.azErrText);
-//            textRoll360 = findViewById(R.id.roll360Text);
             textTempUc = findViewById(R.id.orientation_temperature_data); //idk if this is correct
 
 //            editBoxAverage = findViewById(R.id.averageTextNumber);
@@ -387,6 +395,8 @@ public class SensorActivity extends AppCompatActivity {
         }
     }
 
+//    private StateApp stateApp;
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -400,6 +410,44 @@ public class SensorActivity extends AppCompatActivity {
                     Log.i(TAG, "Requesting user to enable Bluetooth radio");
                 }
             }
+
+            final Intent intent = getIntent();
+            try {
+                Log.e(TAG, intent.getStringExtra(EXTRA_PARENT_ACTIVITY) + "," + intent.getStringExtra(EXTRA_DEVICE_NAME) + "," + intent.getStringExtra(EXTRA_DEVICE_ADDRESS));
+                stateApp = stateApp.RUNNING;
+                bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+                bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+
+                if (bleDeviceName != null) {
+                    textDeviceNameAndAddress.setText(bleDeviceName);
+                } else {
+                    textDeviceNameAndAddress.setText(R.string.unknown_device);
+                }
+                if (bleDeviceAddress != null) {
+                    textDeviceNameAndAddress.append(" - " + bleDeviceAddress);
+                }
+
+                        if (bleDeviceAddress == null) {
+                            stateConnection = StateConnection.DISCONNECTED;
+                        } else {
+                            stateConnection = StateConnection.CONNECTING;
+                            connectWithAddress(bleDeviceAddress);
+                        }
+                        updateConnectionState();
+//                    } else if (parentActivityValue.equals(Globals.ActivityName.AllSurveyOptions)) {
+//                        bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+//                        bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+//                    } else if (parentActivityValue.equals(Globals.ActivityName.ProbeDetails)) {
+//                        bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+//                        bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+//                    } else {
+//                        Log.e(TAG, "Impossible"); //error as these are the only activities which lead back to the main activity
+//                    }
+//                }
+            } catch (Exception e) {
+                Log.e(TAG, "Exception thrown in getting intent: " + e);
+            }
+
             if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
                 // attempt a reconnection
                 stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
@@ -489,10 +537,10 @@ public class SensorActivity extends AppCompatActivity {
                 intentSaveData.putExtra(SaveData.EXTRA_PARENT_ACTIVITY, "Sensor");
 
                 try {
-                    if (probeData != null) {
-                        intentSaveData.putParcelableArrayListExtra(SaveData.EXTRA_SAVED_DATA, (ArrayList<? extends Parcelable>) probeData);
+                    if (SavedMeasurements != null) {
+//                        intentSaveData.putParcelableArrayListExtra(SaveData.EXTRA_SAVED_DATA, (ArrayList<? extends Parcelable>) SavedMeasurements);
                         Log.d(TAG, "PRINTING PROBE DATA");
-                        Log.d(TAG, probeData.get(0).returnData());
+                        Log.d(TAG, SavedMeasurements.get(0).getName());
                     } else {
                         Log.e(TAG, "Probe Data is null!");
                     }
@@ -507,12 +555,36 @@ public class SensorActivity extends AppCompatActivity {
     }
     /**********************************************************************************************/
 
-    private void saveData() {
+    static LinkedList<Measurement> SavedMeasurements = new LinkedList<>();
 
+    private void saveData() {
+        try {
+            //need to add all current data to a measurement and save to a linkedList
+            Measurement currentData = new Measurement((String) dev_record_number.getText(), (String) null,
+                    (String) null, (String) textTempUc.getText(), (String) null, (String) textDip.getText(),
+                    (String) textRoll.getText(), (String) textAz.getText());
+            //increase the value on the save menu button by 1
+            MenuItem saveMenuItem = menu.findItem(R.id.sensor_save_button);
+            number = saveMenuItem.getTitle().toString().replace("Save ", "");
+            number = Integer.toString(Integer.valueOf(number) + 1);
+            saveMenuItem.setTitle("Save " + number);
+            SavedMeasurements.add(currentData);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown saved sensor data: " + e);
+        }
     }
 
-    private void holdButton() {
+    private boolean hold = false;
 
+    private void holdButton() {
+        MenuItem holdMenuItem = menu.findItem(R.id.sensor_hold_button);
+        if (hold) {
+            hold = false;
+            holdMenuItem.setTitle("Hold");
+        } else {
+            hold = true;
+            holdMenuItem.setTitle("Resume");
+        }
     }
 
 
@@ -803,46 +875,25 @@ public class SensorActivity extends AppCompatActivity {
             int count = toInteger(editBoxAverage.getText().toString());
             if (count < 1) {
                 count = 1;
-//                editBoxAverage.setText(Integer.toString(count));  // only update if it is invalid
             }
             if (count > 120) {   // this value is set by ringBufferSize in bleService
                 count = 120;
-//                editBoxAverage.setText(Integer.toString(count));  // only update if it is invalid
             }
-
-            //textFirmwareVersion.setText(Integer.toString(count));  // hack
             double newVal[] = bleService.getLatestBoreshot(count);
 
             recordCount = bleService.getSensorDataCount();
-//            dev_record_number.setText(recordCount);
-//            if (bleService.isRecordingSensorDataEnabled() && (recordCount > 0)) {
-//                buttonRecord.setText(String.format("Save: %d", recordCount));
-//            }
-
+            dev_record_number.setText(String.format("%7.1f", newVal[0]));
 
             textAccX.setText(String.format("%7.4f", newVal[1]));
             textAccY.setText(String.format("%7.4f", newVal[2]));
             textAccZ.setText(String.format("%7.4f", newVal[3]));
             boolean accValid = true;
             double accMag = Math.sqrt(newVal[1]*newVal[1] + newVal[2]*newVal[2] + newVal[3]*newVal[3]);
-            if (Math.abs(accMag-1.0)>0.03) { accValid = false; }
-//            textAccMag.setText(String.format("(%7.4f)", accMag));
-            if (accValid) {
-                textAccMag.setTextColor(Color.BLACK);
-            }
-            else {
-                textAccMag.setTextColor(Color.RED);
-            }
-
             double magMag = Math.sqrt(newVal[4]*newVal[4] + newVal[5]*newVal[5] + newVal[6]*newVal[6]);
-
-            //
             textMagX.setText(String.format("%7.4f", newVal[4]));
             textMagY.setText(String.format("%7.4f", newVal[5]));
             textMagZ.setText(String.format("%7.4f", newVal[6]));
-
-//            textMagMag.setText(String.format("(%7.4f)", magMag));
-
+            shotFormat.setText(String.format("%7.1f", newVal[11]));
             textRoll.setText(String.format("%7.4f", newVal[7]));
 //            textRoll360.setText(String.format("(%7.4f)", newVal[7]+180));
             textDip.setText(String.format("%7.4f", newVal[8]));
@@ -851,25 +902,22 @@ public class SensorActivity extends AppCompatActivity {
 
 //            textTempUc.setText(String.format("%7.4f", newVal[10]));
 
+            //orientation_temperature_data accelerometer_temp_data magnetometer_temp_data
+            textTempUc.setText(String.format("%7.4f", newVal[10]));
+            accTemp.setText(String.format("%7.4f", newVal[10]));
+            magTemp.setText(String.format("%7.4f", newVal[10]));
+
             if (newAlignCountRemaining > 0) {
                 newAlignReadingDipSum += newVal[8];
                 newAlignReadingAzSum += newVal[9];
                 newAlignCountRemaining -= 1;
-//                textAlignCountdown.setText(String.format("(%d)",newAlignCountRemaining));
-
                 if (newAlignCountRemaining == 0) {
                     if (switchRecord.isChecked()) {  // do we have a race condition here
                         bleService.stopRecordingSensorData();
                     }
-
-                    // now update the totals
                     alignDipTotal += newAlignReadingDipSum;
                     alignAzTotal += newAlignReadingAzSum;
                     alignCount += 1;
-                    // and update the display
-//                    textAlignCount.setText(String.format("%d", alignCount));
-//                    textAlignAvgDip.setText(String.format("%7.4f", (alignDipTotal / alignCount / alignSamplesPerReading)));
-//                    textAlignAvgAz.setText(String.format("%7.4f", (alignAzTotal / alignCount / alignSamplesPerReading)));
                 }
 
                 if (acceptShowLiveError) {
@@ -887,18 +935,6 @@ public class SensorActivity extends AppCompatActivity {
                         azIdeal = acceptIdeal30Az;
                     }
                     acceptCurrentLiveAzError = Math.abs(newVal[9] - azIdeal);
-
-                    if (acceptCurrentLiveDipError < acceptAcceptableLiveError) {
-                        textDip.setTextColor(Color.BLACK);
-                    } else {
-                        textDip.setTextColor(Color.RED);
-                    }
-                    if (acceptCurrentLiveRoll360Error < 4) {
-                        textRoll360.setTextColor(Color.BLACK);
-                    } else {
-                        textRoll360.setTextColor(Color.RED);
-                    }
-
                     textAzErr.setText(String.format("(err:%7.4f)", acceptCurrentLiveAzError));
                 } else {
                     acceptCurrentLiveDipError = 0;
@@ -938,9 +974,6 @@ public class SensorActivity extends AppCompatActivity {
                             buttonAcceptStart.setText("START");
 
                             acceptShowLiveError = false;  // turn off error display and make sure everything back to normal
-                            textDip.setTextColor(Color.BLACK);
-                            textRoll360.setTextColor(Color.BLACK);
-                            textRoll.setVisibility(View.VISIBLE);
 
                             bleService.setProbeIdle();
                             // now generate results file
@@ -949,8 +982,6 @@ public class SensorActivity extends AppCompatActivity {
                             String safeBleDeviceName = bleDeviceName.replace(':', '-');
                             String filename = String.format("AcceptTest_%s_%s_%s.csv", nowDate, safeBleDeviceAddress, safeBleDeviceName);
                             Log.i(TAG, String.format("PJH - Accept filename: %s", filename));
-//                        writeAcceptReadingsToFile(getExternalFilesDir("/").getAbsolutePath() + "/"+filename);
-                            // and do calculations
                             double sqAzDeltaSum = 0;
                             double sqDipDeltaSum = 0;
                             double err = 0;

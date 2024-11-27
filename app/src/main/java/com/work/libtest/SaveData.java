@@ -13,6 +13,7 @@ package com.work.libtest;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -58,8 +59,6 @@ public class SaveData extends AppCompatActivity {
     public static final String EXTRA_EXTRA_SAVED_DATA = "Extra_weird_data";
 
     public static final String EXTRA_PARENT_ACTIVITY = "Parent_activity"; //either View or Sensor
-
-//    private AppBarConfiguration appBarConfiguration;
 
     private Menu menu;
 
@@ -110,10 +109,14 @@ public class SaveData extends AppCompatActivity {
          * needs the name, address, status and parent activity in order to function
          */
         final Intent intent = getIntent();
-        mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
-        mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
-        mDeviceConnectionStatus = intent.getStringExtra(EXTRA_DEVICE_CONNECTION_STATUS);
-        parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
+        try {
+            mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+            mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+            mDeviceConnectionStatus = intent.getStringExtra(EXTRA_DEVICE_CONNECTION_STATUS);
+            parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown gathering intent from SaveData: " + e);
+        }
 
         /**
          * Link items on the view to objects in the java class so they are usable
@@ -154,17 +157,11 @@ public class SaveData extends AppCompatActivity {
         }
     }
 
+    LinkedList<Measurement> sensorSavedData = new LinkedList<>();
 
     @Override
     protected void onResume() {
         super.onResume();
-        /**
-         * Make sure that the app has processed which activity it came from to ensure the right options
-         * are presented to the user
-         */
-        final Intent intent = getIntent();
-        parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
-
 
         /**
          * If the activity came from is a survey, ensure only the file name option
@@ -180,6 +177,12 @@ public class SaveData extends AppCompatActivity {
             saveNumberTitle.setVisibility(View.INVISIBLE);
 
             viewProbeData = TakeMeasurements.recordedShots;
+        } else if (parentActivity.equals("Sensor")){
+            sensorSavedData = SensorActivity.SavedMeasurements;
+            for (int i = 0; i < sensorSavedData.size(); i++) {
+                Log.i(TAG, "Measurement record number: " + sensorSavedData.get(i).getName());
+            }
+
         } else {
             /**
              * get all the probe data passed into the activity and log for backend checks
@@ -267,6 +270,47 @@ public class SaveData extends AppCompatActivity {
             } catch (Exception e) {
                 Log.e(TAG, "failed to save: " + e);
             }
+        } else if (parentActivity.equals("Sensor")) {
+            //gathered measurments = sensorSavedData
+            content = ""; //clear content in case there is anything left after the last save attempt (ie, if the app crashes)
+            if (exportTitles.isChecked()) {
+                content = content + "Record Name,Date,Time,Temp,Depth,Dip,Roll,Azimuth\n"; //headings from measurement.java
+            }
+            if (exportAllData.isChecked()) {
+                //export all of the data
+                if (sensorSavedData != null && sensorSavedData.size() > 0) {
+                    for (int i = 0; i < sensorSavedData.size(); i++) {
+                        content = content + sensorSavedData.get(i).getName();
+                        content = content + "," +  sensorSavedData.get(i).getDate();
+                        content = content + "," +  sensorSavedData.get(i).getTime();
+                        content = content + "," +  sensorSavedData.get(i).getTemp();
+                        content = content + "," +  sensorSavedData.get(i).getDepth();
+                        content = content + "," +  sensorSavedData.get(i).getDip();
+                        content = content + "," +  sensorSavedData.get(i).getRoll();
+                        content = content + "," +  sensorSavedData.get(i).getAzimuth();
+                        content = content + "\n";
+                    }
+                }
+            } else {
+                //export a single value
+                if (!saveNumberEdit.getText().toString().equals("")) {
+                    errorMessage.setText(" ");
+                    recordToBeSaved = Integer.valueOf(saveNumberEdit.getText().toString());
+                    content = content + sensorSavedData.get(recordToBeSaved).getName();
+                    content = content + "," +  sensorSavedData.get(recordToBeSaved).getDate();
+                    content = content + "," +  sensorSavedData.get(recordToBeSaved).getTime();
+                    content = content + "," +  sensorSavedData.get(recordToBeSaved).getTemp();
+                    content = content + "," +  sensorSavedData.get(recordToBeSaved).getDepth();
+                    content = content + "," +  sensorSavedData.get(recordToBeSaved).getDip();
+                    content = content + "," +  sensorSavedData.get(recordToBeSaved).getRoll();
+                    content = content + "," +  sensorSavedData.get(recordToBeSaved).getAzimuth();
+                    content = content + "\n";
+                    saveTextAsFile(content);
+                } else {
+                    errorMessage.setText("Please enter a number");
+                }
+            }
+            saveTextAsFile(content);
         } else {
             /**
              * Check data that is being saved is correct
@@ -381,11 +425,18 @@ public class SaveData extends AppCompatActivity {
             ProbeDataStorage.arrayListNum++;
             probeData = null;
             startActivity(intent);
+        } else if (parentActivity.equals("Sensor")) {
+            Intent intent = new Intent(this, SensorActivity.class);
+            intent.putExtra(ViewMeasurements.EXTRA_DEVICE_NAME, mDeviceName);
+            intent.putExtra(ViewMeasurements.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+            intent.putExtra(ViewMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, mDeviceConnectionStatus);
+            SensorActivity.SavedMeasurements = new LinkedList<>();
+            startActivity(intent);
         } else {
             Intent intent = new Intent(this, MainActivity.class);
-//            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-//            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-//            intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+            intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
 
             ProbeDataStorage.arrayListNum++;
             probeData = null;
