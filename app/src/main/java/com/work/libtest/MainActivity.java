@@ -1530,7 +1530,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
-
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -1564,7 +1563,7 @@ public class MainActivity extends AppCompatActivity {
                 String parentActivityValue = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
                 Log.e(TAG, intent.getStringExtra(EXTRA_PARENT_ACTIVITY) + "," + intent.getStringExtra(EXTRA_DEVICE_NAME) + "," + intent.getStringExtra(EXTRA_DEVICE_ADDRESS));
                 if (parentActivityValue != null) {
-                    if (parentActivityValue.equals("SurveyOptions") || parentActivityValue.equals("ProbeDetails") || parentActivityValue.equals("TakeMeasurement") || parentActivityValue.equals("AllSurveyOptions")) {
+                    if (parentActivityValue.equals("SurveyOptions") || parentActivityValue.equals("ProbeDetails") || parentActivityValue.equals("TakeMeasurements") || parentActivityValue.equals("AllSurveyOptions")) {
                         stateApp = StateApp.RUNNING;
                         bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
                         bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
@@ -1581,9 +1580,16 @@ public class MainActivity extends AppCompatActivity {
                         if (bleDeviceAddress == null) {
                             stateConnection = StateConnection.DISCONNECTED;
                         } else {
-                            stateConnection = StateConnection.CONNECTING;
-                            connectWithAddress(bleDeviceAddress);
+                            stateConnection = StateConnection.CONNECTED;
+//                            connectWithAddress(bleDeviceAddress);
                         }
+                        //the method below works for reconnecting on a button, havent gotten it to work in a life cycle method
+//                        if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+//                            // attempt a reconnection
+//                            stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+//                            connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+//                        }
+//                        updateConnectionState();
                         updateConnectionState();
                     } else if (parentActivityValue.equals(Globals.ActivityName.AllSurveyOptions)) {
                         bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
@@ -1934,6 +1940,10 @@ public class MainActivity extends AppCompatActivity {
                     textDeviceStatus.setText(R.string.ready);
                     blackProbeStatusImg.setImageResource(R.drawable.ready);
 
+                    Globals.probeConnectedName = bleDeviceName;
+                    Globals.probeConnectedAddress = bleDeviceAddress;
+                    Log.e(TAG, "Name: " + Globals.probeConnectedName + ", Address: " + Globals.probeConnectedAddress);
+
                     bleService.parseBinaryCalibration();   // process thr calibration data just retrieved
                     bleService.setNotifications(true);   // PJH - HACK - find place where this write doesn't kill something else
                     haveSuitableProbeConnected = true;   // this enables the test stuff
@@ -2055,7 +2065,8 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     }
                     case CONNECTED: {
-                        textDeviceStatus.setText(R.string.interrogating_configuration);
+                        blackProbeStatusImg.setImageResource(R.drawable.ready);
+                        textDeviceStatus.setText(R.string.ready);
                         break;
                     }
                     case DISCOVERING: {
@@ -2108,6 +2119,14 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         } else {
             Log.e(TAG, "Probe is disconnected");
+            stateConnection = StateConnection.DISCONNECTED;
+            blackProbeStatusImg.setImageResource(R.drawable.unconnected);
+            if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                // attempt a reconnection
+                stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+            }
+            updateConnectionState();
         }
     }
 
@@ -2124,5 +2143,15 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
         intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_CONNECTION, haveSuitableProbeConnected);
         startActivity(intent);
+    }
+
+    public void reconnect(View view) {
+        if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+            // attempt a reconnection
+            stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+            connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+        }
+
+        updateConnectionState();
     }
 }

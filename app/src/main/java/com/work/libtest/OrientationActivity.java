@@ -1478,7 +1478,10 @@ public class OrientationActivity extends AppCompatActivity {
 
 
             final Intent intent = getIntent();
+            mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+            mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
             parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
+            Log.i(TAG, "name: " + mDeviceName + ", address: " + mDeviceAddress);
             Log.i(TAG, "Parent activity of orientation activity is: " + parentActivity);
             //check if the parent activity is the probe details page or the view measurement page
             //if the activity has come from the view measurement activity then we have to display the data that was clicked on when opening the activity
@@ -1601,9 +1604,11 @@ public class OrientationActivity extends AppCompatActivity {
                 bleService.setProbeMode(0);
                 startActivity(intent);
             } else {
+                Log.i(TAG, "Returning to the Probe Details class, passing in: " + mDeviceName + " + " + mDeviceAddress);
+                bleService.setProbeIdle();
                 Intent intent = new Intent(this, ProbeDetails.class);
                 intent.putExtra(ProbeDetails.EXTRA_DEVICE_NAME, mDeviceName);
-                intent.putExtra(ProbeDetails.EXTRA_DEVICE_DEVICE_ADDRESS, mDeviceAddress);
+                intent.putExtra(ProbeDetails.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
                 intent.putExtra(ProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
                 startActivity(intent);
             }

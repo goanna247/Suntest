@@ -123,16 +123,16 @@ public class InitalisePopupActivity extends AppCompatActivity {
     }
 
     /**
-     * Open a previous survey
+     * Open a previous survey - TODO
      *
      * TODO - NOT IMPLEMENTED
      */
     public void resumePrevClick(View v) {
-        Intent intent = new Intent(this, PreviousSurvey.class);
-        intent.putExtra(PreviousSurvey.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(PreviousSurvey.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(PreviousSurvey.EXTRA_MEASUREMENT_TYPE, "OLD");
-        startActivity(intent);
+//        Intent intent = new Intent(this, PreviousSurvey.class);
+//        intent.putExtra(PreviousSurvey.EXTRA_DEVICE_NAME, mDeviceName);
+//        intent.putExtra(PreviousSurvey.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+//        intent.putExtra(PreviousSurvey.EXTRA_MEASUREMENT_TYPE, "OLD");
+//        startActivity(intent);
     }
 
 }

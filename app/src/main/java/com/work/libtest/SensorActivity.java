@@ -287,19 +287,11 @@ public class SensorActivity extends AppCompatActivity {
             }
             textDeviceNameAndAddress = findViewById(R.id.probe_info);                     //Get a reference to the TextView that will display the device name and address
             textDeviceStatus = findViewById(R.id.orientation_connection_Txt);                     //Get a reference to the TextView that will display the device name and address
-            //TODO - @ANNA - Add next
-//            labelFirmwareVersion =  findViewById(R.id.labelFirmware);
-//            textFirmwareVersion = findViewById(R.id.firmwareVersionText);
-//            textCalibratedDate = findViewById(R.id.calibratedDateText);                     //Get a reference to the TextView that will display the device name and address
-//            labelCalibratedDate = findViewById(R.id.labelCalibratedDate);
-//            editBoxDebug1 = findViewById(R.id.debug1TextNumber);
-//            labelDebug1 = findViewById(R.id.labelDebug1);                     //Get a reference to the TextView that will display the device name and address
-//            editBoxDebug2 = findViewById(R.id.debug2TextNumber);
-//            labelDebug2 = findViewById(R.id.labelDebug2);
-//            textInterval = findViewById(R.id.intervalText);
-//            labelInterval = findViewById(R.id.labelInterval);
-
             shotFormat = findViewById(R.id.dev_format_info);
+
+            final Intent intent = getIntent();
+            mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+            mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
 
             textAccX = findViewById(R.id.accelerometer_x_data);
             textAccY = findViewById(R.id.accelerometer_y_data);
@@ -319,64 +311,11 @@ public class SensorActivity extends AppCompatActivity {
             textAz = findViewById(R.id.orientation_azimuth_data);
             textTempUc = findViewById(R.id.orientation_temperature_data); //idk if this is correct
 
-//            editBoxAverage = findViewById(R.id.averageTextNumber);
-
-//            labelAcceptDip =  findViewById(R.id.labelAcceptDip);
-//            labelAcceptAz =  findViewById(R.id.labelAcceptAz);
-//            textAcceptResultAz =  findViewById(R.id.acceptResultAzText);
-//            textAcceptResultDip =  findViewById(R.id.acceptResultDipText);
-//
-//            textAlignCount = findViewById(R.id.alignCountText);
-//            textAlignAvgDip = findViewById(R.id.alignAvgDipText);
-//            textAlignAvgAz = findViewById(R.id.alignAvgAzText);
-//            textAlignCountdown = findViewById(R.id.alignCountdownText);
-
-//            textAcceptLocation = findViewById(R.id.acceptLocationText);
-//
-//            textAcceptComment = findViewById(R.id.acceptCommentText);
-//            textAcceptDip = findViewById(R.id.acceptDipText);
-//            textAcceptAz = findViewById(R.id.acceptAzText);
-
             connectTimeoutHandler = new Handler(Looper.getMainLooper());
             connectionStatus = (TextView) findViewById(R.id.orientation_connection_Txt);
             connectionStatusImage = (ImageView) findViewById(R.id.orientation_connection_img);
 
-//            dev_shot_format = (TextView) findViewById(R.id.dev_format_info);
             dev_record_number = (TextView) findViewById(R.id.dev_record_number_info);
-//
-//            orientation_roll_data = (TextView) findViewById(R.id.orientation_roll_data);
-//            orientation_dip_data = (TextView) findViewById(R.id.orientation_dip_data);
-//            orientation_azimuth_data = (TextView) findViewById(R.id.orientation_azimuth_data);
-//            orientation_temperature_data = (TextView) findViewById(R.id.orientation_temperature_data);
-//
-//            accelerometer_x_data = (TextView) findViewById(R.id.accelerometer_x_data);
-//            accelerometer_y_data = (TextView) findViewById(R.id.accelerometer_y_data);
-//            accelerometer_z_data = (TextView) findViewById(R.id.accelerometer_z_data);
-//            accelerometer_temp_data = (TextView) findViewById(R.id.accelerometer_temp_data);
-//            accelerometer_magError_data = (TextView) findViewById(R.id.accelerometer_magError_data);
-//
-//            magnetometer_x_data = (TextView) findViewById(R.id.magnetometer_x_data);
-//            magnetometer_y_data = (TextView) findViewById(R.id.magnetometer_y_data);
-//            magnetometer_z_data = (TextView) findViewById(R.id.magnetometer_z_data);
-//            magnetometer_temp_data = (TextView) findViewById(R.id.magnetometer_temp_data);
-//
-//            maxDev_title = (TextView) findViewById(R.id.maxDev_title);
-//            maxDev_mean_check = (CheckBox) findViewById(R.id.maxDev_mean_check);
-//            maxDev_acc_data = (TextView) findViewById(R.id.maxDev_acc_data);
-//            maxDev_mag_data = (TextView) findViewById(R.id.maxDev_mag_data);
-//            maxDev_accX_data = (TextView) findViewById(R.id.maxDev_accX_data);
-//            maxDev_accY_data = (TextView) findViewById(R.id.maxDev_accY_data);
-//            maxDev_accZ_data = (TextView) findViewById(R.id.maxDev_accZ_data);
-//            maxDev_magX_data = (TextView) findViewById(R.id.maxDev_magX_data);
-//            maxDev_magY_data = (TextView) findViewById(R.id.maxDev_magY_data);
-//            maxDev_magZ_data = (TextView) findViewById(R.id.maxDev_magZ_data);
-//
-//            fastMag_data = (CheckBox) findViewById(R.id.fastMag_data);
-//
-//            relayOptions_title = (TextView) findViewById(R.id.relayOptions_title);
-//            relayOptions_info = (TextView) findViewById(R.id.relayOptions_info);
-//            relayOptions_check = (CheckBox) findViewById(R.id.relayOptions_check);
-
             buttonLive = (Button) findViewById(R.id.shot_request_button);
             buttonLive.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
@@ -436,16 +375,7 @@ public class SensorActivity extends AppCompatActivity {
                             connectWithAddress(bleDeviceAddress);
                         }
                         updateConnectionState();
-//                    } else if (parentActivityValue.equals(Globals.ActivityName.AllSurveyOptions)) {
-//                        bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
-//                        bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
-//                    } else if (parentActivityValue.equals(Globals.ActivityName.ProbeDetails)) {
-//                        bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
-//                        bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
-//                    } else {
-//                        Log.e(TAG, "Impossible"); //error as these are the only activities which lead back to the main activity
-//                    }
-//                }
+
             } catch (Exception e) {
                 Log.e(TAG, "Exception thrown in getting intent: " + e);
             }
@@ -475,6 +405,7 @@ public class SensorActivity extends AppCompatActivity {
     @Override
     public void onStop() {
         super.onStop();                                                                             //Call superclass (AppCompatActivity) onStop method
+        bleService.setProbeIdle();
     }
 
     @Override
@@ -508,11 +439,14 @@ public class SensorActivity extends AppCompatActivity {
          * hence this is not bad programming practice
          */
         if (item.getItemId() == R.id.sensor_back_button) {
-            Log.d(TAG, "exit sensor activity to probe details");
-            Intent intent = new Intent(this, ProbeDetails.class);
-            intent.putExtra(ProbeDetails.EXTRA_DEVICE_NAME, mDeviceName);
-            intent.putExtra(ProbeDetails.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-            intent.putExtra(ProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
+            Log.d(TAG, "exit sensor activity to main activity");
+            Log.e(TAG, "Sensor name: " + mDeviceName + ", address: " + mDeviceAddress);
+            Log.e(TAG, "Probe name: " + bleDeviceName + ", address: " + bleDeviceAddress);
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, bleDeviceName);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+//            intent.putExtra(MainActivity.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
+            intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "ProbeDetails");
             startActivity(intent);
         } else if (item.getItemId() == R.id.sensor_save_button) {
             saveData();
@@ -540,7 +474,6 @@ public class SensorActivity extends AppCompatActivity {
 
                 try {
                     if (SavedMeasurements != null) {
-//                        intentSaveData.putParcelableArrayListExtra(SaveData.EXTRA_SAVED_DATA, (ArrayList<? extends Parcelable>) SavedMeasurements);
                         Log.d(TAG, "PRINTING PROBE DATA");
                         Log.d(TAG, SavedMeasurements.get(0).getName());
                     } else {
@@ -777,23 +710,8 @@ public class SensorActivity extends AppCompatActivity {
 
                     String verString = bleService.getFirmwareVersionString();
                     textDeviceStatus.setText(R.string.ready);
-//                    labelFirmwareVersion.setVisibility(View.VISIBLE);
-//                    textFirmwareVersion.setText(verString);
-//                    textFirmwareVersion.setVisibility(View.VISIBLE);
-
                     bleService.parseBinaryCalibration();
                     bleService.setNotifications(true);
-                    String java_date = bleService.getCalibratedDateString();
-//                    labelCalibratedDate.setVisibility(View.VISIBLE);
-//                    textCalibratedDate.setText(java_date);
-//                    textCalibratedDate.setVisibility(View.VISIBLE);
-                    int probeShotInterval = bleService.getShotInterval();
-//                    textInterval.setText(Integer.toString(probeShotInterval));
-//                    int probeDebug1 = bleService.getDebug1();
-//                    editBoxDebug1.setText(Integer.toString(probeDebug1));
-//                    int probeDebug2 = bleService.getDebug2();
-//                    editBoxDebug1.setText(Integer.toString(probeDebug2));
-
                     haveSuitableProbeConnected = true;
                     break;
                 }
@@ -822,14 +740,6 @@ public class SensorActivity extends AppCompatActivity {
     private void initializeDisplay() {
         try {
             textDeviceStatus.setText("Not Connected");  // PJH - hack - shouldn't be here!
-//            labelFirmwareVersion.setVisibility(View.INVISIBLE);
-//            textFirmwareVersion.setText("");
-//            textFirmwareVersion.setVisibility(View.INVISIBLE);
-//
-//            labelCalibratedDate.setVisibility(View.INVISIBLE);
-//            textCalibratedDate.setText("");
-//            textCalibratedDate.setVisibility(View.INVISIBLE);
-
             textAccX.setText("");
             textAccY.setText("");
             textAccZ.setText("");

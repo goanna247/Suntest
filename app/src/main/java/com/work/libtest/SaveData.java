@@ -430,6 +430,7 @@ public class SaveData extends AppCompatActivity {
             intent.putExtra(ViewMeasurements.EXTRA_DEVICE_NAME, mDeviceName);
             intent.putExtra(ViewMeasurements.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
             intent.putExtra(ViewMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, mDeviceConnectionStatus);
+            Log.e(TAG, "Name: " + mDeviceName + ", Address: " + mDeviceAddress);
             SensorActivity.SavedMeasurements = new LinkedList<>();
             startActivity(intent);
         } else {
@@ -437,6 +438,7 @@ public class SaveData extends AppCompatActivity {
             intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
             intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
             intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
+            Log.e(TAG, "Name: " + mDeviceName + ", Address: " + mDeviceAddress);
 
             ProbeDataStorage.arrayListNum++;
             probeData = null;

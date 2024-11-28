@@ -633,6 +633,7 @@ public class BluetoothLeService extends Service {
             return;
         }
         mBluetoothGatt.disconnect();
+        //add a close
     }
 
     /**

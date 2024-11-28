@@ -14,7 +14,13 @@ import com.work.libtest.R;
 
 public class editDepthIntervalActivity extends AppCompatActivity {
 
+    public static final String EXTRA_DEVICE_NAME = "Device_name";
+    public static final String EXTRA_DEVICE_ADDRESS = "Device_address";
+
     EditText depthIntervalEdit;
+
+    String mDeviceName = "";
+    String mDeviceAddress = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +29,10 @@ public class editDepthIntervalActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
 
         depthIntervalEdit = findViewById(R.id.magneticDeviationEdit);
+
+        final Intent intent = getIntent();
+        mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+        mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
 
 //        depthIntervalEdit.setText(Double.toString(MainActivity.preferences.getDepthInterval()));
 

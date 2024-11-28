@@ -11,7 +11,7 @@
 
     <!-- About dialog -->
     <string name="about_title">About Java Test Application</string>
-    <string name="about_contents">Copyright (C) 2022\n\nVersion\u0020</string>
+    <string name="about_contents">Copyright (C) 2024\n\nVersion\u0020</string>
     <string name="about_ok_button">OK</string>
 
     <!-- Exit dialog -->

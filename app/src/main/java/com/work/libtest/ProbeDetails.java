@@ -287,10 +287,10 @@ public class ProbeDetails extends AppCompatActivity {
 
         dataToBeRead = 0;
 
-        final Intent intent = getIntent();
-        mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
-        mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
-        mDeviceConnectionStatus = intent.getStringExtra(EXTRA_DEVICE_CONNECTION_STATUS);
+        final Bundle intent = getIntent().getExtras();
+        mDeviceName = intent.getString(EXTRA_DEVICE_NAME);
+        mDeviceAddress = intent.getString(EXTRA_DEVICE_ADDRESS);
+        mDeviceConnectionStatus = intent.getString(EXTRA_DEVICE_CONNECTION_STATUS);
         Log.d(TAG, "Device Name: " + mDeviceName + ", Device Address: " + mDeviceAddress + " Device Connection status: " + mDeviceConnectionStatus);
 
         probeNumber = (TextView) findViewById(R.id.status_probeNumber);
@@ -486,6 +486,7 @@ public class ProbeDetails extends AppCompatActivity {
     }
     public void backProbeDetailClick() {
         Intent intent = new Intent(this, MainActivity.class);
+        Log.e(TAG, "Name: " + mDeviceName + ", Address: " + mDeviceAddress);
         intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
         intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
         intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "ProbeDetails");

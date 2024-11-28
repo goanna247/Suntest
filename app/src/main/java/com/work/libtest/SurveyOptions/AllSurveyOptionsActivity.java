@@ -110,23 +110,38 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
     public void allSurveyOptionsSubmit(View v) {
         try {
             if (resumePosition != 128) {
-                Log.d(TAG, "Hole ID: " + holeIDInput.getText().toString() + " Operator Name: " + operatorName.getText().toString() + " Company Name: " + companyName.getText().toString() + " Initial depth: " + initialDepth.getText().toString() + " Depth Interval: " + depthInterval.getText().toString());
+                Log.d(TAG, "Hole ID: " + holeIDInput.getText().toString() + " Operator Name: " + operatorName.getText().toString() + " Company Name: " + companyName.getText().toString());//ADD BACK IN + " Initial depth: " + initialDepth.getText().toString() + " Depth Interval: " + depthInterval.getText().toString());
                 if (MainActivity.surveySize > 0) {
                     MainActivity.surveys.get(resumePosition).getSurveyOptions().setHoleID(Integer.valueOf(holeIDInput.getText().toString()));
                     MainActivity.surveys.get(resumePosition).getSurveyOptions().setOperatorName(operatorName.getText().toString());
                     MainActivity.surveys.get(resumePosition).getSurveyOptions().setCompanyName(companyName.getText().toString());
-                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setInitialDepth(Double.parseDouble(initialDepth.getText().toString()));
-                    MainActivity.surveys.get(resumePosition).getSurveyOptions().setDepthInterval(Double.parseDouble(depthInterval.getText().toString()));
+                    if (initialDepth.getText().toString() == null || initialDepth.getText().toString().equals("")) {
+                        MainActivity.surveys.get(resumePosition).getSurveyOptions().setInitialDepth(0); //default value is 0 meters, TODO - let this be set in the preferences as a default
+                    } else {
+                        MainActivity.surveys.get(resumePosition).getSurveyOptions().setInitialDepth(Double.parseDouble(initialDepth.getText().toString()));
+                    }
+                    if (depthInterval.getText().toString() == null || depthInterval.getText().toString().equals("") ) {
+                        MainActivity.surveys.get(resumePosition).getSurveyOptions().setDepthInterval(5); //default value is 5 meters per shot taken, TODO - let this be set in the preferences as a default
+                    } else {
+                        MainActivity.surveys.get(resumePosition).getSurveyOptions().setDepthInterval(Double.parseDouble(depthInterval.getText().toString()));
+                    }
                 } else {
-                    SurveyOptions newSurveyOptions = new SurveyOptions(Integer.valueOf(holeIDInput.getText().toString()), operatorName.getText().toString(), companyName.getText().toString(), Double.parseDouble(initialDepth.getText().toString()), Double.parseDouble(depthInterval.getText().toString()));
+                    SurveyOptions newSurveyOptions;
+                    if (initialDepth.getText().toString() == null || initialDepth.getText().toString().equals("") || depthInterval.getText().toString() == null || depthInterval.getText().toString().equals("")) {
+                        newSurveyOptions = new SurveyOptions(Integer.valueOf(holeIDInput.getText().toString()), operatorName.getText().toString(), companyName.getText().toString(), Double.parseDouble(initialDepth.getText().toString()), Double.parseDouble(depthInterval.getText().toString()));
+                    } else {
+                        newSurveyOptions = new SurveyOptions(Integer.valueOf(holeIDInput.getText().toString()), operatorName.getText().toString(), companyName.getText().toString(), Double.parseDouble(initialDepth.getText().toString()), Double.parseDouble(depthInterval.getText().toString()));
+                    }
+
                     Survey newSurvey = new Survey(newSurveyOptions);
 //                    MainActivity.surveys.add(newSurvey);
 //                    MainActivity.surveySize++;
                 }
 
-                if (!holeIDInput.getText().toString().equals("") && !operatorName.getText().toString().equals("") && !companyName.getText().toString().equals("") && !initialDepth.getText().toString().equals("") && !depthInterval.getText().toString().equals("")) {
+                if (!holeIDInput.getText().toString().equals("") && !operatorName.getText().toString().equals("") && !companyName.getText().toString().equals("")) {// && !initialDepth.getText().toString().equals("") && !depthInterval.getText().toString().equals("")) {
                     //move to taking measurements
                     Intent measurements = new Intent(this, TakeMeasurements.class);
+                    Log.e(TAG, "Name: " + mDeviceName + ", Address: " + mDeviceAddress);
                     measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_NAME, mDeviceName);
                     measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
                     measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, "Connected");
@@ -138,8 +153,19 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
                     MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setHoleID(Integer.valueOf(holeIDInput.getText().toString()));
                     MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setOperatorName(operatorName.getText().toString());
                     MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setCompanyName(companyName.getText().toString());
-                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setInitialDepth(Double.parseDouble(initialDepth.getText().toString()));
-                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setDepthInterval(Double.parseDouble(depthInterval.getText().toString()));
+
+                    if (initialDepth.getText().toString() == null || initialDepth.getText().toString().equals("")) {
+                        MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setInitialDepth(0); //default value is 0 meters, TODO - let this be set in the preferences as a default
+                    } else {
+                        MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setInitialDepth(Double.parseDouble(initialDepth.getText().toString()));
+                    }
+                    if (depthInterval.getText().toString() == null || depthInterval.getText().toString().equals("") ) {
+                        MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setDepthInterval(5); //default value is 5 meters per shot taken, TODO - let this be set in the preferences as a default
+                    } else {
+                        MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setDepthInterval(Double.parseDouble(depthInterval.getText().toString()));
+                    }
+//                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setInitialDepth(Double.parseDouble(initialDepth.getText().toString()));
+//                    MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().setDepthInterval(Double.parseDouble(depthInterval.getText().toString()));
                 } else {
                     SurveyOptions newSurveyOptions = new SurveyOptions(Integer.valueOf(holeIDInput.getText().toString()), operatorName.getText().toString(), companyName.getText().toString(), Double.parseDouble(initialDepth.getText().toString()), Double.parseDouble(depthInterval.getText().toString()));
                     Survey newSurvey = new Survey(newSurveyOptions);
@@ -147,7 +173,7 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
                     MainActivity.surveySize++;
                 }
 
-                if (!holeIDInput.getText().toString().equals("") && !operatorName.getText().toString().equals("") && !companyName.getText().toString().equals("") && !initialDepth.getText().toString().equals("") && !depthInterval.getText().toString().equals("")) {
+                if (!holeIDInput.getText().toString().equals("") && !operatorName.getText().toString().equals("") && !companyName.getText().toString().equals("")) {// && !initialDepth.getText().toString().equals("") && !depthInterval.getText().toString().equals("")) {
                     //move to taking measurements
                     if (resumePosition != 128) {
                         Intent measurements = new Intent(this, TakeMeasurements.class);

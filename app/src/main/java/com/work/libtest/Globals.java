@@ -23,4 +23,7 @@ public class Globals {
         TakeMeasurement,
         ViewMeasurement
     }
+
+    public static String probeConnectedName = "";
+    public static String probeConnectedAddress = "";
 }

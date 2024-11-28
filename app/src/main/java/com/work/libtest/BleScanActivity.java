@@ -85,6 +85,9 @@ public class BleScanActivity extends AppCompatActivity {
         catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
+
+        Globals.probeConnectedName = "";
+        Globals.probeConnectedAddress = "";
     }
 
     // ----------------------------------------------------------------------------------------------------------------

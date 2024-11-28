@@ -78,6 +78,11 @@ public class ViewMeasurements extends AppCompatActivity {
         setContentView(R.layout.activity_view_measurements);
         Toolbar toolbar = findViewById(R.id.toolbar);
 
+        final Intent intent = getIntent();
+        mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+        mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+        Log.i(TAG, "Name: " + mDeviceName + ", Address: " + mDeviceAddress);
+
         //WORKS
         LinkedList<Measurement> savedProbeData = TakeMeasurements.recordedShots;
 
@@ -117,6 +122,8 @@ public class ViewMeasurements extends AppCompatActivity {
     //Will need slight reworking
     private void goToOrientation(int position) {
         Intent intent = new Intent(this, OrientationActivity.class);
+        intent.putExtra(OrientationActivity.EXTRA_DEVICE_NAME, mDeviceName);
+        intent.putExtra(OrientationActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
         intent.putExtra(OrientationActivity.EXTRA_PARENT_ACTIVITY, "MEASUREMENT");
         String positionToSend = String.valueOf(position);
         intent.putExtra(OrientationActivity.EXTRA_MEASUREMENT_DATA, positionToSend);
@@ -154,6 +161,7 @@ public class ViewMeasurements extends AppCompatActivity {
 
     private void back() {
         Intent backIntent = new Intent(this, TakeMeasurements.class);
+
         backIntent.putExtra(TakeMeasurements.EXTRA_DEVICE_NAME, mDeviceName);
         backIntent.putExtra(TakeMeasurements.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
         backIntent.putExtra(TakeMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);

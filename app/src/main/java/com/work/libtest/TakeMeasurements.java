@@ -417,6 +417,11 @@ public class TakeMeasurements extends AppCompatActivity {
             nextDepth = findViewById(R.id.next_depth_txt);
             directionButton = findViewById(R.id.direction_button);
 
+            final Intent intent = getIntent();
+            bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME); //mDeviceName
+            bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS); //mDeviceAddress
+
+
             //Works
             try {
                 initialDepth = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth();
@@ -1183,6 +1188,8 @@ public class TakeMeasurements extends AppCompatActivity {
                     }
                     //NEED TO ACCESS RECORDEDSHOTS IN THE VIEW MEASUREMENT ACTIVITY
                     Intent intent = new Intent(this, ViewMeasurements.class);
+                    intent.putExtra(ViewMeasurements.EXTRA_DEVICE_NAME, bleDeviceName);
+                    intent.putExtra(ViewMeasurements.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
                     startActivity(intent);
                 } catch (Exception e) {
                     Log.e(TAG, "Exception thrown: " + e);
@@ -1470,6 +1477,8 @@ public class TakeMeasurements extends AppCompatActivity {
             int shotToCollect = shotsToCollect.get(0);
             Log.e(TAG, "Getting shot for: " + shotToCollect);
             bleService.setShotRequest(shotToCollect);
+
+            bleService.setProbeIdle(); //otherwise the timer gets mucky
         } catch (Exception e) {
             Log.e(TAG, "Exception thrown in withdraw click: " + e);
         }
