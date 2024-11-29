@@ -1513,7 +1513,18 @@ public class OrientationActivity extends AppCompatActivity {
                         bleService.setProbeIdle();
                     }
                     else {
-                        bleService.setProbeMode(2);
+                        if (bleService.getShotInterval() == 10) {
+                            bleService.setProbeMode(2);
+                        } else {
+                            Log.e(TAG, "Suitable device not connected:");
+                            if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                                // attempt a reconnection
+                                stateConnection = OrientationActivity.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                                connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+                            }
+
+                            updateConnectionState();
+                        }
                     }
                 }
             });

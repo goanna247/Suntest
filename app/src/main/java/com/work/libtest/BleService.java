@@ -432,10 +432,6 @@ public class BleService extends Service {
                 calibrationAddressCharacteristic = null;  //  1 byte
                 calibrationDataCharacteristic    = null;  // 16 bytes
 
-
-
-
-
                 if (status == BluetoothGatt.GATT_SUCCESS) {                                         //See if service discovery was successful
                     BluetoothGattService gattCameraService = gatt.getService(UUID_CAMERA_SERVICE); //Get the Transparent UART service
                     if (gattCameraService != null) {                                                      //Check that the service was discovered
@@ -2184,10 +2180,6 @@ public class BleService extends Service {
             Log.e(TAG, "PJH - Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
-
-
-
-
 
 
     // ----------------------------------------------------------------------------------------------------------------

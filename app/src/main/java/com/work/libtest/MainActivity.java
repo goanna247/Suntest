@@ -1429,7 +1429,8 @@ public class MainActivity extends AppCompatActivity {
     private ByteArrayOutputStream transparentUartData = new ByteArrayOutputStream();                //Stores all the incoming byte arrays received from BLE device in bleService
     private ShowAlertDialogs showAlert;                                                             //Object that creates and shows all the alert pop ups used in the app
     private Handler connectTimeoutHandler;                                                          //Handler to provide a time out if connection attempt takes too long
-    private String bleDeviceName, bleDeviceAddress;                                                 //Name and address of remote Bluetooth device
+    public static String bleDeviceName;
+    public static String bleDeviceAddress;                                                 //Name and address of remote Bluetooth device
 
     private boolean haveSuitableProbeConnected = false;
 
