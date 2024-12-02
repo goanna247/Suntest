@@ -1511,8 +1511,8 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 if (surveys.size() > 0) { //array has begun to be populated
-                    if (surveys.get(0).getSurveyOptions().getHoleID() != 0 && surveys.get(0).getSurveyOptions() != null) {
-                        HoleIDDisplayTxt.setText(Integer.toString(surveys.get(0).getSurveyOptions().getHoleID()));
+                    if (surveys.get(0).getSurveyOptions().getHoleID() != null && surveys.get(0).getSurveyOptions() != null) {
+                        HoleIDDisplayTxt.setText(surveys.get(0).getSurveyOptions().getHoleID());
                         OperatorNameDisplayTxt.setText(surveys.get(0).getSurveyOptions().getOperatorName());
 
                     } else {

@@ -86,9 +86,6 @@ public class BleService extends Service {
     private final static UUID UUID_CALIBRATION_ADDRESS_CHAR =    UUID.fromString("0000ff01-0000-1000-8000-00805f9b34fb"); //Characteristic for Calibration Address, properties - write
     private final static UUID UUID_CALIBRATION_DATA_CHAR =       UUID.fromString("0000ff02-0000-1000-8000-00805f9b34fb"); //Characteristic for Calibration Data, properties - read, write
 
-
-
-
     //private final Queue<byte[]> characteristicWriteQueue = new LinkedList<>();                      //Queue to buffer multiple writes since the radio does one at a time
     //private final Queue<BluetoothGattDescriptor> descriptorWriteQueue = new LinkedList<>();         //Queue to buffer multiple writes since the radio does one at a time
     private BluetoothAdapter btAdapter;                                                             //BluetoothAdapter is used to control the Bluetooth radio
@@ -2287,6 +2284,9 @@ public class BleService extends Service {
     }
 
 
+    public int getProbeMode() {
+        return probeMode;
+    }
 
     // ----------------------------------------------------------------------------------------------------------------
     // Read from the Transparent UART - get all the bytes that have been received since the last read
@@ -2392,6 +2392,173 @@ public class BleService extends Service {
     //    return binCalData;
     //}
 
+
+    public double[] getLatestCoreshot(int count) {
+        double result[] = new double[12];
+        int i, c;
+        double tally, tmp;
+
+        if (count < 1) { count = 1; }
+        if (count > 120) { count = 120; }
+        if (count > countRB) { count = countRB; }   // in case the ring buffer has not yet filled
+
+        if (count == 1) {
+            result[0] = recNum_RingBuffer[headRB];
+            Log.e(TAG, "NAME: " + recNum_RingBuffer[headRB]); //BUG HERE
+
+            result[1] = acc_X_RingBuffer[headRB];
+            result[2] = acc_Y_RingBuffer[headRB];
+            result[3] = acc_Z_RingBuffer[headRB];
+
+            result[4] = mag_X_RingBuffer[headRB];
+            result[5] = mag_Y_RingBuffer[headRB];
+            result[6] = mag_Z_RingBuffer[headRB];
+
+            result[7] = roll_RingBuffer[headRB];
+            result[8] = dip_RingBuffer[headRB];
+            result[9] = az_RingBuffer[headRB];
+            result[10] = temp_RingBuffer[headRB];
+
+            result[11] = 03;
+
+            //CALLBACK
+            //NEED TO GET SHOT FORMAT
+        }
+        else {
+            result[0] = count;  // HACK, as this field no longer makes sense
+            Log.e(TAG, "NAME: (from else) : " + count);
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += acc_X_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            result[1] = tally / count;  // Acc X
+
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += acc_Y_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            result[2] = tally / count;  // Acc Y
+
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += acc_Z_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            result[3] = tally / count;  // Acc Z
+
+
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += mag_X_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            result[4] = tally / count;  // Acc X
+
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += mag_Y_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            result[5] = tally / count;  // Acc Y
+
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += mag_Z_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            result[6] = tally / count;  // Acc Z
+
+
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += roll_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            tmp = tally / count;
+            if (tmp < -180) { tmp += 360; }
+            if (tmp > 180)  { tmp -= 360; }
+            result[7] = tmp;  // Roll
+
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += dip_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            result[8] = tally / count;  // Dip
+
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += az_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            tmp = tally / count;
+            if (tmp < 0) { tmp += 360; }
+            if (tmp > 360)  { tmp -= 360; }
+            result[9] = tmp;  // Az
+
+            i = headRB;
+            c = count;
+            tally = 0;
+            while (c > 0) {
+                tally += temp_RingBuffer[i];
+                c -= 1;
+                i -= 1;
+                if (i < 0) { i = ringBufferSize - 1; }
+            }
+            tmp = tally / count;
+            if (tmp < 0) { tmp += 360; }
+            if (tmp > 360)  { tmp -= 360; }
+            result[10] = tmp;  // Az
+        }
+        return result;
+    }
 
 
     // ----------------------------------------------------------------------------------------------------------------

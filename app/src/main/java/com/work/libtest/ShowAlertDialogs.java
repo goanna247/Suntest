@@ -107,6 +107,48 @@ public class ShowAlertDialogs {
     }
 
     // ----------------------------------------------------------------------------------------------------------------
+    // Show a dialog that shows that the probe has disconnected and needs to be reconnected to access data
+    public void showFailToAccessProbe(final Runnable callback) {
+        dialog.dismiss();
+        builder.setTitle(R.string.probedisconnect_title);                                                      //Set up the AlertDialog that will let the user know that the connection failed
+        builder.setMessage(R.string.probedisconnect_contents);
+        builder.setPositiveButton(R.string.probedisconnect_reconnect, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {                                            //User clicked OK button
+                callback.run();
+            }
+        });
+        builder.setNegativeButton(R.string.probedisconnect_cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {                                        //User clicked Cancel button
+
+            }                                                                                       //Don't do anything, continue as before
+        });
+        dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Show a dialog that shows that asks to repeat measurement at depth or next depth
+    public void measurementProgression(final Runnable callback) {
+        dialog.dismiss();
+        builder.setTitle(R.string.measurementProgression_title);                                                      //Set up the AlertDialog that will let the user know that the connection failed
+        builder.setMessage(R.string.measurementProgression_contents);
+        builder.setPositiveButton(R.string.measurementProgression_next, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {                                            //User clicked OK button
+                callback.run();
+            }
+        });
+        builder.setNegativeButton(R.string.measurementProgression_repeat, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {                                        //User clicked Cancel button
+//                callback.run();
+            }                                                                                       //Don't do anything, continue as before
+        });
+        dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
     // Show a dialog that the existing connection was lost. Probably caused by the remote Bluetooth device disconnecting, powering off, or going out of range.
     public void showLostConnectionDialog(final Runnable callback) {
         dialog.dismiss();

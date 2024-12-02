@@ -26,6 +26,18 @@
     <string name="noconnect_ok_button">OK</string>
     <string name="noconnect_cancel_button">Cancel</string>
 
+    <!-- Probe lost connection dialog -->
+    <string name="probedisconnect_title">Probe has lost connection</string>
+    <string name="probedisconnect_contents">Connection to the bluetooth device was lost. \n\nMake sure the probe is close to the device and has battery</string>
+    <string name="probedisconnect_reconnect">Reconnect Probe</string>
+    <string name="probedisconnect_cancel">Resume Measurements</string>
+
+    <!-- Repeat or proceed with new measurement -->
+    <string name="measurementProgression_title">Next Measurement</string>
+    <string name="measurementProgression_contents">Repeat measurement at this depth or proceed to the next depth?</string>
+    <string name="measurementProgression_repeat">Repeat Depth</string>
+    <string name="measurementProgression_next">Next Depth</string>
+    
     <!-- Lost connection dialog -->
     <string name="lost_title">Lost Connection...</string>
     <string name="lost_contents">The connection to the Bluetooth device was lost.\n\nDo you want to scan for another device?</string>

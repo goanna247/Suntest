@@ -1,19 +1,19 @@
 package com.work.libtest.SurveyOptions;
 
 public class SurveyOptions {
-    private int holeID;
+    private String holeID;
     private String operatorName;
     private String companyName;
     private double initialDepth = 0;
     private double depthInterval = 5;
 
-    public SurveyOptions(int pHoleID, String pOperatorName, String pCompanyName) {
+    public SurveyOptions(String pHoleID, String pOperatorName, String pCompanyName) {
         holeID = pHoleID;
         operatorName = pOperatorName;
         companyName = pCompanyName;
     }
 
-    public SurveyOptions(int pHoleID, String pOperatorName, String pCompanyName, double pInitialDepth, double pDepthInterval) {
+    public SurveyOptions(String pHoleID, String pOperatorName, String pCompanyName, double pInitialDepth, double pDepthInterval) {
         holeID = pHoleID;
         operatorName = pOperatorName;
         companyName = pCompanyName;
@@ -22,7 +22,7 @@ public class SurveyOptions {
     }
 
     //accessors
-    public int getHoleID() {
+    public String getHoleID() {
         return holeID;
     }
 
@@ -43,7 +43,7 @@ public class SurveyOptions {
     }
 
     //mutators
-    public void setHoleID(int pHoleID) {
+    public void setHoleID(String pHoleID) {
         holeID = pHoleID;
     }
 

@@ -22,6 +22,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.provider.Settings;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -307,6 +308,7 @@ public class TakeMeasurements extends AppCompatActivity {
             switch (timePassed) {
                 case 0:
                     collectionNumImg.setImageResource(R.drawable.s0);
+                    collectingData = true;
                     break;
                 case 1:
                     collectionNumImg.setImageResource(R.drawable.s1);
@@ -353,26 +355,37 @@ public class TakeMeasurements extends AppCompatActivity {
                     takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
                     Log.e(TAG, "MEASUREMENT TAKEN");
                     takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
-                    try {
-                        if (directionButton.getText().equals("IN")) {
-                            takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
-                            double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
-                            prevDepth.setText("PREV DEPTH: " + (nextDepthNum));
-                            nextDepth.setText("NEXT DEPTH: " + (nextDepthNum + depthInterval));
-                        } else if (directionButton.getText().equals("OUT")) {
-                            takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
-                            double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
-                            prevDepth.setText("PREV DEPTH: " + (nextDepthNum));
-                            nextDepth.setText("NEXT DEPTH: " + (nextDepthNum - depthInterval));
-                        } else {
-                            Log.e(TAG, "ERROR, direction button has invalid text");
-                        }
-                        break;
-                    } catch (Exception e) {
-                        Log.e(TAG, "exception thrown when changing direction of measurement: " + e);
-                    }
+                    break;
                 case 15:
+                    collectingData = false;
                     collectionNumImg.setImageResource(R.drawable.s15);
+
+                    showAlert.measurementProgression(new Runnable() {                               //Show the AlertDialog for a faulty device
+                        @Override
+                        public void run() {                                                         //Runnable to execute if OK button pressed
+                            //CALLBACK
+                            //proceed to the next depth                                               //Launch the BleScanActivity to scan for BLE devices
+                            Log.i(TAG, "Proceed to the next depth");
+                            try {
+                                if (directionButton.getText().equals("IN")) {
+                                    takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
+                                    double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
+                                    prevDepth.setText("PREV DEPTH: " + (nextDepthNum));
+                                    nextDepth.setText("NEXT DEPTH: " + (nextDepthNum + depthInterval));
+                                } else if (directionButton.getText().equals("OUT")) {
+                                    takeMeasurement.setText("TAKE MEASUREMENT " + measurementNum);
+                                    double nextDepthNum = Double.parseDouble(nextDepth.getText().toString().replace("NEXT DEPTH: ", ""));
+                                    prevDepth.setText("PREV DEPTH: " + (nextDepthNum));
+                                    nextDepth.setText("NEXT DEPTH: " + (nextDepthNum - depthInterval));
+                                } else {
+                                    Log.e(TAG, "ERROR, direction button has invalid text");
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "exception thrown when changing direction of measurement: " + e);
+                            }
+                        }
+                    });
+                    collectionNumImg.setImageResource(R.drawable.s0);
                     break;
             }
 
@@ -443,7 +456,6 @@ public class TakeMeasurements extends AppCompatActivity {
             connectionStatusText = findViewById(R.id.connection_status_text);
             connectionStatusImage = findViewById(R.id.connection_status_img);
 
-
             connectionStatusText.setText("Connected");
             connectionStatusImage.setImageResource(R.drawable.ready);
             collectionNumImg = findViewById(R.id.collection_num);
@@ -451,24 +463,28 @@ public class TakeMeasurements extends AppCompatActivity {
             takeMeasurement = findViewById(R.id.take_measurement_button);
 
             buttonLive = (Button) findViewById(R.id.probeOn);
-            buttonLive.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Log.i(TAG, "PJH - processing Live Data button press");
-                    if (buttonLive.getText().equals("PAUSE")) { //TODO - @ANNA remove ability to pause the session once started, makes life a pain
-                        bleService.setProbeIdle();
-                    } else {
-                        bleService.setProbeMode(1); //TODO - @ANNA needs to also start the timer here
-                        connectionStatusText.setText("Collecting Data");
-                        connectionStatusImage.setImageResource(R.drawable.calibrating);
 
-                        startTime = System.currentTimeMillis();
-                        //@ANNA - ISSUE - user can press this button multiple times and reset the probe internal shot count.....
-                    }
-                }
-            });
             initializeDisplay();
+            bleService.setProbeIdle();
+
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
+    }
+
+    boolean probeCollectingData = false;
+
+    public void probeOnButton(View view) {
+        Log.i(TAG, "PJH - processing Live Data button press");
+        if (!probeCollectingData) {
+            bleService.setProbeMode(1);
+            connectionStatusText.setText("Collecting Data");
+            connectionStatusImage.setImageResource(R.drawable.calibrating);
+            probeCollectingData = true;
+
+            startTime = System.currentTimeMillis();
+        } else {
+            Log.e(TAG, "Current probe mode is: " + bleService.getProbeMode());
         }
     }
 
@@ -635,7 +651,7 @@ public class TakeMeasurements extends AppCompatActivity {
                 break;
             }
             case REQ_CODE_SCAN_ACTIVITY: {
-                showAlert.dismiss();
+//                showAlert.dismiss();
                 if (resultCode == Activity.RESULT_OK) {                                             //User chose a Bluetooth device to connect
                     stateApp = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is fully operational
                     bleDeviceAddress = intent.getStringExtra(BleScanActivity.EXTRA_SCAN_ADDRESS);   //Get the address of the BLE device selected in the BleScanActivity
@@ -767,10 +783,11 @@ public class TakeMeasurements extends AppCompatActivity {
                     connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
                     bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
+                    showAlert.showFailToAccessProbe(new Runnable() {                               //Show the AlertDialog for a faulty device
                         @Override
                         public void run() {                                                         //Runnable to execute if OK button pressed
-                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+                            //CALLBACK
+                            //rescan for the device                                               //Launch the BleScanActivity to scan for BLE devices
                         }
                     });
                     break;
@@ -943,7 +960,7 @@ public class TakeMeasurements extends AppCompatActivity {
             double magMag = Math.sqrt(newVal[4] * newVal[4] + newVal[5] * newVal[5] + newVal[6] * newVal[6]);
 
             //
-//            textMagX.setText(String.format("%7.4f", newVal[4])); //TODO - @ANNA - add back in as a record or smth
+//            textMagX.setText(String.format("%7.4f", newVal[4])); //TODO - @ANNA - add back in as a record or smth -> need to add totalMag into the report thingo
 //            textMagY.setText(String.format("%7.4f", newVal[5]));
 //            textMagZ.setText(String.format("%7.4f", newVal[6]));
 
@@ -1391,10 +1408,10 @@ public class TakeMeasurements extends AppCompatActivity {
                     stateConnection = StateConnection.DISCONNECTING;                                //Are now disconnecting
                     bleService.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFailedToConnectDialog(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
+                    showAlert.showFailToAccessProbe(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
                         @Override
                         public void run() {                                                         //Runnable to execute if OK button pressed
-                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+                            //startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
                         }
                     });
                 }
@@ -1468,36 +1485,46 @@ public class TakeMeasurements extends AppCompatActivity {
 
     public void withdrawClick(View view) {
         try {
-            int shotInterval = bleService.getShotInterval();
-            for (int i = 0; i < measurementTime.size(); i++) {
-                shotsToCollect.add((int) (measurementTime.get(i) / shotInterval));
+            if (!collectingData) {
+                int shotInterval = bleService.getShotInterval();
+                for (int i = 0; i < measurementTime.size(); i++) {
+                    shotsToCollect.add((int) (measurementTime.get(i) / shotInterval));
+                }
+                Log.i(TAG, "Shots to collect: " + shotsToCollect.toString());
+
+                int shotToCollect = shotsToCollect.get(0);
+                Log.e(TAG, "Getting shot for: " + shotToCollect);
+                bleService.setShotRequest(shotToCollect);
+
+                bleService.setProbeIdle(); //otherwise the timer gets mucky
             }
-            Log.i(TAG, "Shots to collect: " + shotsToCollect.toString());
-
-            int shotToCollect = shotsToCollect.get(0);
-            Log.e(TAG, "Getting shot for: " + shotToCollect);
-            bleService.setShotRequest(shotToCollect);
-
-            bleService.setProbeIdle(); //otherwise the timer gets mucky
         } catch (Exception e) {
             Log.e(TAG, "Exception thrown in withdraw click: " + e);
         }
     }
 
+    LinkedList<Date> measurementDate = new LinkedList<>();
+
     public void measurementClick(View view) throws InterruptedException {
-        elapsedTime = System.currentTimeMillis() - startTime;
-        elapsedSeconds = elapsedTime / 1000;
-        secondsDisplay = elapsedSeconds % 60;
-        elapsedMinutes = elapsedSeconds / 60;
+        if (probeCollectingData && !collectingData) { //probe is turned on and the probe is not currently collecting a measurement
+            elapsedTime = System.currentTimeMillis() - startTime;
+            elapsedSeconds = elapsedTime / 1000;
+            secondsDisplay = elapsedSeconds % 60;
+            elapsedMinutes = elapsedSeconds / 60;
 
-        startTime = System.currentTimeMillis();
-        timerHandler.removeCallbacks(timerRunnable);
-        timerHandler.postDelayed(timerRunnable, 0);
+            startTime = System.currentTimeMillis();
+            timerHandler.removeCallbacks(timerRunnable);
+            timerHandler.postDelayed(timerRunnable, 0);
 
-//        if (!collectingDataMeasurement) {
-        Log.i(TAG, "Time added to measurement collection list: " + elapsedSeconds);
-        measurementTime.add((double) elapsedSeconds); //add this elapsed time to a linked list
-        measurementStartTime = elapsedSeconds;
+    //        if (!collectingDataMeasurement) {
+            measurementTime.add((double) elapsedSeconds); //add this elapsed time to a linked list
+            measurementDate.add(Calendar.getInstance().getTime());
+            Log.i(TAG, "Time added to measurement collection list: " + elapsedSeconds);
+            measurementStartTime = elapsedSeconds;
+        } else {
+            Log.e(TAG, "Error, probe not yet set to collect measurements");
+            //TODO - Maybe could show a popup here saying do you wish to put the probe into data collecting mode
+        }
     }
 
     public void changeDirection(View view) {

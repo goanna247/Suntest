@@ -802,6 +802,8 @@ public class SensorActivity extends AppCompatActivity {
                 count = 120;
             }
             double newVal[] = bleService.getLatestBoreshot(count);
+//            double newVal[] = bleService.getLatestCoreshot(count);
+
 
             recordCount = bleService.getSensorDataCount();
             dev_record_number.setText(String.format("%7.1f", newVal[0]));

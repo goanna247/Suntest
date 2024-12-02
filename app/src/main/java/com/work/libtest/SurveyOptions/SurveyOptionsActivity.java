@@ -65,7 +65,7 @@ public class SurveyOptionsActivity extends AppCompatActivity {
                 || OperatorNameEditTxt != null || OperatorNameEditTxt.equals(" ") || Integer.valueOf(OperatorNameEditTxt.getText().toString()) != 0
                 || CompanyNameEditTxt != null || CompanyNameEditTxt.equals(" ") || Integer.valueOf(CompanyNameEditTxt.getText().toString()) != 0)
             {
-                SurveyOptions newSurveyOptions = new SurveyOptions(Integer.valueOf(HoleIDEditTxt.getText().toString()), OperatorNameEditTxt.getText().toString(), CompanyNameEditTxt.getText().toString());
+                SurveyOptions newSurveyOptions = new SurveyOptions(HoleIDEditTxt.getText().toString(), OperatorNameEditTxt.getText().toString(), CompanyNameEditTxt.getText().toString());
                 if (MainActivity.surveySize == MainActivity.surveyNum) {
                     //no survey options saved, create a new entire survey
                     Survey newSurvey = new Survey(newSurveyOptions);
