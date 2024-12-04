@@ -14,7 +14,7 @@ import android.util.Log;
 public class Measurement {
     private static final String TAG = "Measurement";
 
-    private String measurementName;
+    private String measurementName; //basicaly serving as a record number right now
     private String date;
     private String time;
     private String temp;

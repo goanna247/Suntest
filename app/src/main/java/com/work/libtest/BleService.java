@@ -2209,6 +2209,39 @@ public class BleService extends Service {
         }
     }
 
+    // ----------------------------------------------------------------------------------------------------------------
+    // Start interrogateConfig - Initiate a read of ProbeMode, which cascades into the other reads:
+    // - FirmwareVersionMajor, FirmwareVersionMinor, ShotInterval, SurveyMaxShots, RollingShotInterval, etc
+    public boolean setProbeModeReturn(int mode) {
+        try {
+            Log.i(TAG, String.format("PJH - setting new probe mode (%d)", mode));
+            // PJH - TODO - blindly assume we are connected and initiate the get config state machine
+            // TODO - needs some form of timeout
+
+            // reset the ring buffer
+            headRB = 0;
+            countRB = 0;   // only needed during the initial fill
+
+            // turn on notification for shots - no
+            // (don't need to do this explicitly, setting Rolling Shot mode is sufficient)
+            byte[] tt = "A".getBytes();   // ???
+            tt[0] = (byte)(mode & 0xFF);
+            probeModeCharacteristic.setValue(tt);                //Put the bytes into the characteristic value
+            //Log.i(TAG, "PJH - Characteristic write TEST started");
+            if (!btGatt.writeCharacteristic(probeModeCharacteristic)) {           //Request the BluetoothGatt to do the Write
+                Log.w(TAG, "PJH - Failed to set new Probe mode");                      //Warning that write request was not accepted by the BluetoothGatt
+                return false;
+            }
+            probeMode = mode;   // assuming success
+            Log.i(TAG, String.format("PJH - Set Probe Mode to %d", probeMode));
+        }
+        catch (Exception e) {
+            Log.e(TAG, "PJH - Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
     /**
      * This requires 2 bytes, if it doesnt recevie 2 bytes, low byte first it wont return anything from the core/bore shot
      * @param shot
@@ -2281,6 +2314,37 @@ public class BleService extends Service {
         catch (Exception e) {
             Log.e(TAG, "PJH - Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
+    }
+
+    public boolean setProbeIdleReturn() {
+        try {
+            Log.i(TAG, "PJH - setting probe back to Idle mode");
+            // PJH - TODO - blindly assume we are connected and initiate the get config state machine
+            // TODO - needs some form of timeout
+            if (probeMode != PROBE_MODE_IDLE) {
+                // reset the ring buffer
+                headRB = 0;
+                countRB = 0;   // only needed during the initial fill
+
+                // turn on notification for shots
+                // (don't need to do this explicitly, setting Rolling Shot mode is sufficient)
+                byte[] tt = "A".getBytes();
+                tt[0] = 0;
+                probeModeCharacteristic.setValue(tt);                //Put the bytes into the characteristic value
+                //Log.i(TAG, "PJH - Characteristic write TEST started");
+                if (!btGatt.writeCharacteristic(probeModeCharacteristic)) {           //Request the BluetoothGatt to do the Write
+                    Log.w(TAG, "PJH - Failed to set probe to Idle");                      //Warning that write request was not accepted by the BluetoothGatt
+                    return false;
+                }
+                probeMode = PROBE_MODE_IDLE;
+                return true;
+            }
+        }
+        catch (Exception e) {
+            Log.e(TAG, "PJH - Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            return false;
+        }
+        return false;
     }
 
 

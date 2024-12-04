@@ -85,6 +85,7 @@ public class SaveData extends AppCompatActivity {
 
     public static ArrayList<ProbeData> probeData = new ArrayList<ProbeData>();
     public static LinkedList<Measurement> viewProbeData = new LinkedList<>();
+    public static LinkedList<DetailedMeasurement> detailedViewProbeData = new LinkedList<>();
 
     @Override
     protected void onDestroy() {
@@ -177,6 +178,7 @@ public class SaveData extends AppCompatActivity {
             saveNumberTitle.setVisibility(View.INVISIBLE);
 
             viewProbeData = TakeMeasurements.recordedShots;
+            detailedViewProbeData = TakeMeasurements.detailedRecordedShots;
         } else if (parentActivity.equals("Sensor")){
             sensorSavedData = SensorActivity.SavedMeasurements;
             for (int i = 0; i < sensorSavedData.size(); i++) {
@@ -240,27 +242,48 @@ public class SaveData extends AppCompatActivity {
         if (parentActivity.equals("View")) {
             //Get the measurment data from the takeMeasurements/viewmeasurement activity, check validity then save locally
             LinkedList<Measurement> gatheredMeasurements = null;
+            LinkedList<DetailedMeasurement> detailedGatheredMeasurements = null;
 
             try {
                 gatheredMeasurements = TakeMeasurements.recordedShots; //maybe it would be better to get from viewMeasurements ¯\_(ツ)_/¯
-                content = content + "Record Name,Date,Time,Temp,Depth,Dip,Roll,Azimuth\n"; //headings from measurement.java
+                detailedGatheredMeasurements = TakeMeasurements.detailedRecordedShots;
 
             } catch (Exception e) {
                 Log.e(TAG, "Exception thrown collecting data: " + e);
             }
 
             try {
+                content = content + "Borecam - Precision Instrumentation\n";
+                content = content + "Company Name " + detailedGatheredMeasurements.get(0).getCompanyName() + "\n";
+                content = content + "Operator Name " + detailedGatheredMeasurements.get(0).getOperatorID() + "\n\n";
+
+
+                content = content + "Probe ID,Hole,Measurement,Depth,Date,Time,DIntegrity,Azimuth,Dip,Roll,TotMag,Temperature\n"; //headings from measurement.java
+
                 for (int i = 0; i < gatheredMeasurements.size(); i++) {
-                    content = content + gatheredMeasurements.get(i).getName();
+                    content = content + detailedGatheredMeasurements.get(i).getProbeID();
+                    content = content + "," + detailedGatheredMeasurements.get(i).getHoleID();
+                    content = content + "," + detailedGatheredMeasurements.get(i).getDetailedName();
+                    content = content + "," +  gatheredMeasurements.get(i).getDepth();
                     content = content + "," +  gatheredMeasurements.get(i).getDate();
                     content = content + "," +  gatheredMeasurements.get(i).getTime();
-                    content = content + "," +  gatheredMeasurements.get(i).getTemp();
-                    content = content + "," +  gatheredMeasurements.get(i).getDepth();
+                    content = content + "," +  detailedGatheredMeasurements.get(i).getDIntegrity();
+                    content = content + "," +  gatheredMeasurements.get(i).getAzimuth();
                     content = content + "," +  gatheredMeasurements.get(i).getDip();
                     content = content + "," +  gatheredMeasurements.get(i).getRoll();
-                    content = content + "," +  gatheredMeasurements.get(i).getAzimuth();
-                    content = content + "\n";
+                    content = content + "," + detailedGatheredMeasurements.get(i).getTotMag();
+                    content = content + "," +  gatheredMeasurements.get(i).getTemp();
+                    content = content + "\n\n";
                 }
+
+                content = content + "DIntegrity Legend:\n";
+                content = content + "D*                   Dip outside expected range\n";
+                content = content + "M*                   Total magnetic field outside excpected range\n";
+                content = content + "A*                   Azimuth outside expected range\n";
+                content = content + "#                    Probe outside operating temperature\n";
+                content = content + "!                    Probe moving during survey shot\n";
+
+
             } catch (Exception e) {
                 Log.e(TAG, "Exception thrown in adding data to file to be saved: " + e);
             }

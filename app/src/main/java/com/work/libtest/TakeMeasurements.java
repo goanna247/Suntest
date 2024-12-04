@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
@@ -304,6 +305,16 @@ public class TakeMeasurements extends AppCompatActivity {
             long millis = System.currentTimeMillis() - startTime;
             seconds = (int) (millis / 1000);
 
+            if (stateConnection == StateConnection.DISCONNECTED || stateConnection == StateConnection.DISCONNECTING) {
+                if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                    // attempt a reconnection
+                    stateConnection = TakeMeasurements.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                    connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+                }
+
+                updateConnectionState();
+            }
+
             int timePassed = seconds - starttime;
             switch (timePassed) {
                 case 0:
@@ -434,7 +445,7 @@ public class TakeMeasurements extends AppCompatActivity {
             bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME); //mDeviceName
             bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS); //mDeviceAddress
 
-
+            withdrawButton = findViewById(R.id.withdraw_button);
             //Works
             try {
                 initialDepth = MainActivity.surveys.get(MainActivity.surveySize-1).getSurveyOptions().getInitialDepth();
@@ -477,12 +488,31 @@ public class TakeMeasurements extends AppCompatActivity {
     public void probeOnButton(View view) {
         Log.i(TAG, "PJH - processing Live Data button press");
         if (!probeCollectingData) {
-            bleService.setProbeMode(1);
-            connectionStatusText.setText("Collecting Data");
-            connectionStatusImage.setImageResource(R.drawable.calibrating);
-            probeCollectingData = true;
+            boolean setProbe = bleService.setProbeModeReturn(1);
+            if (setProbe) {
+                connectionStatusText.setText("Collecting Data");
+                connectionStatusImage.setImageResource(R.drawable.calibrating);
+                probeCollectingData = true;
 
-            startTime = System.currentTimeMillis();
+                startTime = System.currentTimeMillis();
+            } else {
+                Log.e(TAG, "Error with probe being set, going to throw error screen");
+                showAlert.showFailToAccessProbe(new Runnable() {                               //Show the AlertDialog for a faulty device
+                    @Override
+                    public void run() {                                                         //Runnable to execute if OK button pressed
+                        //rescan for the device                                               //Launch the BleScanActivity to scan for BLE devices
+                        if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                            // attempt a reconnection
+                            stateConnection = TakeMeasurements.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                            connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+                        }
+
+                        updateConnectionState();
+                    }
+                });
+                connectionStatusText.setText("Disconnected");
+                connectionStatusImage.setImageResource(R.drawable.unconnected);
+            }
         } else {
             Log.e(TAG, "Current probe mode is: " + bleService.getProbeMode());
         }
@@ -741,13 +771,31 @@ public class TakeMeasurements extends AppCompatActivity {
                     initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
                     transparentUartData.reset();   // PJH remove                                                 //Also clear any buffered incoming data
                     stateConnection = StateConnection.DISCOVERING;                                  //BleService automatically starts service discovery after connecting
-                    updateConnectionState();                                                        //Update the screen and menus
+                    updateConnectionState();
+
+                    try {
+                        if (measurementTime.size() > 0) {
+                            withdrawButton.setTextColor(Color.GREEN);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception thrown in changing the colour of the withdraw button: " + e);
+                    }
                     break;
                 }
                 case BleService.ACTION_BLE_DISCONNECTED: {                                          //Have disconnected from BLE device
                     Log.d(TAG, "Received Intent ACTION_BLE_DISCONNECTED");
                     initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
                     transparentUartData.reset();                                                    //Also clear any buffered incoming data
+                    try {
+                        withdrawButton.setTextColor(Color.RED);
+                        if (!probeCollectingData) {
+                            connectionStatusText.setText("Disconnected");
+                            connectionStatusImage.setImageResource(R.drawable.unconnected);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception thrown in changing the colour of the withdraw button: " + e);
+                    }
+                    //Make the withdraw thingo light red
                     //if (stateConnection == StateConnection.CONNECTED) {                             //See if we were connected before
                     //    showAlert.showLostConnectionDialog(new Runnable() {                         //Show the AlertDialog for a lost connection
                     //        @Override
@@ -779,18 +827,18 @@ public class TakeMeasurements extends AppCompatActivity {
                 }
                 case BleService.ACTION_BLE_DISCOVERY_FAILED: {                                      //Service discovery failed to find the right service and characteristics
                     Log.d(TAG, "Received Intent  ACTION_BLE_DISCOVERY_FAILED");
-                    stateConnection = StateConnection.DISCONNECTING;                                //Were already connected but showing discovering, so are now disconnecting
-                    connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
-                    bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
-                    updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFailToAccessProbe(new Runnable() {                               //Show the AlertDialog for a faulty device
-                        @Override
-                        public void run() {                                                         //Runnable to execute if OK button pressed
-                            //CALLBACK
-                            //rescan for the device                                               //Launch the BleScanActivity to scan for BLE devices
-                        }
-                    });
-                    break;
+//                    stateConnection = StateConnection.DISCONNECTING;                                //Were already connected but showing discovering, so are now disconnecting
+//                    connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
+//                    bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
+//                    updateConnectionState();                                                        //Update the screen and menus
+//                    showAlert.showFailToAccessProbe(new Runnable() {                               //Show the AlertDialog for a faulty device
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            //CALLBACK
+//                            //rescan for the device                                               //Launch the BleScanActivity to scan for BLE devices
+//                        }
+//                    });
+//                    break;
                 }
                 case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
                     Log.d(TAG, "Received Intent  ACTION_BLE_CONFIG_READY");
@@ -798,6 +846,11 @@ public class TakeMeasurements extends AppCompatActivity {
                     bleService.parseBinaryCalibration();   // process thr calibration data just retrieved
                     bleService.setNotifications(true);   // PJH - HACK - find place where this write doesn't kill something else
                     haveSuitableProbeConnected = true;   // this enables the test stuff
+
+                    if (!probeCollectingData) {
+                        connectionStatusText.setText("Connected");
+                        connectionStatusImage.setImageResource(R.drawable.ready);
+                    }
                     break;
                 }
                 case BleService.ACTION_BLE_FETCH_CAL: {                                        //Have completed service discovery
@@ -895,11 +948,13 @@ public class TakeMeasurements extends AppCompatActivity {
 
     int shotsCollected = 0;
     static LinkedList<Measurement> recordedShots = new LinkedList<>();
+    static LinkedList<DetailedMeasurement> detailedRecordedShots = new LinkedList<>(); //include MORE STUFF!
 
 
     // a new shot has been received, so retrieve and display it
     private void processNewReading() {
         Measurement newMeasurementBeingCollected = null;
+        double magMag = 0;
         try {
 
             int count = 1;
@@ -917,17 +972,24 @@ public class TakeMeasurements extends AppCompatActivity {
             Log.e(TAG, "Measurement name: " + String.valueOf(newVal[0]));
             DecimalFormat numberFormat = new DecimalFormat("#.0000");
 
-            Date c = Calendar.getInstance().getTime();
-            System.out.println("Current time => " + c);
+            Date c = measurementDate.get(0);
+//            System.out.println("Current time => " + c);
 
             SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
             String date = df.format(c);
 
             SimpleDateFormat dfer = new SimpleDateFormat("h:mm:ss a");
-            String time = dfer.format(Calendar.getInstance().getTime());
+            String time = dfer.format(measurementDate.get(0));
 
-            String depthRecorded = (String) nextDepth.getText();
+            measurementDate.remove(); // i hope this removes the head of the list
+
+            //THIS IS CAUSING ISSUES, the Depth needs to be recorded when the shot is taken not at the end :/
+            String depthRecorded = measurementDepth.get(0);
             depthRecorded = depthRecorded.replace("NEXT DEPTH: ", "");
+            measurementDepth.remove();
+
+            magMag = Math.sqrt(newVal[4] * newVal[4] + newVal[5] * newVal[5] + newVal[6] * newVal[6]);
+            magMag = magMag * 1000;
 
             if (depthRecorded != null) {
                 if (newVal[0] >= 283) {
@@ -957,7 +1019,6 @@ public class TakeMeasurements extends AppCompatActivity {
                 accValid = false;
             }
 
-            double magMag = Math.sqrt(newVal[4] * newVal[4] + newVal[5] * newVal[5] + newVal[6] * newVal[6]);
 
             //
 //            textMagX.setText(String.format("%7.4f", newVal[4])); //TODO - @ANNA - add back in as a record or smth -> need to add totalMag into the report thingo
@@ -1183,7 +1244,14 @@ public class TakeMeasurements extends AppCompatActivity {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
 
+
         recordedShots.add(newMeasurementBeingCollected);
+        DetailedMeasurement newDetailedMeasurement = new DetailedMeasurement(newMeasurementBeingCollected, String.valueOf(recordedShots.size()),
+                bleDeviceName, MainActivity.surveys.get(MainActivity.surveySize - 1).getSurveyOptions().getHoleID(),
+                MainActivity.surveys.get(MainActivity.surveySize - 1).getSurveyOptions().getCompanyName(),
+                MainActivity.surveys.get(MainActivity.surveySize - 1).getSurveyOptions().getOperatorName(),
+                "DIntegrity", String.valueOf(magMag));
+        detailedRecordedShots.add(newDetailedMeasurement);
 
         try {
             shotsCollected++;
@@ -1408,12 +1476,12 @@ public class TakeMeasurements extends AppCompatActivity {
                     stateConnection = StateConnection.DISCONNECTING;                                //Are now disconnecting
                     bleService.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFailToAccessProbe(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
-                        @Override
-                        public void run() {                                                         //Runnable to execute if OK button pressed
-                            //startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
-                        }
-                    });
+//                    showAlert.showFailToAccessProbe(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            //startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+//                        }
+//                    });
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
@@ -1486,24 +1554,71 @@ public class TakeMeasurements extends AppCompatActivity {
     public void withdrawClick(View view) {
         try {
             if (!collectingData) {
-                int shotInterval = bleService.getShotInterval();
-                for (int i = 0; i < measurementTime.size(); i++) {
-                    shotsToCollect.add((int) (measurementTime.get(i) / shotInterval));
+
+                //CHECK CURRENT CONNECTION STATUS
+                Log.e(TAG, "Current connection status: " + stateConnection);
+                if (stateConnection == StateConnection.DISCONNECTED || stateConnection == StateConnection.DISCONNECTING || stateConnection == StateConnection.CONNECTING) {
+                    //probe currently disconnected and need to show the pop-up message
+                    showAlert.showFailToAccessProbe(new Runnable() {                               //Show the AlertDialog for a faulty device
+                        @Override
+                        public void run() {                                                         //Runnable to execute if OK button pressed
+                            //Show as disconnected
+
+
+                            //rescan for the device
+                            if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                                // attempt a reconnection
+                                stateConnection = TakeMeasurements.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                                connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+                            }
+
+                            updateConnectionState();
+                        }
+                    });
+                } else { //probe is currently connect to the app, able to withdraw
+                    Log.i(TAG, "Measurements taken: " + measurementTime);
+                    LinkedList<Double> cumulativeList = createCumulativeSumList(measurementTime);
+
+                    Log.e(TAG, "Measurement Dates: " + measurementDate); //Need to add this to the measurement thingo
+
+                    int shotInterval = bleService.getShotInterval();
+                    if (shotInterval == 10) {
+                        for (int i = 0; i < cumulativeList.size(); i++) {
+                            shotsToCollect.add((int) (cumulativeList.get(i) / shotInterval));
+                        }
+                        Log.i(TAG, "Shots to collect: " + shotsToCollect.toString());
+
+                        int shotToCollect = shotsToCollect.get(0);
+                        Log.e(TAG, "Getting shot for: " + shotToCollect);
+                        bleService.setShotRequest(shotToCollect);
+
+                        boolean setProbeSuccess = bleService.setProbeIdleReturn(); //TODO - set this to be a boolean value so that we have a way of knowing if the probe is weirdly disconnected
+                    } else {
+                        //Update connection to
+                        Log.e(TAG, "Shot interval incorrect");
+                    }
                 }
-                Log.i(TAG, "Shots to collect: " + shotsToCollect.toString());
 
-                int shotToCollect = shotsToCollect.get(0);
-                Log.e(TAG, "Getting shot for: " + shotToCollect);
-                bleService.setShotRequest(shotToCollect);
-
-                bleService.setProbeIdle(); //otherwise the timer gets mucky
             }
         } catch (Exception e) {
             Log.e(TAG, "Exception thrown in withdraw click: " + e);
         }
     }
 
+    public static LinkedList<Double> createCumulativeSumList(LinkedList<Double> originalList) {
+        LinkedList<Double> cumulativeList = new LinkedList<>();
+        double sum = 0.0;
+
+        for (Double value : originalList) {
+            sum += value; // Add the current value to the cumulative sum
+            cumulativeList.add(sum); // Add the cumulative sum to the new list
+        }
+
+        return cumulativeList;
+    }
+
     LinkedList<Date> measurementDate = new LinkedList<>();
+    LinkedList<String> measurementDepth = new LinkedList<>(); //technically an int/double but easier to keep as a string here
 
     public void measurementClick(View view) throws InterruptedException {
         if (probeCollectingData && !collectingData) { //probe is turned on and the probe is not currently collecting a measurement
@@ -1512,15 +1627,27 @@ public class TakeMeasurements extends AppCompatActivity {
             secondsDisplay = elapsedSeconds % 60;
             elapsedMinutes = elapsedSeconds / 60;
 
-            startTime = System.currentTimeMillis();
+            startTime = System.currentTimeMillis(); //needed to start timer, answer for getting shots may be to add the collected data
             timerHandler.removeCallbacks(timerRunnable);
             timerHandler.postDelayed(timerRunnable, 0);
 
     //        if (!collectingDataMeasurement) {
             measurementTime.add((double) elapsedSeconds); //add this elapsed time to a linked list
             measurementDate.add(Calendar.getInstance().getTime());
+            measurementDepth.add(nextDepth.getText().toString());
             Log.i(TAG, "Time added to measurement collection list: " + elapsedSeconds);
             measurementStartTime = elapsedSeconds;
+
+            if (stateConnection == StateConnection.CONNECTED) {
+                try {
+                    if (measurementTime.size() > 0) {
+                        withdrawButton.setTextColor(Color.GREEN);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception thrown in changing the colour of the withdraw button: " + e);
+                }
+            }
+
         } else {
             Log.e(TAG, "Error, probe not yet set to collect measurements");
             //TODO - Maybe could show a popup here saying do you wish to put the probe into data collecting mode

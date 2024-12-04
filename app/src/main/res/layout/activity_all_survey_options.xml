@@ -148,7 +148,7 @@
             android:layout_marginTop="60dp"
             android:alpha="1"
             android:ems="10"
-            android:hint="7 (Default)"
+            android:hint="0 (Default)"
             android:inputType="textPersonName"
             app:layout_constraintStart_toEndOf="@+id/initialDepthTxt"
             app:layout_constraintTop_toBottomOf="@+id/companyNameInput" />
@@ -161,7 +161,7 @@
             android:layout_marginTop="60dp"
             android:alpha="1"
             android:ems="10"
-            android:hint="10 (Default)"
+            android:hint="5 (Default)"
             android:inputType="textPersonName"
             app:layout_constraintStart_toEndOf="@+id/depthIntervalTxt"
             app:layout_constraintTop_toBottomOf="@+id/initialDepthInput" />

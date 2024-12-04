@@ -86,13 +86,16 @@ public class ViewMeasurements extends AppCompatActivity {
         //WORKS
         LinkedList<Measurement> savedProbeData = TakeMeasurements.recordedShots;
 
+        LinkedList<DetailedMeasurement> savedDetailedProbeData = TakeMeasurements.detailedRecordedShots;
+
         listView = (ListView) findViewById(R.id.listView);
         measurementArrayAdapter = new MeasurementArrayAdapter(getApplicationContext(), R.layout.listview_row_layout);
         listView.setAdapter(measurementArrayAdapter);
 
         for (int i = 0; i < savedProbeData.size(); i++) {
             DecimalFormat numberFormat = new DecimalFormat("#.0000");
-            String measurementName = savedProbeData.get(i).getName();
+//            String measurementName = savedProbeData.get(i).getName(); //needs to not be the record number but the measurement number
+            String measurementName = savedDetailedProbeData.get(i).getDetailedName();
             String date = savedProbeData.get(i).getDate();
             String time = savedProbeData.get(i).getTime();
             String depth = savedProbeData.get(i).getDepth();

@@ -2145,14 +2145,4 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_CONNECTION, haveSuitableProbeConnected);
         startActivity(intent);
     }
-
-    public void reconnect(View view) {
-        if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
-            // attempt a reconnection
-            stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-            connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
-        }
-
-        updateConnectionState();
-    }
 }
