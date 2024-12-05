@@ -19,6 +19,7 @@
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
+
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
@@ -36,10 +37,13 @@
         android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
+            android:name=".ResumePrevious"
+            android:exported="false" />
+        <activity
             android:name=".CalibrationActivity"
             android:exported="false"
             android:label="@string/title_activity_calibration"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
             android:name=".ViewMeasurements"
             android:exported="false"
@@ -112,7 +116,6 @@
         <service
             android:name=".BluetoothLeService"
             android:enabled="true" />
-
         <service
             android:name=".BleService"
             android:enabled="true" />
@@ -146,9 +149,9 @@
         </activity>
         <activity
             android:name=".BleScanActivity"
-            android:parentActivityName="com.work.libtest.BleScanActivity"
+            android:parentActivityName=".BleScanActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
             android:name=".Preferences.editRoll.editRollActivity"
             android:label="@string/title_activity_edit_roll"
@@ -221,7 +224,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.work.libtest.Preferences.PreferencesActivity" />
         </activity>
-
         <activity
             android:name=".SurveyOptions.SurveyOptionsActivity"
             android:label="Survey Options"
@@ -284,4 +286,5 @@
             android:label="Device Scan Activity"
             android:theme="@android:style/Theme.Holo.Light" />
     </application>
+
 </manifest>
