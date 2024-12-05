@@ -28,6 +28,8 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
     public static final String EXTRA_DEVICE_NAME = "Device_name";
     public static final String EXTRA_DEVICE_ADDRESS = "Device_address";
     public static final String EXTRA_MEASUREMENT_TYPE = "Continue_or_new";
+    public static final String EXTRA_SURVEY_TICKET = "Survey_Ticket";
+    private int surveyTicket;
 
     int resumePosition = 128; //error code!
 
@@ -60,6 +62,12 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+        try {
+            surveyTicket = Integer.valueOf(intent.getStringExtra(EXTRA_SURVEY_TICKET));
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown receiving survey ticket: " + e);
+        }
+
         Log.e(TAG, "PASSED IN VALUE: " + intent.getStringExtra(EXTRA_MEASUREMENT_TYPE));
         try {
             if (intent.getStringExtra(EXTRA_MEASUREMENT_TYPE).equals(null)) {
@@ -153,6 +161,7 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
                     measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_NAME, mDeviceName);
                     measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
                     measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, "Connected");
+                    measurements.putExtra(TakeMeasurements.EXTRA_SURVEY_TICKET, String.valueOf(surveyTicket));
                     startActivity(measurements);
                 }
             } else {
@@ -203,6 +212,7 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
                             measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
                             measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, "Connected");
                             measurements.putExtra(TakeMeasurements.EXTRA_MEASUREMENT_TYPE, Integer.toString(resumePosition));
+                            measurements.putExtra(TakeMeasurements.EXTRA_SURVEY_TICKET, String.valueOf(surveyTicket));
                             startActivity(measurements);
                         } else {
                             Intent measurements = new Intent(this, TakeMeasurements.class);
@@ -210,6 +220,7 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
                             measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
                             measurements.putExtra(TakeMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, "Connected");
                             measurements.putExtra(TakeMeasurements.EXTRA_MEASUREMENT_TYPE, "NEW");
+                            measurements.putExtra(TakeMeasurements.EXTRA_SURVEY_TICKET, String .valueOf(surveyTicket));
                             startActivity(measurements);
                         }
                     }
@@ -259,6 +270,15 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
         intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
         intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
         intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
+        surveyTicket = -1; //error code
+
+        try {
+            TakeMeasurements.detailedRecordedShots = null;
+            TakeMeasurements.recordedShots = null;
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown in removing existing survey from short term: " + e);
+        }
+
         startActivity(intent);
     }
 }

@@ -69,6 +69,8 @@ public class TakeMeasurements extends AppCompatActivity {
     public static final String EXTRA_MEASUREMENT_TYPE = "Resume_or_new";
     public static final String EXTRA_PREV_DEPTH = "prev depth";
     public static final String EXTRA_NEXT_DEPTH = "next depth";
+    public static final String EXTRA_SURVEY_TICKET = "Survey_Ticket";
+    private int surveyTicket;
 
     int resumePosition = 128; //error code - NEEDED BY OTHER ACTIVITIES
 
@@ -444,6 +446,11 @@ public class TakeMeasurements extends AppCompatActivity {
             final Intent intent = getIntent();
             bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME); //mDeviceName
             bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS); //mDeviceAddress
+            try {
+                surveyTicket = Integer.valueOf(intent.getStringExtra(EXTRA_SURVEY_TICKET));
+            } catch (Exception e) {
+                Log.e(TAG, "Exception thrown receiving survey ticket: " + e);
+            }
 
             withdrawButton = findViewById(R.id.withdraw_button);
             //Works
@@ -623,6 +630,7 @@ public class TakeMeasurements extends AppCompatActivity {
         intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, bleDeviceName);
         intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
         intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "TakeMeasurements");
+        surveyTicket = -1; //error code as this represents the index num of a linked list
         startActivity(intent);
     }
 
@@ -947,8 +955,8 @@ public class TakeMeasurements extends AppCompatActivity {
     }
 
     int shotsCollected = 0;
-    static LinkedList<Measurement> recordedShots = new LinkedList<>();
-    static LinkedList<DetailedMeasurement> detailedRecordedShots = new LinkedList<>(); //include MORE STUFF!
+    public static LinkedList<Measurement> recordedShots = new LinkedList<>();
+    public static LinkedList<DetailedMeasurement> detailedRecordedShots = new LinkedList<>(); //include MORE STUFF!
 
 
     // a new shot has been received, so retrieve and display it
@@ -1019,15 +1027,11 @@ public class TakeMeasurements extends AppCompatActivity {
                 accValid = false;
             }
 
-
-            //
-//            textMagX.setText(String.format("%7.4f", newVal[4])); //TODO - @ANNA - add back in as a record or smth -> need to add totalMag into the report thingo
-//            textMagY.setText(String.format("%7.4f", newVal[5]));
-//            textMagZ.setText(String.format("%7.4f", newVal[6]));
-
             Log.i(TAG, "Roll: " + String.format("%7.4f", newVal[7]));
             Log.i(TAG, "Dip: " + String.format("%7.4f", newVal[8]));
             Log.i(TAG, "Azimuth: " + String.format("%7.4f", newVal[9]));
+
+
             //
             // Check if taking reading for alignment
             //
@@ -1253,6 +1257,7 @@ public class TakeMeasurements extends AppCompatActivity {
                 "DIntegrity", String.valueOf(magMag));
         detailedRecordedShots.add(newDetailedMeasurement);
 
+
         try {
             shotsCollected++;
             if (shotsToCollect.size() > shotsCollected) {
@@ -1268,13 +1273,21 @@ public class TakeMeasurements extends AppCompatActivity {
                 Log.i(TAG, "All shots collected");
                 Log.e(TAG, "RecordedShots: " + recordedShots.size());
                 try {
-                    for (int i = 0; i < recordedShots.size(); i++) {
-                        recordedShots.get(i).printMeasurement();
+//                    for (int i = 0; i < recordedShots.size(); i++) {
+//                        recordedShots.get(i).printMeasurement();
+//                    }
+                    try {
+                        Log.e(TAG, "Survey Ticket number: " + surveyTicket);
+                        Globals.storedMeasurements.add(surveyTicket, detailedRecordedShots); //Need to not add if already exists
+                        Log.e(TAG, "MEASUREMENTS Stored in global: " + Globals.storedMeasurements);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception thrown adding and accessing global stored measurements: " + e);
                     }
                     //NEED TO ACCESS RECORDEDSHOTS IN THE VIEW MEASUREMENT ACTIVITY
                     Intent intent = new Intent(this, ViewMeasurements.class);
                     intent.putExtra(ViewMeasurements.EXTRA_DEVICE_NAME, bleDeviceName);
                     intent.putExtra(ViewMeasurements.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+                    intent.putExtra(ViewMeasurements.EXTRA_SURVEY_TICKET, String.valueOf(surveyTicket));
                     startActivity(intent);
                 } catch (Exception e) {
                     Log.e(TAG, "Exception thrown: " + e);

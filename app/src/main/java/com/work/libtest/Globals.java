@@ -1,5 +1,7 @@
 package com.work.libtest;
 
+import java.util.LinkedList;
+
 public class Globals {
     /**
      * whether the app will collect and use calibration data from the probe,
@@ -26,4 +28,9 @@ public class Globals {
 
     public static String probeConnectedName = "";
     public static String probeConnectedAddress = "";
+
+
+    //Storage of previously done surveys to resume later, perhaps this should be stored locally to a file then read back?
+    //If the app crashes this might delete this style of data storage
+    public static LinkedList<LinkedList<DetailedMeasurement>> storedMeasurements = new LinkedList<>();
 }

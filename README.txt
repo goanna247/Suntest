@@ -56,6 +56,10 @@ need to create a BluetoothLeService, a BluetoothGatt,
 
 ## Calibration
 
+## Surveys
+The user needs to be able to start a new survey or resume a previous survey, the app should also live save all data collected to be resumed later.
+When starting a new survey a "ticket" is issued which signifies a place in a linked list that stores all the saved data (LinkedList<LinkedList<DetailedMeasurements>>) this ticket is passed through to the take measurement, view measurement and orientation activities. If the activity goes back to Main the ticket is nullified.
+
 ### Variables:
 NUM_CAL_PARAMS_EXPECTED_DURING_PARSING = 38
 arrays for acc_a - c as well as mag_a - c and temp_params

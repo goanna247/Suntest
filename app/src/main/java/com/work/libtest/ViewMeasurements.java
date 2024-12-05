@@ -39,6 +39,8 @@ public class ViewMeasurements extends AppCompatActivity {
     public static final String EXTRA_DEVICE_ADDRESS = "Device_address";
     public static final String EXTRA_DEVICE_CONNECTION_STATUS = "Connection_status";
     public static final String EXTRA_PROBE_MEASUREMENTS = "Measurements";
+    public static final String EXTRA_SURVEY_TICKET = "Survey_Ticket";
+    private int surveyTicket;
 
     public static final String EXTRA_PREV_DEPTH = "Prev depth";
     public static final String EXTRA_NEXT_DEPTH = "Next depth";
@@ -82,6 +84,11 @@ public class ViewMeasurements extends AppCompatActivity {
         mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
         Log.i(TAG, "Name: " + mDeviceName + ", Address: " + mDeviceAddress);
+        try {
+            surveyTicket = Integer.valueOf(intent.getStringExtra(EXTRA_SURVEY_TICKET));
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown receiving survey ticket: " + e);
+        }
 
         //WORKS
         LinkedList<Measurement> savedProbeData = TakeMeasurements.recordedShots;
@@ -130,6 +137,7 @@ public class ViewMeasurements extends AppCompatActivity {
         intent.putExtra(OrientationActivity.EXTRA_PARENT_ACTIVITY, "MEASUREMENT");
         String positionToSend = String.valueOf(position);
         intent.putExtra(OrientationActivity.EXTRA_MEASUREMENT_DATA, positionToSend);
+        intent.putExtra(OrientationActivity.EXTRA_SURVEY_TICKET, surveyTicket);
         startActivity(intent);
     }
 
@@ -170,6 +178,7 @@ public class ViewMeasurements extends AppCompatActivity {
         backIntent.putExtra(TakeMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
         backIntent.putExtra(TakeMeasurements.EXTRA_PREV_DEPTH, mPrevDepth);
         backIntent.putExtra(TakeMeasurements.EXTRA_NEXT_DEPTH, mNextDepth);
+        backIntent.putExtra(TakeMeasurements.EXTRA_SURVEY_TICKET, surveyTicket);
         startActivity(backIntent);
     }
 

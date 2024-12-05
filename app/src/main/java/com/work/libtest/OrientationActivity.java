@@ -1266,6 +1266,8 @@ public class OrientationActivity extends AppCompatActivity {
     public static final String EXTRA_MEASUREMENT_DATA = "null";
     public static final String EXTRA_NEXT_DEPTH = "null";
     public static final String EXTRA_PREV_DEPTH = "null";
+    public static final String EXTRA_SURVEY_TICKET = "Survey_Ticket";
+    private int surveyTicket;
 
     public static final String EXTRA_DEVICE_SERIAL_NUMBER = "Serial_number";
     public static final String EXTRA_DEVICE_VERSION = "Device_firmware_version";

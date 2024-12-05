@@ -49,6 +49,7 @@ public class InitalisePopupActivity extends AppCompatActivity {
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+
         Log.d(TAG, "Device Name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
 
         setSupportActionBar(toolbar);
@@ -108,17 +109,20 @@ public class InitalisePopupActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-
     /**
      * Start new survey by going to the survey options activity
      * @param v
      */
     public void startNewClick(View v) {
+        //Need to open a new "ticket" for a new set of measurements
+        int surveyTicket = Globals.storedMeasurements.size(); //this is the index that new data needs to be added in at.
+//        Globals.storedMeasurements.add(null);
         //open survey preferences with initial depth and depth interval
         Intent intent = new Intent(this, AllSurveyOptionsActivity.class);
         intent.putExtra(AllSurveyOptionsActivity.EXTRA_DEVICE_NAME, mDeviceName);
         intent.putExtra(AllSurveyOptionsActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
         intent.putExtra(AllSurveyOptionsActivity.EXTRA_MEASUREMENT_TYPE, "NEW");
+        intent.putExtra(AllSurveyOptionsActivity.EXTRA_SURVEY_TICKET, String.valueOf(surveyTicket));
         startActivity(intent);
     }
 
