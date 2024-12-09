@@ -169,6 +169,47 @@ public class ShowAlertDialogs {
     }
 
     // ----------------------------------------------------------------------------------------------------------------
+    // Show a dialog that the existing connection was lost. Probably caused by the remote Bluetooth device disconnecting, powering off, or going out of range.
+//    public void showLostConnectionDialog(final Runnable callback) {
+//        dialog.dismiss();
+//        builder.setTitle(R.string.lost_title);                                                     //Set up the AlertDialog that will let the user know that the connection failed
+//        builder.setMessage(R.string.lost_contents);
+//        builder.setPositiveButton(R.string.lost_ok_button, new DialogInterface.OnClickListener() {
+//            public void onClick(DialogInterface dialog, int id) {                                            //User clicked OK button
+//                callback.run();
+//            }
+//        });
+//        builder.setNegativeButton(R.string.lost_cancel_button, new DialogInterface.OnClickListener() {
+//            public void onClick(DialogInterface dialog, int id) {                                        //User clicked Cancel button
+//            }                                                                                       //Don't do anything, continue as before
+//        });
+//        dialog = builder.create();
+//        dialog.setCanceledOnTouchOutside(false);
+//        dialog.show();
+//    }
+//
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Show a dialog that the device is faulty. Service discovery failed to find the right service and characteristics.
+    public void removeAllSurveys(final Runnable callback) {
+        dialog.dismiss();
+        builder.setTitle(R.string.remove_title);                                                       //Set up the AlertDialog that will let the user know that the device is faulty (failed to discover services)
+        builder.setMessage(R.string.remove_content);
+        builder.setPositiveButton(R.string.remove_ok_button, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {                                            //User clicked OK button
+                callback.run();
+            }
+        });
+        builder.setNegativeButton(R.string.remove_cancel_button, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {                                        //User clicked Cancel button
+            }                                                                                       //Don't do anything, continue as before
+        });
+        dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
     // Show a dialog that the device is faulty. Service discovery failed to find the right service and characteristics.
     public void showFaultyDeviceDialog(final Runnable callback) {
         dialog.dismiss();

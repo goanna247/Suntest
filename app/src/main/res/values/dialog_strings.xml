@@ -55,4 +55,10 @@
     <string name="location_contents">App cannot scan for bluetooth devices without permission for coarse location.\n\nPlease grant permission.</string>
     <string name="location_continue_button">Continue</string>
 
+    <!-- Remove all previous saved surveys -->
+    <string name="remove_title">Remove all surveys</string>
+    <string name="remove_content">Remove all saved surveys, warning this is a non-reversible change!</string>
+    <string name="remove_ok_button">OK</string>
+    <string name="remove_cancel_button">Cancel</string>
+
 </resources>

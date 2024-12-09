@@ -625,6 +625,12 @@ public class TakeMeasurements extends AppCompatActivity {
     }
 
     public void back() {
+        //if we are returning to the main activity then we need to wipe the last survey (DON'T WORRY, it's saved in the global previous surveys)
+        LinkedList<Measurement> emptyList = new LinkedList<>();
+        LinkedList<DetailedMeasurement> emptyerList = new LinkedList<>();
+        TakeMeasurements.recordedShots = emptyList;
+        TakeMeasurements.detailedRecordedShots = emptyerList;
+
         Intent intent = new Intent(this, MainActivity.class);
         Log.d(TAG, "Device name: " + bleDeviceName + ", Device Address: " + bleDeviceAddress);
         intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, bleDeviceName);
