@@ -443,6 +443,8 @@ public class TakeMeasurements extends AppCompatActivity {
             nextDepth = findViewById(R.id.next_depth_txt);
             directionButton = findViewById(R.id.direction_button);
 
+
+
             final Intent intent = getIntent();
             bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME); //mDeviceName
             bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS); //mDeviceAddress
@@ -463,6 +465,14 @@ public class TakeMeasurements extends AppCompatActivity {
                 Log.e(TAG, "Exception thrown in getting initial depth and the depth interval");
             }
 
+            try {
+                if (detailedRecordedShots.size() > 0) {
+                    initialDepth = Double.parseDouble(detailedRecordedShots.get(detailedRecordedShots.size()-1).getBasicMeasurement().getDepth()) + depthInterval;
+                    Log.e(TAG, "New initial depth set by prev measurement: " + initialDepth);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Exception thrown setting a different detailed recorded shots: " + e);
+            }
 
             try {
                 nextDepth.setText("NEXT DEPTH: " + (initialDepth + depthInterval * measurementNum));
@@ -1271,7 +1281,10 @@ public class TakeMeasurements extends AppCompatActivity {
                 try {
                     int shotToCollect = shotsToCollect.get(shotsCollected);
                     Log.e(TAG, "Getting shot for: " + shotToCollect);
-                    bleService.setShotRequest(shotToCollect);
+                    boolean success = bleService.setShotRequest(shotToCollect);
+//                    if (success) {
+//
+//                    }
                 } catch (Exception e) {
                     Log.e(TAG, "Exception thrown in first part: " + e);
                 }
@@ -1279,12 +1292,18 @@ public class TakeMeasurements extends AppCompatActivity {
                 Log.i(TAG, "All shots collected");
                 Log.e(TAG, "RecordedShots: " + recordedShots.size());
                 try {
-//                    for (int i = 0; i < recordedShots.size(); i++) {
-//                        recordedShots.get(i).printMeasurement();
-//                    }
                     try {
                         Log.e(TAG, "Survey Ticket number: " + surveyTicket);
+//                        if (Globals.storedMeasurements.size() >= surveyTicket) { //check if the position is null
+//                            Globals.storedMeasurements.set(surveyTicket, detailedRecordedShots); //Need to not add if already exists
+//                        } else {
+//                        if (Globals.storedMeasurements.get(surveyTicket) != null) {
+//                            Log.e(TAG, "Already have a record in the stored measurements place: ");
+//                        } else {
+//                            Log.e(TAG, "Measurement in said position is null, hence no measurement found for ticket number");
+//                        }
                         Globals.storedMeasurements.add(surveyTicket, detailedRecordedShots); //Need to not add if already exists
+//                        }
                         Log.e(TAG, "MEASUREMENTS Stored in global: " + Globals.storedMeasurements);
                     } catch (Exception e) {
                         Log.e(TAG, "Exception thrown adding and accessing global stored measurements: " + e);
@@ -1366,91 +1385,6 @@ public class TakeMeasurements extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
-
-//    private void processIncomingData(byte[] newBytes) {
-//        try {
-//            /*
-//            transparentUartData.write(newBytes);                                                    //Add new data to any previous bytes left over
-//            boolean search = (transparentUartData.size() >= 8);                                     //Need at least 8 bytes for a complete message
-//            while (search) {                                                                        //Keep searching until the code has worked through all the bytes
-//                final byte[] allBytes = transparentUartData.toByteArray();                          //Put all the bytes into a byte array
-//                search = false;                                                                     //Assume there is no termination byte, and update to repeat the search if we find one
-//                for (int i = 0; i < allBytes.length; i++) {                                         //Loop through all the bytes
-//                    if (allBytes[i] == (byte)']') {                                                 // to look for termination byte
-//                        byte[] newLine = Arrays.copyOf(allBytes, i);                                //Get all the bytes up to the termination byte
-//                        byte[] leftOver = Arrays.copyOfRange(allBytes, i + 1, allBytes.length); //Get all the remaining bytes after the termination byte
-//                        transparentUartData.reset();                                                //Clear out the original data
-//                        transparentUartData.write(leftOver);                                        // and save the remaining bytes for later
-//                        final String newLineStr = new String(newLine, StandardCharsets.UTF_8);      //Create a string from the bytes up to the termination byte
-//                        int ledIndex = newLineStr.indexOf("L02");                                   //Search for the text for the LED state
-//                        int tempIndex = newLineStr.indexOf("T04");                                  //Search for the text for the temperature reading
-//                        int accelIndex = newLineStr.indexOf("X0C");                                 //Search for the text for the accelerometer readings
-//                        //Got LED packet
-//                        if (ledIndex != -1) {                                                       //See if the LED text was found
-//                            if (newLineStr.charAt(ledIndex + 3) == '0') {                           //See if the status is for the green LED (LED0)
-//                                if (newLineStr.charAt(ledIndex + 4) == '0' && switchGreenLed.isChecked()) { //See if the LED is off and should be on
-//                                    bleService.writeToTransparentUART("[0L0201]".getBytes());       //Write command to the Transparent UART to light the green LED (LED0)
-//                                }
-//                                else if (newLineStr.charAt(ledIndex + 4) == '1' && !switchGreenLed.isChecked()) { //See if the LED is on and should be off
-//                                    bleService.writeToTransparentUART("[0L0200]".getBytes());       //Write command to the Transparent UART to turn off the green LED (LED0)
-//                                }
-//                            }
-//                            else if (newLineStr.charAt(ledIndex + 3) == '1') {                      //See if the status is for the red LED (LED1)
-//                                if (newLineStr.charAt(ledIndex + 4) == '0' && switchRedLed.isChecked()) { //See if the LED is off and should be on
-//                                    bleService.writeToTransparentUART("[0L0211]".getBytes());       //Write command to the Transparent UART to light the red LED (LED1)
-//                                }
-//                                else if (newLineStr.charAt(ledIndex + 4) == '1' && !switchRedLed.isChecked()) { //See if the LED is on and should be off
-//                                    bleService.writeToTransparentUART("[0L0210]".getBytes());       //Write command to the Transparent UART to turn off the red LED (LED1)
-//                                }
-//                            }
-//                        }
-//                        //Got temperature packet
-//                        if (tempIndex != -1) {                                                      //See if the temperature text was found
-//                            int rawTemp = (Character.digit(newLineStr.charAt(tempIndex + 5), 16) << 12) //Pull out the ascii characters for the temperature reading
-//                                    + (Character.digit(newLineStr.charAt(tempIndex + 6), 16) << 8)
-//                                    + (Character.digit(newLineStr.charAt(tempIndex + 3), 16) << 4)
-//                                    + Character.digit(newLineStr.charAt(tempIndex + 4), 16);
-//                            double temperature = (rawTemp > 32767) ? ((double)(rawTemp - 65536)) / 16 : ((double)(rawTemp)) / 16; //Convert unsigned left shifted to signed
-//                            textTemperature.setText(String.format("%s%s", temperature, getString(R.string.degrees_celcius)));     //Display the temperature on the screen
-//                        }
-//                        //Got accelerometer packet
-//                        if (accelIndex != -1) {                                                     //See if the accelerometer text was found
-//                            int rawX = (Character.digit(newLineStr.charAt(accelIndex + 5), 16) << 12) //Pull out the ascii characters for the accelerometer X readings
-//                                    + (Character.digit(newLineStr.charAt(accelIndex + 6), 16) << 8)
-//                                    + (Character.digit(newLineStr.charAt(accelIndex + 3), 16) << 4)
-//                                    + Character.digit(newLineStr.charAt(accelIndex + 4), 16);
-//                            int accelX = (rawX > 2047) ? (rawX - 4096) : rawX;                      //Convert unsigned 12-bit to signed
-//                            int rawY = (Character.digit(newLineStr.charAt(accelIndex + 9), 16) << 12) //Pull out the ascii characters for the accelerometer Y readings
-//                                    + (Character.digit(newLineStr.charAt(accelIndex + 10), 16) << 8)
-//                                    + (Character.digit(newLineStr.charAt(accelIndex + 7), 16) << 4)
-//                                    + Character.digit(newLineStr.charAt(accelIndex + 8), 16);
-//                            int accelY = (rawY > 2047) ? (rawY - 4096) : rawY;                      //Convert unsigned 12-bit to signed
-//                            int rawZ = (Character.digit(newLineStr.charAt(accelIndex + 13), 16) << 12) //Pull out the ascii characters for the accelerometer Z readings
-//                                    + (Character.digit(newLineStr.charAt(accelIndex + 14), 16) << 8)
-//                                    + (Character.digit(newLineStr.charAt(accelIndex + 11), 16) << 4)
-//                                    + Character.digit(newLineStr.charAt(accelIndex + 12), 16);
-//                            int accelZ = (rawZ > 2047) ? (rawZ - 4096) : rawZ;                      //Convert unsigned 12-bit to signed
-//                            textAccelerometerX.setText(String.format("%s%d", getString(R.string.accelerometer_x), accelX));        //Display the accelerometer X readings
-//                            textAccelerometerY.setText(String.format("%s%d", getString(R.string.accelerometer_y), accelY));        //Display the accelerometer Y readings
-//                            textAccelerometerZ.setText(String.format("%s%d", getString(R.string.accelerometer_z), accelZ));        //Display the accelerometer Z readings
-//                            accelXSeries.appendData(new DataPoint(accelGraphHorizontalPoint, accelX), true, 100); //Update the graph with the new accelerometer readings
-//                            accelYSeries.appendData(new DataPoint(accelGraphHorizontalPoint, accelY), true, 100);
-//                            accelZSeries.appendData(new DataPoint(accelGraphHorizontalPoint, accelZ), true, 100);
-//                            accelGraphHorizontalPoint += 1d;                                        //Increment the index for the next point on the horizontal axis of the graph
-//                        }
-//                        search = true;                                                              //Found a termination byte during this search so repeat the search to see if there are any more
-//                        break;
-//                    }
-//                }
-//
-//
-//            }
-//        */
-//        } catch (Exception e) {
-//            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
-//        }
-//    }
 
     /******************************************************************************************************************
      * Methods for scanning, connecting, and showing event driven dialogs
@@ -1582,8 +1516,6 @@ public class TakeMeasurements extends AppCompatActivity {
                         @Override
                         public void run() {                                                         //Runnable to execute if OK button pressed
                             //Show as disconnected
-
-
                             //rescan for the device
                             if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
                                 // attempt a reconnection
@@ -1617,7 +1549,6 @@ public class TakeMeasurements extends AppCompatActivity {
                         Log.e(TAG, "Shot interval incorrect");
                     }
                 }
-
             }
         } catch (Exception e) {
             Log.e(TAG, "Exception thrown in withdraw click: " + e);
@@ -1666,7 +1597,6 @@ public class TakeMeasurements extends AppCompatActivity {
                     Log.e(TAG, "Exception thrown in changing the colour of the withdraw button: " + e);
                 }
             }
-
         } else {
             Log.e(TAG, "Error, probe not yet set to collect measurements");
             //TODO - Maybe could show a popup here saying do you wish to put the probe into data collecting mode

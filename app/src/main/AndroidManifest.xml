@@ -152,7 +152,7 @@
             android:name=".BleScanActivity"
             android:parentActivityName=".BleScanActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity
             android:name=".Preferences.editRoll.editRollActivity"
             android:label="@string/title_activity_edit_roll"

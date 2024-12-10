@@ -21,6 +21,7 @@ public class SurveyArrayAdapter extends ArrayAdapter<DetailedMeasurement> {
     static class SurveyViewHolder {
         TextView date;
         TextView holeID;
+        TextView time;
     }
 
     public SurveyArrayAdapter(Context context, int textViewResourceId) {
@@ -52,6 +53,7 @@ public class SurveyArrayAdapter extends ArrayAdapter<DetailedMeasurement> {
             row = inflater.inflate(R.layout.listitem_resume_survey, parent, false);
             surveyViewHolder = new SurveyViewHolder();
             surveyViewHolder.date = (TextView) row.findViewById(R.id.survey_date);
+            surveyViewHolder.time = (TextView) row.findViewById(R.id.survey_time);
             surveyViewHolder.holeID = (TextView) row.findViewById(R.id.survey_probeID);
             row.setTag(surveyViewHolder);
 
@@ -60,6 +62,7 @@ public class SurveyArrayAdapter extends ArrayAdapter<DetailedMeasurement> {
         }
         DetailedMeasurement measurement = getItem(position);
         surveyViewHolder.date.setText(measurement.getBasicMeasurement().getDate());
+        surveyViewHolder.time.setText(measurement.getBasicMeasurement().getTime());
         surveyViewHolder.holeID.setText(measurement.getHoleID());
         return row;
     }

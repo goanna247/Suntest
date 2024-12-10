@@ -84,8 +84,9 @@ public class ResumePrevious extends AppCompatActivity {
 
         for (int i = 0; i < previousSavedData.size(); i++) {
             String date = previousSavedData.get(i).getBasicMeasurement().getDate();
+            String time = previousSavedData.get(i).getBasicMeasurement().getTime();
             String holeID = previousSavedData.get(i).getHoleID();
-            Measurement measurement = new Measurement(null, date, null, null, null, null, null, null);
+            Measurement measurement = new Measurement(null, date, time, null, null, null, null, null);
             DetailedMeasurement newMeasurement = new DetailedMeasurement(measurement, null, null, holeID, null, null, null, null);
             surveyArrayAdapter.add(newMeasurement);
         }
@@ -220,7 +221,8 @@ public class ResumePrevious extends AppCompatActivity {
         }
 
         try {
-            filename = Calendar.getInstance().getTime().toString();
+            filename = String.valueOf(Globals.storedMeasurements.get(0).get(0).getBasicMeasurement().getDate());
+            filename = filename + String.valueOf(Globals.storedMeasurements.get(0).get(0).getProbeID()); //just to make sure that it isn't inadvertantely adding the probe id to the date instead of as strings
 
             File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + filename + ".csv");
 

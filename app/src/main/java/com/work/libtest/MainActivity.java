@@ -1941,9 +1941,13 @@ public class MainActivity extends AppCompatActivity {
                     textDeviceStatus.setText(R.string.ready);
                     blackProbeStatusImg.setImageResource(R.drawable.ready);
 
-                    Globals.probeConnectedName = bleDeviceName;
-                    Globals.probeConnectedAddress = bleDeviceAddress;
-                    Log.e(TAG, "Name: " + Globals.probeConnectedName + ", Address: " + Globals.probeConnectedAddress);
+                    try {
+                        Globals.probeConnectedName = bleDeviceName;
+                        Globals.probeConnectedAddress = bleDeviceAddress;
+                        Log.e(TAG, "Name: " + Globals.probeConnectedName + ", Address: " + Globals.probeConnectedAddress);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception thrown getting probe information from globals: " + e);
+                    }
 
                     bleService.parseBinaryCalibration();   // process thr calibration data just retrieved
                     bleService.setNotifications(true);   // PJH - HACK - find place where this write doesn't kill something else

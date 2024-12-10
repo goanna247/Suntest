@@ -107,10 +107,6 @@ public class ViewMeasurements extends AppCompatActivity {
                         for (int i = 0; i < Globals.storedMeasurements.get(surveyTicket).size(); i++) {
                             savedProbeData.add(Globals.storedMeasurements.get(surveyTicket).get(i).getBasicMeasurement());
                         }
-
-                        //Experiment
-        //                TakeMeasurements.savedProbeData = savedProbeData;
-
                         TakeMeasurements.recordedShots = savedProbeData;
                         TakeMeasurements.detailedRecordedShots = savedDetailedProbeData;
 

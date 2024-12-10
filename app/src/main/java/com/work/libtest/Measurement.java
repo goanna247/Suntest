@@ -101,9 +101,9 @@ public class Measurement {
     }
 
 
-    public void printMeasurement() {
-        Log.i(TAG, "Measurement name: " + this.measurementName + ", date: " + this.date + ", time: " + this.time +
-                ", temp: " + this.temp + ", depth: " + this.depth + ", roll: " + this.roll + ", dip: " + this.dip + ",azimuth: "
-                + this.azimuth);
-    }
+//    public void printMeasurement() {
+//        Log.i(TAG, "Measurement name: " + this.measurementName + ", date: " + this.date + ", time: " + this.time +
+//                ", temp: " + this.temp + ", depth: " + this.depth + ", roll: " + this.roll + ", dip: " + this.dip + ",azimuth: "
+//                + this.azimuth);
+//    }
 }
