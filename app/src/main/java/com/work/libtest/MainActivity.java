@@ -1461,6 +1461,31 @@ public class MainActivity extends AppCompatActivity {
     private TextView HoleIDDisplayTxt;
     private TextView OperatorNameDisplayTxt;
 
+    public int seconds;
+    private long startTime = 0;
+
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            long millis = System.currentTimeMillis() - startTime;
+            seconds = (int) (millis / 1000);
+
+            if (bleDeviceName != null && bleDeviceAddress != null) {
+                if (stateConnection == MainActivity.StateConnection.DISCONNECTED || stateConnection == MainActivity.StateConnection.DISCONNECTING) {
+                    if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                        // attempt a reconnection
+                        stateConnection = MainActivity.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                        connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+                    }
+
+                    updateConnectionState();
+                }
+            }
+            timerHandler.postDelayed(this, 1000);
+        }
+    };
+
     /******************************************************************************************************************
      * Methods for handling life cycle events of the activity.
      */
@@ -1472,6 +1497,9 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);  //Call superclass (AppCompatActivity) onCreate method
 
+        startTime = System.currentTimeMillis();
+        timerHandler.removeCallbacks(timerRunnable);
+        timerHandler.postDelayed(timerRunnable, 0);
         try {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  // PJH - try preventing phone from sleeping
             setContentView(R.layout.activity_main);                                                   //Show the main screen - may be shown briefly if we immediately start the scan activity             //Hide the circular progress bar
@@ -1623,7 +1651,8 @@ public class MainActivity extends AppCompatActivity {
     // Unregister the receiver for Intents from the BleService
     @Override
     protected void onPause() {
-        super.onPause();                                                                            //Call superclass (AppCompatActivity) onPause method
+        super.onPause();
+        timerHandler.removeCallbacks(timerRunnable); //Call superclass (AppCompatActivity) onPause method
         try {
             unregisterReceiver(bleServiceReceiver);                                                     //Unregister receiver that was registered in onResume()
         } catch (Exception e) {

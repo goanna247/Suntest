@@ -326,7 +326,12 @@ public class SensorActivity extends AppCompatActivity {
                     }
                     else {
                         buttonLive.setText("PAUSE");
-                        bleService.setProbeMode(2); //PROBE_MODE_ROLLING_SHOTS);
+                        boolean success = bleService.setProbeModeReturn(2);
+                        if (success) {
+                            Log.e(TAG, "Set mode successful");
+                        } else {
+                            Log.e(TAG, "Set mode BAD!"); //elloquently worded
+                        }
                     }
                 }
             });
@@ -334,6 +339,17 @@ public class SensorActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Exception thrown in onCreate in SensorActivity: " + e);
         }
+    }
+
+    public void modeRequest(View view) {
+        //return the current mode of the probe -> this will determine whether its a write issue, a read issue or a notify issue
+        double[] coreShot = bleService.getLatestCoreshot(1);
+        double[] boreShot = bleService.getLatestBoreshot(1); //should really do a check here to determine what type of probe we are working with before printing
+        for (int i = 0; i < coreShot.length; i++) {
+            Log.e(TAG, "Core: " + String.valueOf(coreShot[i]));
+            Log.e(TAG, "Bore: " + String.valueOf(boreShot[i])); //wont print all the stuff in a boreshot
+        }
+        Log.e(TAG, "Probe Mode: " + String.valueOf(bleService.getProbeMode()));
     }
 
 //    private StateApp stateApp;
@@ -706,10 +722,9 @@ public class SensorActivity extends AppCompatActivity {
                 }
                 case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
                     Log.d(TAG, "Received Intent  ACTION_BLE_CONFIG_READY");
-                    progressBar.setVisibility(ProgressBar.INVISIBLE);
 
-                    String verString = bleService.getFirmwareVersionString();
-                    textDeviceStatus.setText(R.string.ready);
+//                    String verString = bleService.getFirmwareVersionString();
+//                    textDeviceStatus.setText(R.string.ready);
                     bleService.parseBinaryCalibration();
                     bleService.setNotifications(true);
                     haveSuitableProbeConnected = true;
@@ -717,8 +732,7 @@ public class SensorActivity extends AppCompatActivity {
                 }
                 case BleService.ACTION_BLE_FETCH_CAL: {                                        //Have completed service discovery
                     Log.d(TAG, "PJH - Received Intent  ACTION_BLE_FETCH_CAL");
-                    textDeviceStatus.setText("Fetching calibration");                            //Show "Discovering"
-                    progressBar.setVisibility(ProgressBar.VISIBLE);
+//                    textDeviceStatus.setText("Fetching calibration");                            //Show "Discovering"
                     break;
                 }
                 case BleService.ACTION_BLE_NEW_DATA_RECEIVED: {                                     //Have received data (characteristic notification) from BLE device
@@ -743,33 +757,33 @@ public class SensorActivity extends AppCompatActivity {
             textAccX.setText("");
             textAccY.setText("");
             textAccZ.setText("");
-            textAccMag.setText("");
+//            textAccMag.setText("");
 
             textMagX.setText("");
             textMagY.setText("");
             textMagZ.setText("");
-            textMagMag.setText("");
+//            textMagMag.setText("");
 
             textRoll.setText("");
-            textRoll360.setText("");
+//            textRoll360.setText("");
             textDip.setText("");
             textAz.setText("");
-            textAzErr.setText("");
+//            textAzErr.setText("");
 
 
-            textAlignCount.setText("0");
-            textAlignAvgDip.setText("");
-            textAlignAvgAz.setText("");
+//            textAlignCount.setText("0");
+//            textAlignAvgDip.setText("");
+//            textAlignAvgAz.setText("");
 
-            textAcceptComment.setText("Select Location and press Start\n(in -50 tray, at 0 roll, az should be 283.26)");
-            textAcceptDip.setText("");
-            textAcceptAz.setText("");
+//            textAcceptComment.setText("Select Location and press Start\n(in -50 tray, at 0 roll, az should be 283.26)");
+//            textAcceptDip.setText("");
+//            textAcceptAz.setText("");
 
-            buttonAlignStart.setText("START");  // was having issues with first click not working
-            buttonAcceptStart.setText("START");
+//            buttonAlignStart.setText("START");  // was having issues with first click not working
+//            buttonAcceptStart.setText("START");
 
-            textAcceptResultAz.setText("");
-            textAcceptResultDip.setText("");
+//            textAcceptResultAz.setText("");
+//            textAcceptResultDip.setText("");
 
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
@@ -873,8 +887,8 @@ public class SensorActivity extends AppCompatActivity {
                     textAlignCountdown.setText(String.format("(%d)", newAcceptCountRemaining));  // yes, I know it is in the wrong area
 
                     if (acceptState > 0) {
-                        textAcceptResultAz.setText("");
-                        textAcceptResultDip.setText("");
+//                        textAcceptResultAz.setText("");
+//                        textAcceptResultDip.setText("");
                     }
 
                     if (newAcceptCountRemaining == 0) {
@@ -972,8 +986,8 @@ public class SensorActivity extends AppCompatActivity {
                             acceptRmsAz = Math.sqrt(sqAzDeltaSum / 12);
                             acceptRmsDip = Math.sqrt(sqDipDeltaSum / 12);
 
-                            textAcceptResultAz.setText(String.format("%5.3f", acceptRmsAz));     // show the result (summary) of the test
-                            textAcceptResultDip.setText(String.format("%5.3f", acceptRmsDip));
+//                            textAcceptResultAz.setText(String.format("%5.3f", acceptRmsAz));     // show the result (summary) of the test
+//                            textAcceptResultDip.setText(String.format("%5.3f", acceptRmsDip));
                             textAcceptComment.setText(String.format("Test complete\nPress Start to begin a new test."));
                             acceptState = 0;
                         } else {
@@ -1030,10 +1044,15 @@ public class SensorActivity extends AppCompatActivity {
                     stateConnection = StateConnection.DISCONNECTING;                                //Are now disconnecting
                     bleService.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFailedToConnectDialog(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
+                    showAlert.showFailToAccessProbe(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
                         @Override
                         public void run() {                                                         //Runnable to execute if OK button pressed
-                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+                            if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                                // attempt a reconnection
+                                stateConnection = SensorActivity.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                                connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+                            }
+                            updateConnectionState();                                                 //Launch the BleScanActivity to scan for BLE devices
                         }
                     });
                 }
@@ -1056,31 +1075,26 @@ public class SensorActivity extends AppCompatActivity {
                 switch (stateConnection) {
                     case CONNECTING: {
                         textDeviceStatus.setText(R.string.waiting_to_connect);                             //Show "Connecting"
-                        progressBar.setVisibility(ProgressBar.VISIBLE);                             //Show the circular progress bar
                         break;
                     }
                     case CONNECTED: {
                         textDeviceStatus.setText(R.string.interrogating_configuration);
 
-                        progressBar.setVisibility(ProgressBar.INVISIBLE);                           //Hide the circular progress bar
                         break;
                     }
                     case DISCOVERING: {
                         //textDeviceStatus.setText(R.string.discovering);                            //Show "Discovering"
                         textDeviceStatus.setText(R.string.interrogating_features);                            //Show "Discovering"
-                        progressBar.setVisibility(ProgressBar.VISIBLE);                             //Show the circular progress bar
                         break;
                     }
                     case DISCONNECTING: {
                         textDeviceStatus.setText(R.string.disconnecting);                          //Show "Disconnectiong"
-                        progressBar.setVisibility(ProgressBar.INVISIBLE);                           //Hide the circular progress bar
                         break;
                     }
                     case DISCONNECTED:
                     default: {
                         stateConnection = StateConnection.DISCONNECTED;                             //Default, in case state is unknown
                         textDeviceStatus.setText(R.string.not_connected);                          //Show "Not Connected"
-                        progressBar.setVisibility(ProgressBar.INVISIBLE);                           //Hide the circular progress bar
                         break;
                     }
                 }
@@ -1107,7 +1121,7 @@ public class SensorActivity extends AppCompatActivity {
                 alignSamplesPerReading = count;
 
                 buttonAlignStart.setText("ABORT");
-                bleService.setProbeMode(2); //PROBE_MODE_ROLLING_SHOTS);  // TODO - this is wrong for corecam
+                bleService.setProbeMode(2);
 
                 if (switchRecord.isChecked()) {
                     // sensor data recording is enabled

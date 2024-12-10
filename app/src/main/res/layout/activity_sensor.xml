@@ -46,6 +46,14 @@
                     android:onClick="shotRequest"
                     android:text="Shot Request" />
 
+                <Button
+                    android:id="@+id/shot_request_button2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="modeRequest"
+                    android:text="mode request" />
+
             </LinearLayout>
 
             <LinearLayout
