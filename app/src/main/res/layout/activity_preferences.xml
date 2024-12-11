@@ -19,29 +19,21 @@
 
     <ScrollView
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
         android:background="#d2d2d4">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="fill_parent"
-            android:layout_height="1393dp">
-
-            <TextView
-                android:id="@+id/orientation_title_txt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="80dp"
-                android:text="OPERATIONS"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+            android:layout_height="fill_parent">
 
             <LinearLayout
                 android:id="@+id/linearLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="60dp"
                 android:background="#ffffff"
                 android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@+id/orientation_title_txt"
+                app:layout_constraintTop_toTopOf="parent"
                 tools:layout_editor_absoluteX="1dp">
 
                 <LinearLayout
@@ -55,7 +47,6 @@
                         android:layout_height="40dp"
                         android:background="#ffffff"
                         android:clickable="true"
-                        android:onClick="preferences_operations_mode_click"
                         android:orientation="horizontal"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -63,7 +54,7 @@
 
                         <TextView
                             android:id="@+id/orientation_connection_Txt"
-                            android:layout_width="wrap_content"
+                            android:layout_width="98dp"
                             android:layout_height="wrap_content"
                             android:paddingLeft="10dp"
                             android:paddingTop="10dp"
@@ -72,172 +63,20 @@
                             android:textStyle="bold" />
 
                         <TextView
-                            android:id="@+id/preferences_operations_modeOptions"
-                            android:layout_width="fill_parent"
+                            android:id="@+id/preferences_mode"
+                            android:layout_width="232dp"
                             android:layout_height="match_parent"
                             android:layout_marginTop="10dp"
-                            android:gravity="right"
                             android:paddingRight="20dp"
                             android:text="Bore orientation"
                             android:textSize="15sp" />
 
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="fill_parent"
-                        android:layout_height="1dp"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/black_rec"></ImageView>
-
-                    <LinearLayout
-                        android:id="@+id/orientation_roll"
-                        android:layout_width="fill_parent"
-                        android:layout_height="40dp"
-                        android:background="#ffffff"
-                        android:orientation="horizontal"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/orientation_connection">
-
-                        <TextView
-                            android:id="@+id/orientation_roll_title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.9"
-                            android:paddingLeft="10dp"
-                            android:paddingTop="10dp"
-                            android:text="Advanced Mode"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
                         <CheckBox
-                            android:id="@+id/preferences_operations_advancedOptions"
-                            android:layout_width="0dp"
-                            android:layout_height="30dp"
-                            android:layout_gravity="end"
-                            android:layout_weight="0.3"
-                            android:gravity="right" />
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="fill_parent"
-                        android:layout_height="1dp"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/black_rec"></ImageView>
-
-                    <LinearLayout
-                        android:id="@+id/orientation_dip"
-                        android:layout_width="fill_parent"
-                        android:layout_height="40dp"
-                        android:background="#ffffff"
-                        android:orientation="horizontal"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/orientation_connection">
-
-                        <TextView
-                            android:id="@+id/orientation_dip_title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.9"
-                            android:paddingLeft="10dp"
-                            android:paddingTop="10dp"
-                            android:text="Multi shot mode"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <CheckBox
-                            android:id="@+id/preferences_operations_multiShotOptions"
-                            android:layout_width="0dp"
-                            android:layout_height="30dp"
-                            android:layout_gravity="end"
-                            android:layout_weight="0.3"
-                            android:gravity="right"
-                            android:paddingRight="20dp" />
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="fill_parent"
-                        android:layout_height="1dp"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/black_rec"></ImageView>
-
-                    <LinearLayout
-                        android:id="@+id/orientation_azimuth"
-                        android:layout_width="fill_parent"
-                        android:layout_height="40dp"
-                        android:background="#ffffff"
-                        android:orientation="horizontal"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/orientation_dip">
-
-                        <TextView
-                            android:id="@+id/orientation_azimuth_title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.9"
-                            android:paddingLeft="10dp"
-                            android:paddingTop="10dp"
-                            android:text="Depth tracking"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <CheckBox
-                            android:id="@+id/preferences_operations_depthTrackingOptions"
-                            android:layout_width="0dp"
-                            android:layout_height="30dp"
-                            android:layout_gravity="end"
-                            android:layout_weight="0.3"
-                            android:gravity="right"
-                            android:paddingRight="20dp" />
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="fill_parent"
-                        android:layout_height="1dp"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/black_rec"></ImageView>
-
-                    <LinearLayout
-                        android:id="@+id/orientation_temperature"
-                        android:layout_width="fill_parent"
-                        android:layout_height="40dp"
-                        android:background="#ffffff"
-                        android:orientation="horizontal"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/orientation_azimuth">
-
-                        <TextView
-                            android:id="@+id/orientation_temperature_title"
+                            android:id="@+id/preferences_mode_check"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:paddingLeft="10dp"
-                            android:paddingTop="10dp"
-                            android:text="Initial depth"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <EditText
-                            android:id="@+id/initalDepthEdit"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="10dp"
                             android:layout_weight="1"
-                            android:ems="10"
-                            android:inputType="numberDecimal"
-                            android:text="0" />
-
-                        <TextView
-                            android:id="@+id/preferences_operations_initialDepthOptions"
-                            android:layout_width="50dp"
-                            android:layout_height="40dp"
-                            android:gravity="right|center_horizontal"
-                            android:paddingLeft="10dp"
-                            android:paddingRight="20dp"
-                            android:text="m"
-                            android:textSize="15sp" />
+                            tools:layout_weight="0.3" />
 
                     </LinearLayout>
 
@@ -247,441 +86,11 @@
                         android:scaleType="fitXY"
                         android:src="@drawable/black_rec"></ImageView>
 
-                    <LinearLayout
-                        android:id="@+id/preferences_operations_depthInterval"
-                        android:layout_width="fill_parent"
-                        android:layout_height="40dp"
-                        android:background="#ffffff"
-                        android:orientation="horizontal"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/orientation_temperature">
-
-                        <TextView
-                            android:id="@+id/preferences_operations_depthIntervalTxt"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingLeft="10dp"
-                            android:paddingTop="10dp"
-                            android:text="Depth interval"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <EditText
-                            android:id="@+id/depthIntervalEdit"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="10dp"
-                            android:layout_weight="1"
-                            android:ems="10"
-                            android:inputType="numberDecimal"
-                            android:text="5" />
-
-                        <TextView
-                            android:id="@+id/preferences_operations_depthIntervalOptions"
-                            android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:gravity="right"
-                            android:paddingRight="20dp"
-                            android:text="m"
-                            android:textSize="15sp" />
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="fill_parent"
-                        android:layout_height="1dp"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/black_rec"></ImageView>
                 </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/accelerometer_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="ALIGNMENT THRESHOLDS"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
-
-            <LinearLayout
-                android:id="@+id/accelerometer"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:background="#ffffff"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@+id/accelerometer_title"
-                tools:layout_editor_absoluteX="1dp">
-
-                <LinearLayout
-                    android:id="@+id/accelerometer_x"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/accelerometer_x_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Roll"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <EditText
-                        android:id="@+id/rollEdit"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_weight="1"
-                        android:ems="10"
-                        android:inputType="numberDecimal"
-                        android:text="0.5" />
-
-                    <TextView
-                        android:id="@+id/accelerometer_x_data"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="10dp"
-                        android:gravity="right"
-                        android:paddingRight="20dp"
-                        android:text="Degrees"
-                        android:textSize="15sp" />
-
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-
-                <LinearLayout
-                    android:id="@+id/preferences_alignment_dip"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_alignment_dipTxt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Dip"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <EditText
-                        android:id="@+id/dipEdit"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right"
-                        android:layout_marginLeft="10dp"
-                        android:layout_weight="1"
-                        android:ems="10"
-                        android:inputType="numberDecimal"
-                        android:text="0.5" />
-
-                    <TextView
-                        android:id="@+id/preferences_alignment_dipOptions"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="10dp"
-                        android:gravity="right"
-                        android:paddingRight="20dp"
-                        android:text="Degrees"
-                        android:textSize="15sp" />
-
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/magnetometer_title"
-                android:layout_width="145dp"
-                android:layout_height="20dp"
-                android:layout_marginTop="20dp"
-                android:text="MOVEMENT ALARM"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/accelerometer" />
-
-            <LinearLayout
-                android:id="@+id/magnetometer"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:background="#ffffff"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@+id/magnetometer_title"
-                tools:layout_editor_absoluteX="1dp">
-
-                <LinearLayout
-                    android:id="@+id/preferences_movement_enable"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_movement_enableTxt"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.9"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Enable"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <CheckBox
-                        android:id="@+id/preferences_movement_enableOptions"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="end"
-                        android:layout_weight="0.3"
-                        android:gravity="right"
-                        android:paddingRight="20dp" />
-
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-
-                <LinearLayout
-                    android:id="@+id/preferences_movement_deviation"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_movement_deviationTxt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Maximum Deviation"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <EditText
-                        android:id="@+id/moveMaxDevEdit"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_weight="1"
-                        android:ems="10"
-                        android:inputType="numberDecimal"
-                        android:text="0.01" />
-
-                    <TextView
-                        android:id="@+id/preferences_movement_deviationOptions"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="10dp"
-                        android:gravity="right"
-                        android:paddingRight="20dp"
-                        android:text="G"
-                        android:textSize="15sp" />
-
-                </LinearLayout>
-
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/maxDev_title"
-                android:layout_width="176dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="20dp"
-                android:text="MAGNETIC FIELD ALARM"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/magnetometer" />
-
-            <LinearLayout
-                android:id="@+id/maxDev"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:background="#ffffff"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@+id/maxDev_title"
-                tools:layout_editor_absoluteX="1dp">
-
-                <LinearLayout
-                    android:id="@+id/preferences_magnetic_enable"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_magnetic_enableTxt"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.9"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Enable"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <CheckBox
-                        android:id="@+id/preferences_magnetic_enableOptions"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="end"
-                        android:layout_weight="0.3"
-                        android:gravity="right"
-                        android:paddingRight="20dp" />
-
-                </LinearLayout>
-
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-
-                <LinearLayout
-                    android:id="@+id/preferences_magnetic_magnitude"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_magnetic_magnitudeTxt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Normal Magnitude"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <EditText
-                        android:id="@+id/normalMagEdit"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_weight="1"
-                        android:ems="10"
-                        android:inputType="numberDecimal"
-                        android:text="5800" />
-
-                    <TextView
-                        android:id="@+id/preferences_magnetic_magnitudeOptions"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="10dp"
-                        android:gravity="right"
-                        android:paddingRight="20dp"
-                        android:text="nT"
-                        android:textSize="15sp" />
-
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-
-                <LinearLayout
-                    android:id="@+id/preferences_magnetic_deviation"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_magnetic_deviationTxt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Maximum Deviation"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <EditText
-                        android:id="@+id/maxDevEdit"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_weight="1"
-                        android:ems="10"
-                        android:inputType="numberDecimal"
-                        android:text="5800" />
-
-                    <TextView
-                        android:id="@+id/preferences_magnetic_deviationOptions"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="10dp"
-                        android:gravity="right"
-                        android:paddingRight="20dp"
-                        android:text="nT"
-                        android:textSize="15sp" />
-                </LinearLayout>
-
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-            </LinearLayout>
             <!--            TODO -> fix that mess of spacing-->
 
-
-            <TextView
-                android:id="@+id/options_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="PRESENTATION"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/maxDev" />
 
             <LinearLayout
                 android:id="@+id/fastMagOnly"
@@ -689,46 +98,8 @@
                 android:layout_height="wrap_content"
                 android:background="#ffffff"
                 android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@+id/options_title"
+                app:layout_constraintTop_toBottomOf="@+id/linearLayout"
                 tools:layout_editor_absoluteX="1dp">
-
-                <LinearLayout
-                    android:id="@+id/preferences_presentation_showDip"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_presentation_showDipTxt"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.9"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Show dip during orientation"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <CheckBox
-                        android:id="@+id/preferences_presentation_showDipOptions"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="end"
-                        android:layout_weight="0.3"
-                        android:gravity="right"
-                        android:paddingRight="20dp" />
-
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
 
                 <LinearLayout
                     android:id="@+id/preferences_presentation_showRoll"
@@ -747,12 +118,19 @@
                         android:layout_weight="0.9"
                         android:paddingLeft="10dp"
                         android:paddingTop="10dp"
-                        android:text="Show roll as -180 to +180"
+                        android:text="Roll Display"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
+                    <TextView
+                        android:id="@+id/preferences_roll"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="0 - 360" />
+
                     <CheckBox
-                        android:id="@+id/preferences_presentation_showRollOptions"
+                        android:id="@+id/preferences_roll_check"
                         android:layout_width="0dp"
                         android:layout_height="30dp"
                         android:layout_gravity="end"
@@ -762,178 +140,8 @@
 
                 </LinearLayout>
 
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-
-                <LinearLayout
-                    android:id="@+id/preferences_presentation_audio"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_presentation_audioTxt"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.9"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Audio alerts"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <CheckBox
-                        android:id="@+id/preferences_presentation_audioOptions"
-                        android:layout_width="0dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="end"
-                        android:layout_weight="0.3"
-                        android:gravity="right"
-                        android:paddingRight="20dp" />
-
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/sensorRelayService_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="FILES"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/fastMagOnly" />
-
-            <LinearLayout
-                android:id="@+id/linearLayout6"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:background="#ffffff"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@+id/sensorRelayService_title"
-                tools:layout_editor_absoluteX="1dp">
-
-                <LinearLayout
-                    android:id="@+id/preferences_files_email"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_files_emailTxt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Email Files"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-
-                <LinearLayout
-                    android:id="@+id/preferences_files_delete"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_files_deleteTxt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Delete Files"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/textView8"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="ABOUT"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/linearLayout6" />
-
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:background="#ffffff"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@+id/textView8"
-                tools:layout_editor_absoluteX="1dp">
-
-                <LinearLayout
-                    android:id="@+id/preferences_about_version"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_home">
-
-                    <TextView
-                        android:id="@+id/preferences_about_versionTxt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:paddingTop="10dp"
-                        android:text="Version"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/preferences_about_versionOptions"
-                        android:layout_width="fill_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="10dp"
-                        android:gravity="right"
-                        android:paddingRight="20dp"
-                        android:text="1.0"
-                        android:textSize="15sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="fill_parent"
-                    android:layout_height="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/black_rec"></ImageView>
-            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

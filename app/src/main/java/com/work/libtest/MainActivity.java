@@ -48,6 +48,7 @@ import androidx.core.content.ContextCompat;
 //import com.jjoe64.graphview.series.LineGraphSeries;
 
 import com.work.libtest.Preferences.Preferences;
+import com.work.libtest.Preferences.PreferencesActivity;
 import com.work.libtest.SurveyOptions.SurveyOptions;
 import com.work.libtest.SurveyOptions.SurveyOptionsActivity;
 
@@ -418,6 +419,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     return true;
+                }
+                case R.id.menu_preferences: {
+                    //start preferences activity
+                    Intent intent = new Intent(this, PreferencesActivity.class);
+                    intent.putExtra(PreferencesActivity.EXTRA_DEVICE_NAME, bleDeviceName);
+                    intent.putExtra(PreferencesActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+                    startActivity(intent);
                 }
             }
         } catch (Exception e) {

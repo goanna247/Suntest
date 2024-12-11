@@ -1,5 +1,7 @@
 package com.work.libtest;
 
+import com.work.libtest.Preferences.SimplePreferences;
+
 import java.util.LinkedList;
 
 public class Globals {
@@ -35,4 +37,6 @@ public class Globals {
     public static LinkedList<LinkedList<DetailedMeasurement>> storedMeasurements = new LinkedList<>();
 
     public static boolean setNotification = false; //keep track of whether we have already set the probes notification values
+
+    public static SimplePreferences simplePreferences = new SimplePreferences(true, true); //start with bore mode and 0-360 results
 }
