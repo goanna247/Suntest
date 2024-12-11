@@ -1,5 +1,12 @@
 # Boreline probe app
 
+TODO List 
+- Dual connection to 2 core probes (~3 days)
+- Fix measurement display issues (~1/2 day) 
+- Orientation animation and roll offset (~1.5 day)
+
+
+
 RECENT UPDATES: 
 - now calibrates in less than 5 seconds for a new probe
 - reconnects quicker and more reliably 
@@ -7,15 +14,7 @@ RECENT UPDATES:
 - Save data from the sensor page or when doing a survey
 
 CURRENTLY FIXING: 
-- Alot (changed bluetooth methods slightly which has cause some small bugs i am working through) 
-- Connected probe name and address not saved between activities - now semi works however does not immediately re-connect.
-- The orientation page sometimes doesnt display clicked on result.
-- Fixing stack overflow error in the viewMeasurement page which makes the first measurement display incorrect data
-    - line 2424 in BleService seems to be the problem, returns the value 283 consistently while it should be returning the record number
-- sometimes when requesting a bore shot it returns null -> maybe need to up the timer?
-- fill in all data on sensor activity page
-- need to double check full functionality for the small probes (which return a core shot instead of a bore shot)
-- Survey details set on the main page dont save
+
 
 LATER PROBLEMS:
 - Resume previous survey option
