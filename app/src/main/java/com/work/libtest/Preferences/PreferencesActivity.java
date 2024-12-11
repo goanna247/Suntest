@@ -24,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.chip.ChipGroup;
+import com.work.libtest.CoreMain;
 import com.work.libtest.Globals;
 import com.work.libtest.MainActivity;
 import com.work.libtest.Preferences.modeSelection.modeSelectionActivity;
@@ -36,6 +37,12 @@ public class PreferencesActivity extends AppCompatActivity {
     public static final String EXTRA_DEVICE_NAME = "Device_name";
     public static final String EXTRA_DEVICE_ADDRESS = "Device_address";
     public static final String EXTRA_DEVICE_CONNECTION_STATUS = "Connection_status";
+
+    public static final String EXTRA_BLACK_DEVICE_NAME = "Device_name";
+    public static final String EXTRA_BLACK_DEVICE_ADDRESS = "Device_address";
+
+    public static final String EXTRA_WHITE_DEVICE_NAME = "Device_name";
+    public static final String EXTRA_WHITE_DEVICE_ADDRESS = "Device_address";
 
     //local probe information
     private String mDeviceName;
@@ -81,8 +88,26 @@ public class PreferencesActivity extends AppCompatActivity {
         preferences_mode_check.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
         {
             @Override
-            public void onCheckedChang
-        }));
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    preferences_mode.setText("Bore Orientation (Single)");
+                } else {
+                    preferences_mode.setText("Core Orientation (Dual)");
+                }
+            }
+        });
+
+        preferences_rollOptions_check.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    preferences_rollOptions.setText("0 to 360");
+                } else {
+                    preferences_rollOptions.setText("-180 to 180");
+                }
+            }
+        });
 
         loadPreferences();
     }
@@ -141,15 +166,23 @@ public class PreferencesActivity extends AppCompatActivity {
      */
     private void back() {
         //save all the current data
-
         SimplePreferences newPreferences = new SimplePreferences(preferences_mode_check.isChecked(), preferences_rollOptions_check.isChecked());
         Globals.simplePreferences = newPreferences;
 
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
-        intent.putExtra(MainActivity.EXTRA_CONNECTION_STATUS, mDeviceConnectionStatus);
-        startActivity(intent);
+        if (preferences_mode_check.isChecked()) { //Bore
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+            intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "Preferences");
+            startActivity(intent);
+        } else { //Core
+            Intent intent = new Intent(this, CoreMain.class);
+            intent.putExtra(CoreMain.EXTRA_DEVICE_NAME, mDeviceName);
+            intent.putExtra(CoreMain.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+            intent.putExtra(CoreMain.EXTRA_PARENT_ACTIVITY, "Preferences");
+            startActivity(intent);
+        }
+
+
     }
 }

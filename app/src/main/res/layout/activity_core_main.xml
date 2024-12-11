@@ -5,12 +5,12 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:clickable="false"
-    tools:context=".MainActivity">
+    tools:context=".CoreMain"
+    android:backgroundTint="@color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="fill_parent">
-        <!--TODO this is kinda ugly, fix-->
 
         <ImageView
             android:id="@+id/imageView2"
@@ -39,7 +39,7 @@
                 android:layout_height="wrap_content"
                 android:paddingLeft="20dp"
                 android:paddingTop="20dp"
-                android:text="Hole ID:"
+                android:text="CORE Hole ID:"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 

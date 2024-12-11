@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CoreProbeDetails">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="#d2d2d4">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="1393dp">
+
+            <TextView
+                android:id="@+id/statusTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="80dp"
+                android:text="PROBE STATUS"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout
+                android:id="@+id/status"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="#ffffff"
+                android:onClick="connectProbe"
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@+id/statusTitle"
+                tools:layout_editor_absoluteX="1dp">
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/black_rec"></ImageView>
+
+                <LinearLayout
+                    android:id="@+id/status_number"
+                    android:layout_width="fill_parent"
+                    android:layout_height="40dp"
+                    android:background="#ffffff"
+                    android:clickable="true"
+                    android:onClick="connectProbe"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_home">
+
+                    <TextView
+                        android:id="@+id/status_probeNumber"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="10dp"
+                        android:paddingTop="10dp"
+                        android:text="No Probe"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/imageView4"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/black_rec"></ImageView>
+
+                <LinearLayout
+                    android:id="@+id/status_status"
+                    android:layout_width="fill_parent"
+                    android:layout_height="40dp"
+                    android:background="#ffffff"
+                    android:clickable="true"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/status_number">
+
+                    <ImageView
+                        android:id="@+id/connectionStatusImg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingLeft="10dp"
+                        app:srcCompat="@drawable/unconnected" />
+
+                    <TextView
+                        android:id="@+id/connectionStatusTxt"
+                        android:layout_width="365dp"
+                        android:layout_height="wrap_content"
+                        android:onClick="connectProbe"
+                        android:paddingLeft="10dp"
+                        android:paddingTop="10dp"
+                        android:text="No Probe Selected"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/black_rec"></ImageView>
+
+            </LinearLayout>
+
+
+            <TextView
+                android:id="@+id/infoTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="PROBE INFO"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/status" />
+
+            <LinearLayout
+                android:id="@+id/accelerometer"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="#ffffff"
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@+id/infoTitle"
+                tools:layout_editor_absoluteX="1dp">
+
+                <LinearLayout
+                    android:id="@+id/accelerometer_x"
+                    android:layout_width="fill_parent"
+                    android:layout_height="40dp"
+                    android:background="#ffffff"
+                    android:clickable="false"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_home">
+
+                    <TextView
+                        android:id="@+id/info_serialNumber"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="10dp"
+                        android:paddingTop="10dp"
+                        android:text="Serial Number"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/info_SerialNumberTxt"
+                        android:layout_width="fill_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="10dp"
+                        android:gravity="right"
+                        android:paddingRight="20dp"
+                        android:text="9999"
+                        android:textSize="15sp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:scaleType="fitXY"
+                    android:layout_height="1dp"
+                    android:src="@drawable/black_rec"></ImageView>
+
+                <LinearLayout
+                    android:id="@+id/accelerometer_x_details"
+                    android:layout_width="fill_parent"
+                    android:layout_height="40dp"
+                    android:background="#ffffff"
+                    android:clickable="false"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_home">
+
+                    <TextView
+                        android:id="@+id/info_serialNumber_details"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="10dp"
+                        android:paddingTop="10dp"
+                        android:text="Device Address"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/info_deviceAddressTxt_details"
+                        android:layout_width="fill_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="10dp"
+                        android:gravity="right"
+                        android:paddingRight="20dp"
+                        android:text="9999"
+                        android:textSize="15sp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:scaleType="fitXY"
+                    android:layout_height="1dp"
+                    android:src="@drawable/black_rec"></ImageView>
+
+                <LinearLayout
+                    android:id="@+id/preferences_alignment_dip"
+                    android:layout_width="fill_parent"
+                    android:layout_height="40dp"
+                    android:background="#ffffff"
+                    android:clickable="false"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_home">
+
+                    <TextView
+                        android:id="@+id/info_firmwareVersion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="10dp"
+                        android:paddingTop="10dp"
+                        android:text="Firmware Version"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/info_firmwareVersionTxt"
+                        android:layout_width="fill_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="10dp"
+                        android:gravity="right"
+                        android:paddingRight="20dp"
+                        android:text="1.0"
+                        android:textSize="15sp" />
+
+                </LinearLayout>
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:scaleType="fitXY"
+                    android:layout_height="1dp"
+                    android:src="@drawable/black_rec"></ImageView>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/maxDev_title"
+                android:layout_width="176dp"
+                android:layout_height="21dp"
+                android:text="SETUP AND TOOLS"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/accelerometer" />
+
+            <LinearLayout
+                android:id="@+id/maxDev"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="#ffffff"
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@+id/maxDev_title"
+                tools:layout_editor_absoluteX="1dp">
+
+                <LinearLayout
+                    android:id="@+id/preferences_magnetic_enable"
+                    android:layout_width="fill_parent"
+                    android:layout_height="40dp"
+                    android:background="#ffffff"
+                    android:clickable="true"
+                    android:onClick="showRealTimeOrientation"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_home">
+
+                    <TextView
+                        android:id="@+id/setup_orientation"
+                        android:layout_width="366dp"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="10dp"
+                        android:paddingTop="10dp"
+                        android:text="Show Real Time Orientation"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:scaleType="fitXY"
+                    android:layout_height="1dp"
+                    android:src="@drawable/black_rec"></ImageView>
+
+                <LinearLayout
+                    android:id="@+id/preferences_magnetic_magnitude"
+                    android:layout_width="fill_parent"
+                    android:layout_height="40dp"
+                    android:background="#ffffff"
+                    android:clickable="true"
+                    android:onClick="showRealTimeSensors"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_home">
+
+                    <TextView
+                        android:id="@+id/setup_sensors"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="10dp"
+                        android:paddingTop="10dp"
+                        android:text="Show Real Time Sensors "
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+
+                <ImageView
+                    android:layout_width="fill_parent"
+                    android:scaleType="fitXY"
+                    android:layout_height="1dp"
+                    android:src="@drawable/black_rec"></ImageView>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/refresh_button"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_weight="1"
+                android:onClick="refresh"
+                android:text="Refresh"
+                app:layout_constraintTop_toBottomOf="@+id/maxDev"
+                tools:layout_weight="1" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

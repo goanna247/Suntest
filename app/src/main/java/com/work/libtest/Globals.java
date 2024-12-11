@@ -31,6 +31,12 @@ public class Globals {
     public static String probeConnectedName = "";
     public static String probeConnectedAddress = "";
 
+    public static String probeConnectedBlackName = "";
+    public static String probeConnectedBlackAddress = "";
+
+    public static String probeConnectedWhiteName = "";
+    public static String probeConnectedWhiteAddress = "";
+
 
     //Storage of previously done surveys to resume later, perhaps this should be stored locally to a file then read back?
     //If the app crashes this might delete this style of data storage

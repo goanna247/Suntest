@@ -210,6 +210,28 @@ public class ShowAlertDialogs {
     }
 
     // ----------------------------------------------------------------------------------------------------------------
+    // Check whether user wants to connect the selected probe to black or white.
+    public void connectWhiteOrBlack(final Runnable callback) {
+        dialog.dismiss();
+        builder.setTitle(R.string.probeType_title);                                                       //Set up the AlertDialog that will let the user know that the device is faulty (failed to discover services)
+        builder.setMessage(R.string.probeType_content);
+        builder.setPositiveButton(R.string.probeType_white, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {                                            //User clicked OK button
+                callback.run();
+            }
+        });
+        builder.setNegativeButton(R.string.probeType_black, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {                                        //User clicked Cancel button
+
+            }                                                                                       //Don't do anything, continue as before
+        });
+        dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+    }
+
+
+    // ----------------------------------------------------------------------------------------------------------------
     // Show a dialog that the device is faulty. Service discovery failed to find the right service and characteristics.
     public void showFaultyDeviceDialog(final Runnable callback) {
         dialog.dismiss();

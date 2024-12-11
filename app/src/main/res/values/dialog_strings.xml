@@ -61,4 +61,10 @@
     <string name="remove_ok_button">OK</string>
     <string name="remove_cancel_button">Cancel</string>
 
+    <!-- Black or White probe selection -->
+    <string name="probeType_title">Select Probe Type</string>
+    <string name="probeType_content">Please select which type of probe you would like to connect the corecam to</string>
+    <string name="probeType_white">White</string>
+    <string name="probeType_black">Black</string>
+
 </resources>

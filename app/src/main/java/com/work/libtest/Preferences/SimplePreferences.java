@@ -3,7 +3,7 @@ package com.work.libtest.Preferences;
 public class SimplePreferences {
     private static final String TAG = "Simple Preferences";
 
-    private boolean boreMode; //mode can either be core or bore
+    private boolean boreMode; //mode can either be core or bore (default)
     private boolean rollMode; //either (-180 to 180) or (0 to 360) (default)
 
     public SimplePreferences(boolean boreMode, boolean rollMode) {
