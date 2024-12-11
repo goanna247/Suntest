@@ -352,8 +352,6 @@ public class SensorActivity extends AppCompatActivity {
         Log.e(TAG, "Probe Mode: " + String.valueOf(bleService.getProbeMode()));
     }
 
-//    private StateApp stateApp;
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -712,12 +710,12 @@ public class SensorActivity extends AppCompatActivity {
                     connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
                     bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
-                        @Override
-                        public void run() {                                                         //Runnable to execute if OK button pressed
-                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
-                        }
-                    });
+//                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+//                        }
+//                    });
                     break;
                 }
                 case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
@@ -725,9 +723,17 @@ public class SensorActivity extends AppCompatActivity {
 
 //                    String verString = bleService.getFirmwareVersionString();
 //                    textDeviceStatus.setText(R.string.ready);
-                    bleService.parseBinaryCalibration();
-                    bleService.setNotifications(true);
+                    if (!Globals.setNotification) {
+                        bleService.parseBinaryCalibration();
+                        bleService.setNotifications(true);
+                    }
                     haveSuitableProbeConnected = true;
+                    boolean success = bleService.setProbeModeReturn(2);
+                    if (success) {
+                        Log.e(TAG, "Set mode successful");
+                    } else {
+                        Log.e(TAG, "Set mode BAD!"); //elloquently worded
+                    }
                     break;
                 }
                 case BleService.ACTION_BLE_FETCH_CAL: {                                        //Have completed service discovery
@@ -753,37 +759,37 @@ public class SensorActivity extends AppCompatActivity {
 
     private void initializeDisplay() {
         try {
-            textDeviceStatus.setText("Not Connected");  // PJH - hack - shouldn't be here!
-            textAccX.setText("");
-            textAccY.setText("");
-            textAccZ.setText("");
-//            textAccMag.setText("");
-
-            textMagX.setText("");
-            textMagY.setText("");
-            textMagZ.setText("");
-//            textMagMag.setText("");
-
-            textRoll.setText("");
-//            textRoll360.setText("");
-            textDip.setText("");
-            textAz.setText("");
-//            textAzErr.setText("");
-
-
-//            textAlignCount.setText("0");
-//            textAlignAvgDip.setText("");
-//            textAlignAvgAz.setText("");
-
-//            textAcceptComment.setText("Select Location and press Start\n(in -50 tray, at 0 roll, az should be 283.26)");
-//            textAcceptDip.setText("");
-//            textAcceptAz.setText("");
-
-//            buttonAlignStart.setText("START");  // was having issues with first click not working
-//            buttonAcceptStart.setText("START");
-
-//            textAcceptResultAz.setText("");
-//            textAcceptResultDip.setText("");
+//            textDeviceStatus.setText("Not Connected");  // PJH - hack - shouldn't be here!
+//            textAccX.setText("");
+//            textAccY.setText("");
+//            textAccZ.setText("");
+////            textAccMag.setText("");
+//
+//            textMagX.setText("");
+//            textMagY.setText("");
+//            textMagZ.setText("");
+////            textMagMag.setText("");
+//
+//            textRoll.setText("");
+////            textRoll360.setText("");
+//            textDip.setText("");
+//            textAz.setText("");
+////            textAzErr.setText("");
+//
+//
+////            textAlignCount.setText("0");
+////            textAlignAvgDip.setText("");
+////            textAlignAvgAz.setText("");
+//
+////            textAcceptComment.setText("Select Location and press Start\n(in -50 tray, at 0 roll, az should be 283.26)");
+////            textAcceptDip.setText("");
+////            textAcceptAz.setText("");
+//
+////            buttonAlignStart.setText("START");  // was having issues with first click not working
+////            buttonAcceptStart.setText("START");
+//
+////            textAcceptResultAz.setText("");
+////            textAcceptResultDip.setText("");
 
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
@@ -1044,17 +1050,17 @@ public class SensorActivity extends AppCompatActivity {
                     stateConnection = StateConnection.DISCONNECTING;                                //Are now disconnecting
                     bleService.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFailToAccessProbe(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
-                        @Override
-                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                    showAlert.showFailToAccessProbe(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
                             if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
                                 // attempt a reconnection
                                 stateConnection = SensorActivity.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
                                 connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
                             }
                             updateConnectionState();                                                 //Launch the BleScanActivity to scan for BLE devices
-                        }
-                    });
+//                        }
+//                    });
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
@@ -1075,11 +1081,13 @@ public class SensorActivity extends AppCompatActivity {
                 switch (stateConnection) {
                     case CONNECTING: {
                         textDeviceStatus.setText(R.string.waiting_to_connect);                             //Show "Connecting"
+                        //COMEBACK - need to change the icon colour thingo
+                        connectionStatusImage.setImageResource(R.drawable.unconnected);
                         break;
                     }
                     case CONNECTED: {
                         textDeviceStatus.setText(R.string.interrogating_configuration);
-
+                        connectionStatusImage.setImageResource(R.drawable.disconnecting);
                         break;
                     }
                     case DISCOVERING: {
@@ -1089,6 +1097,7 @@ public class SensorActivity extends AppCompatActivity {
                     }
                     case DISCONNECTING: {
                         textDeviceStatus.setText(R.string.disconnecting);                          //Show "Disconnectiong"
+                        //COMEBACK
                         break;
                     }
                     case DISCONNECTED:

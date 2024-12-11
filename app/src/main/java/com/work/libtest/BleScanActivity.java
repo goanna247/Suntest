@@ -73,6 +73,8 @@ public class BleScanActivity extends AppCompatActivity {
         Globals.probeConnectedName = "";
         Globals.probeConnectedAddress = "";
 
+        Globals.setNotification = false;
+
         progressBar = findViewById(R.id.toolbar_progress_bar);                                      //Get a reference to the progress bar
         progressBar.setIndeterminate(true);                                                         //Make the progress bar indeterminate (circular)
         deviceListText = findViewById(R.id.deviceListText);                                         //Text to indicate devices found or not found
