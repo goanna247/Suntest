@@ -73,6 +73,7 @@ public class CoreMain extends AppCompatActivity {
     public static final String EXTRA_BLACK_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String EXTRA_CONNECTION_STATUS = "CONNECTION_STATUS";
     public static final String EXTRA_PARENT_ACTIVITY = "Parent_Activity";
+    public static final String EXTRA_COLOR = "Color";
 
     private static final int REQ_CODE_ENABLE_BT = 1;                                            //Codes to identify activities that return results such as enabling Bluetooth
     private static final int REQ_CODE_SCAN_ACTIVITY = 2;                                            //or scanning for bluetooth devices
@@ -259,15 +260,25 @@ public class CoreMain extends AppCompatActivity {
             }
             final Intent intent = getIntent();
             try {
+                String color = intent.getStringExtra(EXTRA_COLOR);
                 String parentActivityValue = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
                 Log.e(TAG, intent.getStringExtra(EXTRA_PARENT_ACTIVITY) + "," + intent.getStringExtra(EXTRA_BLACK_DEVICE_NAME) + "," + intent.getStringExtra(EXTRA_BLACK_DEVICE_ADDRESS));
+
                 if (parentActivityValue != null) {
                     if (parentActivityValue.equals("SurveyOptions") || parentActivityValue.equals("ProbeDetails") || parentActivityValue.equals("TakeMeasurements") || parentActivityValue.equals("AllSurveyOptions") || parentActivityValue.equals("Preferences")) {
                         stateApp = StateApp.RUNNING;
-                        bleDeviceAddressBlack = intent.getStringExtra(EXTRA_BLACK_DEVICE_ADDRESS);
-                        bleDeviceNameBlack = intent.getStringExtra(EXTRA_BLACK_DEVICE_NAME);
-                        bleDeviceAddressWhite = intent.getStringExtra(EXTRA_WHITE_DEVICE_ADDRESS);
-                        bleDeviceNameWhite = intent.getStringExtra(EXTRA_WHITE_DEVICE_NAME);
+                        Log.e(TAG, "COlour: " + color);
+                        if (color.equals("Black")) {
+                            bleDeviceAddressBlack = intent.getStringExtra(EXTRA_BLACK_DEVICE_ADDRESS);
+                            bleDeviceNameBlack = intent.getStringExtra(EXTRA_BLACK_DEVICE_NAME);
+                        } else if (color.equals("White")) {
+                            bleDeviceAddressWhite = intent.getStringExtra(EXTRA_WHITE_DEVICE_ADDRESS);
+                            bleDeviceNameWhite = intent.getStringExtra(EXTRA_WHITE_DEVICE_NAME);
+                        } else {
+                            Log.e(TAG, "Color is not set");
+                        }
+
+                        Log.e(TAG, "Inputs, black: " + bleDeviceNameBlack + ", white: " + bleDeviceNameWhite);
 
                         //set black probe details
                         if (bleDeviceNameBlack != null) {
@@ -413,6 +424,7 @@ public class CoreMain extends AppCompatActivity {
                 case R.id.menu_preferences: {
                     //start preferences activity
                     Intent intent = new Intent(this, PreferencesActivity.class);
+                    intent.putExtra(PreferencesActivity.EXTRA_PARENT_ACTIVITY, "Core");
                     intent.putExtra(PreferencesActivity.EXTRA_BLACK_DEVICE_NAME, bleDeviceNameBlack);
                     intent.putExtra(PreferencesActivity.EXTRA_BLACK_DEVICE_ADDRESS, bleDeviceAddressBlack);
                     intent.putExtra(PreferencesActivity.EXTRA_WHITE_DEVICE_NAME, bleDeviceNameBlack);
@@ -782,6 +794,7 @@ public class CoreMain extends AppCompatActivity {
             Intent intent = new Intent(this, CoreProbeDetails.class);
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_NAME, bleDeviceNameBlack);
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_ADDRESS, bleDeviceAddressBlack);
+            intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_COLOR, "Black");
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableProbeConnected);
             startActivity(intent);
         } else {
@@ -789,6 +802,7 @@ public class CoreMain extends AppCompatActivity {
             Intent intent = new Intent(this, CoreProbeDetails.class);
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_NAME, bleDeviceNameBlack);
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_ADDRESS, bleDeviceAddressBlack);
+            intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_COLOR, "Black");
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableProbeConnected);
             startActivity(intent);
         }
@@ -798,6 +812,7 @@ public class CoreMain extends AppCompatActivity {
         Intent intent = new Intent(this, CoreProbeDetails.class);
         intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_NAME, bleDeviceNameWhite);
         intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_ADDRESS, bleDeviceAddressWhite);
+        intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_COLOR, "White");
         intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableProbeConnected);
         startActivity(intent);
     }

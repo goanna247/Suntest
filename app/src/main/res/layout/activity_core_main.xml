@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:backgroundTint="#CBDFE4"
     android:clickable="false"
-    tools:context=".CoreMain"
-    android:backgroundTint="@color/white">
+    tools:context=".CoreMain">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -25,7 +25,7 @@
             android:layout_width="fill_parent"
             android:layout_height="60dp"
             android:layout_marginTop="20dp"
-            android:background="#e8e8e8"
+            android:background="#CBDFE4"
             android:clickable="true"
             android:onClick="holeIDBtnClick"
             android:orientation="horizontal"
@@ -39,7 +39,7 @@
                 android:layout_height="wrap_content"
                 android:paddingLeft="20dp"
                 android:paddingTop="20dp"
-                android:text="CORE Hole ID:"
+                android:text="Hole ID:"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -74,7 +74,7 @@
             android:id="@+id/OperatorIDBtn"
             android:layout_width="fill_parent"
             android:layout_height="60dp"
-            android:background="#e8e8e8"
+            android:background="#CBDFE4"
             android:clickable="true"
             android:onClick="operatorIDBtnClick"
             android:orientation="horizontal"
@@ -264,7 +264,6 @@
         <!--</androidx.constraintlayout.widget.ConstraintLayout>-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
 
 </ScrollView>

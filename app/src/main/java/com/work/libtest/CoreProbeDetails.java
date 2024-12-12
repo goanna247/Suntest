@@ -59,6 +59,7 @@ public class CoreProbeDetails extends AppCompatActivity {
 
     public static final String EXTRA_CONNECTION_STATUS = "CONNECTION_STATUS";
     public static final String EXTRA_PARENT_ACTIVITY = "Parent_Activity";
+    public static final String EXTRA_DEVICE_COLOR = "Black_White_Probe";
 
     public static final String EXTRA_DEVICE_SERIAL_NUMBER = "Serial_number";
     public static final String EXTRA_DEVICE_DEVICE_ADDRESS = "Device_gathered_addresses";
@@ -128,6 +129,8 @@ public class CoreProbeDetails extends AppCompatActivity {
     private String lFirmwareVersion;
 
     private String lCalibrationDate;
+
+    private String probeColor;
 
 
     public int seconds;
@@ -207,6 +210,7 @@ public class CoreProbeDetails extends AppCompatActivity {
             final Bundle intent = getIntent().getExtras();
             bleDeviceName = intent.getString(EXTRA_DEVICE_NAME);
             bleDeviceAddress = intent.getString(EXTRA_DEVICE_ADDRESS);
+            probeColor = intent.getString(EXTRA_DEVICE_COLOR);
             Log.d(TAG, "Device Name: " + bleDeviceName + ", Device Address: " + bleDeviceAddress);
 
             textDeviceNameAndAddress = (TextView) findViewById(R.id.status_probeNumber);
@@ -348,8 +352,17 @@ public class CoreProbeDetails extends AppCompatActivity {
                 showAlert.dismiss();
                 if (resultCode == Activity.RESULT_OK) {                                             //User chose a Bluetooth device to connect
                     stateApp = CoreProbeDetails.StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is fully operational
-                    bleDeviceAddress = intent.getStringExtra(BleScanActivity.EXTRA_SCAN_ADDRESS);   //Get the address of the BLE device selected in the BleScanActivity
-                    bleDeviceName = intent.getStringExtra(BleScanActivity.EXTRA_SCAN_NAME);         //Get the name of the BLE device selected in the BleScanActivity
+                    String color = intent.getStringExtra(bleScanCore.EXTRA_PROBE_COLOR);
+//                    if (color.equals("Black")) {
+//
+//                    } else if (color.equals("White")) {
+//
+//                    } else {
+//                        Log.e(TAG, "Error passing through color, invalid response received");
+//                    }
+                    bleDeviceAddress = intent.getStringExtra(bleScanCore.EXTRA_SCAN_ADDRESS);   //Get the address of the BLE device selected in the BleScanActivity
+                    bleDeviceName = intent.getStringExtra(bleScanCore.EXTRA_SCAN_NAME);         //Get the name of the BLE device selected in the BleScanActivity
+
                     if (bleDeviceName != null) {                                                //See if there is a device name
                         textDeviceNameAndAddress.setText(bleDeviceName);                        //Display the name
                     } else {
@@ -633,10 +646,19 @@ public class CoreProbeDetails extends AppCompatActivity {
 
     public void backProbeDetailClick() {
         Intent intent = new Intent(this, CoreMain.class);
-        Log.e(TAG, "Name: " + bleDeviceName + ", Address: " + bleDeviceAddress);
-        intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_NAME, bleDeviceName);
-        intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_ADDRESS, bleDeviceAddress);
+        Log.e(TAG, "Name: " + bleDeviceName + ", Address: " + bleDeviceAddress + ", Color: " + probeColor);
+        if (probeColor.equals("Black")) {
+            intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_NAME, bleDeviceName);
+            intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_ADDRESS, bleDeviceAddress);
+
+        } else if (probeColor.equals("White")) {
+            intent.putExtra(CoreMain.EXTRA_WHITE_DEVICE_NAME, bleDeviceName);
+            intent.putExtra(CoreMain.EXTRA_WHITE_DEVICE_ADDRESS, bleDeviceAddress);
+        } else {
+            Log.e(TAG, "Error color is not valid");
+        }
         intent.putExtra(CoreMain.EXTRA_PARENT_ACTIVITY, "ProbeDetails");
+        intent.putExtra(CoreMain.EXTRA_COLOR, probeColor);
         startActivity(intent);
     }
 
@@ -698,6 +720,7 @@ public class CoreProbeDetails extends AppCompatActivity {
                 haveSuitableProbeConnected = false;
                 bleService.disconnectBle();                                                         //Disconnect an existing Bluetooth connection or cancel a connection attempt
                 final Intent bleScanActivityIntent = new Intent(CoreProbeDetails.this, bleScanCore.class); //Create Intent to start the BleScanActivity
+                bleScanActivityIntent.putExtra(bleScanCore.EXTRA_PROBE_COLOR, probeColor);
                 startActivityForResult(bleScanActivityIntent, REQ_CODE_SCAN_ACTIVITY);              //Start the BleScanActivity
             }
         } catch (Exception e) {

@@ -39,7 +39,8 @@ public class bleScanCore extends AppCompatActivity {
     private final static String TAG = bleScanCore.class.getSimpleName();                        //Activity name for logging messages on the ADB
 
     public static final String EXTRA_SCAN_ADDRESS = "BLE_SCAN_DEVICE_ADDRESS";                      //Identifier for Bluetooth device address attached to Intent that returns a result
-    public static final String EXTRA_SCAN_NAME = "BLE_SCAN_DEVICE_NAME";                            //Identifier for Bluetooth device name attached to Intent that returns a result
+    public static final String EXTRA_SCAN_NAME = "BLE_SCAN_DEVICE_NAME";
+    public static final String EXTRA_SCAN_COLOR = "BLE_SCAN_COLOR";//Identifier for Bluetooth device name attached to Intent that returns a result
     public static final String EXTRA_PROBE_COLOR = "BLE_PROBE_COLOUR"; //used for connecting 2 core cams at the same time
     private static final int REQ_CODE_ENABLE_BT = 1;                                                //Code to identify activity that enables Bluetooth
     private static final UUID EXAMPLE_SERVICE_UUID = UUID.fromString("24e84f52-d20c-4387-85a6-2cea19259c7d"); //Advertised service UUID for scan filter
@@ -53,8 +54,10 @@ public class bleScanCore extends AppCompatActivity {
     private Handler stopScanHandler;                                                                //Handler to stop the scan after a time delay
     private DeviceListAdapter deviceListAdapter;                                                    //ArrayAdapter to manage the ListView showing the devices found during the scan
     private boolean areScanning;                                                                    //Indicator that a scan is in progress
-    private TextView deviceListText;                                                                //Text to indicate whether devices have been found by the scan
+    private TextView deviceListText;
 
+
+    private String probeColor;
     /******************************************************************************************************************
      * Methods for handling life cycle events of the activity.
      */
@@ -77,6 +80,9 @@ public class bleScanCore extends AppCompatActivity {
         Globals.probeConnectedAddress = "";
 
         Globals.setNotification = false;
+
+        final Intent intent = getIntent();
+        probeColor = intent.getStringExtra(EXTRA_PROBE_COLOR);
 
         progressBar = findViewById(R.id.toolbar_progress_bar);                                      //Get a reference to the progress bar
         progressBar.setIndeterminate(true);                                                         //Make the progress bar indeterminate (circular)
@@ -342,9 +348,19 @@ public class bleScanCore extends AppCompatActivity {
 //            if (boreMode) { //in bore mode, only need 1 probe connected to the device
                 final Intent intent = new Intent();                                                     //Create Intent to return information to the MainActivity that started this activity
                 if (device != null) {                                                                   //Check that a valid device was received
-                    intent.putExtra(EXTRA_SCAN_NAME, device.getName());                                 //Add BLE device name to the Intent
-                    intent.putExtra(EXTRA_SCAN_ADDRESS, device.getAddress());                           //Add BLE device address to the Intent
-                    setResult(Activity.RESULT_OK, intent);                                              //Set the Intent to return a result to the calling activity with the selected BLE name and address
+//                    if (probeColor.equals("Black")) {
+                        intent.putExtra(EXTRA_SCAN_NAME, device.getName());                                 //Add BLE device name to the Intent
+                        intent.putExtra(EXTRA_SCAN_ADDRESS, device.getAddress());
+                        intent.putExtra(EXTRA_SCAN_COLOR, probeColor);
+                        setResult(Activity.RESULT_OK, intent);
+//                    } else if (probeColor.equals("White")) {
+//                        intent.putExtra(EXTRA_SCAN_NAME, device.getName());                                 //Add BLE device name to the Intent
+//                        intent.putExtra(EXTRA_SCAN_ADDRESS, device.getAddress());                           //Add BLE device address to the Intent
+//                        setResult(Activity.RESULT_OK, intent);
+//                    } else {
+//                        Log.e(TAG, "Error probe colour is invalid");
+//                    }
+                                                        //Set the Intent to return a result to the calling activity with the selected BLE name and address
                 }
                 else {
                     setResult(Activity.RESULT_CANCELED, intent);                                        //Something went wrong so indicate cancelled

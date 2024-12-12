@@ -44,10 +44,22 @@ public class PreferencesActivity extends AppCompatActivity {
     public static final String EXTRA_WHITE_DEVICE_NAME = "Device_name";
     public static final String EXTRA_WHITE_DEVICE_ADDRESS = "Device_address";
 
+    public static final String EXTRA_PARENT_ACTIVITY = "Parent_Activity";
+
     //local probe information
     private String mDeviceName;
     private String mDeviceAddress;
     private String mDeviceConnectionStatus;
+
+    //Black probes
+    private String mDeviceNameBlack;
+    private String mDeviceAddressBlack;
+
+    //White probes
+    private String mDeviceNameWhite;
+    private String mDeviceAddressWhite;
+
+    private String parentActivity;
 
     //edit items within the view
     TextView preferences_mode;
@@ -79,9 +91,19 @@ public class PreferencesActivity extends AppCompatActivity {
         preferences_rollOptions_check = findViewById(R.id.preferences_roll_check);
 
         final Intent intent = getIntent();
-        mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
-        mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
-        mDeviceConnectionStatus = intent.getStringExtra(EXTRA_DEVICE_CONNECTION_STATUS);
+        parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
+        if (parentActivity.equals("Core")) {
+            mDeviceNameBlack = intent.getStringExtra(EXTRA_BLACK_DEVICE_NAME);
+            mDeviceAddressBlack = intent.getStringExtra(EXTRA_BLACK_DEVICE_ADDRESS);
+
+            mDeviceNameWhite = intent.getStringExtra(EXTRA_WHITE_DEVICE_NAME);
+            mDeviceAddressWhite = intent.getStringExtra(EXTRA_WHITE_DEVICE_ADDRESS);
+        } else if (parentActivity.equals("Bore")) {
+            mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+            mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+            mDeviceConnectionStatus = intent.getStringExtra(EXTRA_DEVICE_CONNECTION_STATUS);
+        }
+
 
         setSupportActionBar(toolbar);
 
@@ -177,8 +199,10 @@ public class PreferencesActivity extends AppCompatActivity {
             startActivity(intent);
         } else { //Core
             Intent intent = new Intent(this, CoreMain.class);
-            intent.putExtra(CoreMain.EXTRA_DEVICE_NAME, mDeviceName);
-            intent.putExtra(CoreMain.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+            intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_NAME, mDeviceNameBlack);
+            intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_ADDRESS, mDeviceAddressBlack);
+            intent.putExtra(CoreMain.EXTRA_WHITE_DEVICE_NAME, mDeviceNameWhite);
+            intent.putExtra(CoreMain.EXTRA_WHITE_DEVICE_ADDRESS, mDeviceAddressWhite);
             intent.putExtra(CoreMain.EXTRA_PARENT_ACTIVITY, "Preferences");
             startActivity(intent);
         }

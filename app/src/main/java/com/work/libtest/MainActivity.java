@@ -426,6 +426,7 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.menu_preferences: {
                     //start preferences activity
                     Intent intent = new Intent(this, PreferencesActivity.class);
+                    intent.putExtra(PreferencesActivity.EXTRA_PARENT_ACTIVITY, "Bore");
                     intent.putExtra(PreferencesActivity.EXTRA_DEVICE_NAME, bleDeviceName);
                     intent.putExtra(PreferencesActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
                     startActivity(intent);
