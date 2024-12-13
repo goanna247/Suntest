@@ -43,6 +43,10 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.work.libtest.SurveyOptions.AllSurveyOptionsActivity;
+
+import org.w3c.dom.Text;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,7 +92,7 @@ public class CoreProbeDetails extends AppCompatActivity {
 //    private String mDeviceAddress;
 //    private String mDeviceConnectionStatus;
 
-    private String TAG = "Probe Details";
+    private String TAG = "Core Probe Details";
 
     private int dataToBeRead = 0;
 
@@ -112,12 +116,13 @@ public class CoreProbeDetails extends AppCompatActivity {
     private TextView serialNumber;
     private TextView deviceAddress;
     private TextView firmwareVersion;
+    private TextView calibrationDate;
 
     //Bluetooth Connection
     private TextView connectionDetails;
 
     //Setup and Tools
-    private TextView calibrationDate;
+//    private TextView calibrationDate;
 
     //debugging
     private TextView errorCodes;
@@ -154,6 +159,7 @@ public class CoreProbeDetails extends AppCompatActivity {
                     updateConnectionState();
                 }
             }
+            Log.e(TAG, "Second: " + seconds);
             timerHandler.postDelayed(this, 1000);
         }
     };
@@ -180,9 +186,7 @@ public class CoreProbeDetails extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        startTime = System.currentTimeMillis();
-        timerHandler.removeCallbacks(timerRunnable);
-        timerHandler.postDelayed(timerRunnable, 0);
+
 
         try {
             setContentView(R.layout.activity_core_probe_details);
@@ -220,6 +224,7 @@ public class CoreProbeDetails extends AppCompatActivity {
             deviceAddress = (TextView) findViewById(R.id.info_deviceAddressTxt_details);
             firmwareVersion = (TextView) findViewById(R.id.info_firmwareVersionTxt);
 //            connectionDetails = (TextView) findViewById(R.id.connectionDetails);
+            calibrationDate = (TextView) findViewById(R.id.info_firmwareDateTxt);
 
 
         } catch (Exception e) {
@@ -235,6 +240,10 @@ public class CoreProbeDetails extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         try {
+            startTime = System.currentTimeMillis();
+            timerHandler.removeCallbacks(timerRunnable);
+            timerHandler.postDelayed(timerRunnable, 0);
+
             registerReceiver(bleServiceReceiver, bleServiceIntentFilter());                         //Register receiver to handles events fired by the BleService
             if (bleService != null && !bleService.isBluetoothRadioEnabled()) {                      //Check if Bluetooth radio was turned off while app was paused
                 if (stateApp == CoreProbeDetails.StateApp.RUNNING) {                                                 //Check that app is running, to make sure service is connected
@@ -249,13 +258,13 @@ public class CoreProbeDetails extends AppCompatActivity {
                 String parentActivityValue = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
                 Log.e(TAG, intent.getStringExtra(EXTRA_PARENT_ACTIVITY) + "," + intent.getStringExtra(EXTRA_DEVICE_NAME) + "," + intent.getStringExtra(EXTRA_DEVICE_ADDRESS));
                 if (parentActivityValue != null) {
-                    if (parentActivityValue.equals("SurveyOptions") || parentActivityValue.equals("ProbeDetails") || parentActivityValue.equals("TakeMeasurements") || parentActivityValue.equals("AllSurveyOptions") || parentActivityValue.equals("Preferences")) {
+                    if (parentActivityValue.equals("SurveyOptions") || parentActivityValue.equals("ProbeDetails") || parentActivityValue.equals("TakeMeasurements") || parentActivityValue.equals("AllSurveyOptions") || parentActivityValue.equals("Preferences") || parentActivityValue.equals("Orientation")) {
                         stateApp = CoreProbeDetails.StateApp.RUNNING;
                         bleDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
                         bleDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
 
                         if (bleDeviceName != null) {
-                            textDeviceNameAndAddress.setText(bleDeviceName); //COMEBACK
+                            textDeviceNameAndAddress.setText(bleDeviceName);
                         } else {
                             textDeviceNameAndAddress.setText(R.string.unknown_device);
                         }
@@ -431,6 +440,13 @@ public class CoreProbeDetails extends AppCompatActivity {
         return intentFilter;                                                                        //Return the new IntentFilter
     }
 
+    private void updateDeviceDetails() {
+        serialNumber.setText(bleDeviceName);
+        deviceAddress.setText(bleDeviceAddress);
+        firmwareVersion.setText(bleService.getFirmwareVersionString());
+        calibrationDate.setText(bleService.getCalibratedDateString());
+    }
+
     // ----------------------------------------------------------------------------------------------------------------
     // BroadcastReceiver handles various Intents sent by the BleService service.
     private final BroadcastReceiver bleServiceReceiver = new BroadcastReceiver() {
@@ -444,7 +460,9 @@ public class CoreProbeDetails extends AppCompatActivity {
                     transparentUartData.reset();   // PJH remove                                                 //Also clear any buffered incoming data
                     stateConnection = CoreProbeDetails.StateConnection.DISCOVERING;                                  //BleService automatically starts service discovery after connecting
                     blackProbeStatusImg.setImageResource(R.drawable.ready);
-                    updateConnectionState();                                                        //Update the screen and menus
+                    updateConnectionState();
+
+                    updateDeviceDetails();
                     break;
                 }
                 case BleService.ACTION_BLE_DISCONNECTED: {                                          //Have disconnected from BLE device
@@ -481,12 +499,12 @@ public class CoreProbeDetails extends AppCompatActivity {
                     connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
                     bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
-                        @Override
-                        public void run() {                                                         //Runnable to execute if OK button pressed
-                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
-                        }
-                    });
+//                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+//                        }
+//                    });
                     break;
                 }
                 case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
@@ -506,6 +524,8 @@ public class CoreProbeDetails extends AppCompatActivity {
                     bleService.setNotifications(true);   // PJH - HACK - find place where this write doesn't kill something else
                     haveSuitableProbeConnected = true;   // this enables the test stuff
                     Globals.setNotification = true;
+
+                    updateDeviceDetails();
                     break;
                 }
                 case BleService.ACTION_BLE_FETCH_CAL: {                                        //Have completed service discovery
@@ -568,12 +588,12 @@ public class CoreProbeDetails extends AppCompatActivity {
                     stateConnection = CoreProbeDetails.StateConnection.DISCONNECTING;                                //Are now disconnecting
                     bleService.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFailedToConnectDialog(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
-                        @Override
-                        public void run() {                                                         //Runnable to execute if OK button pressed
-                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
-                        }
-                    });
+//                    showAlert.showFailedToConnectDialog(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+//                        }
+//                    });
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
@@ -599,6 +619,7 @@ public class CoreProbeDetails extends AppCompatActivity {
                     }
                     case CONNECTED: {
                         blackProbeStatusImg.setImageResource(R.drawable.ready);
+                        updateDeviceDetails();
                         textDeviceStatus.setText(R.string.ready);
                         break;
                     }
@@ -650,7 +671,6 @@ public class CoreProbeDetails extends AppCompatActivity {
         if (probeColor.equals("Black")) {
             intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_NAME, bleDeviceName);
             intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_ADDRESS, bleDeviceAddress);
-
         } else if (probeColor.equals("White")) {
             intent.putExtra(CoreMain.EXTRA_WHITE_DEVICE_NAME, bleDeviceName);
             intent.putExtra(CoreMain.EXTRA_WHITE_DEVICE_ADDRESS, bleDeviceAddress);
@@ -667,7 +687,8 @@ public class CoreProbeDetails extends AppCompatActivity {
         Intent intent = new Intent(this, OrientationActivity.class);
         intent.putExtra(OrientationActivity.EXTRA_DEVICE_NAME, bleDeviceName);
         intent.putExtra(OrientationActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
-        intent.putExtra(OrientationActivity.EXTRA_PARENT_ACTIVITY, "MainProbeDetails");
+        intent.putExtra(OrientationActivity.EXTRA_PARENT_ACTIVITY, "CoreProbeDetails");
+        intent.putExtra(OrientationActivity.EXTRA_DEVICE_COLOR, probeColor);
         startActivity(intent);
     }
 
@@ -681,7 +702,8 @@ public class CoreProbeDetails extends AppCompatActivity {
         intent.putExtra(SensorActivity.EXTRA_DEVICE_DEVICE_ADDRESS, lDeviceAddress);
         intent.putExtra(SensorActivity.EXTRA_DEVICE_VERSION, lFirmwareVersion);
         intent.putExtra(SensorActivity.EXTRA_SAVED_NUM, saveNum);
-//        intent.putExtra(SensorActivity.EXTRA_PARENT_ACTIVITY, "Sensor");
+        intent.putExtra(SensorActivity.EXTRA_PARENT_ACTIVITY, "CoreProbeDetails");
+        intent.putExtra(SensorActivity.EXTRA_COLOR, probeColor);
         startActivity(intent);
     }
 
@@ -726,5 +748,10 @@ public class CoreProbeDetails extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
+    }
+
+    public void refresh(View view) {
+        //Reload connection status, serial number, device address and firmware version
+        updateDeviceDetails();
     }
 }

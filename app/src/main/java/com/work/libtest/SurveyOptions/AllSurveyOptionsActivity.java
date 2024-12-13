@@ -13,6 +13,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.work.libtest.CoreMain;
 import com.work.libtest.MainActivity;
 import com.work.libtest.R;
 import com.work.libtest.Survey;
@@ -29,6 +30,14 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
     public static final String EXTRA_DEVICE_ADDRESS = "Device_address";
     public static final String EXTRA_MEASUREMENT_TYPE = "Continue_or_new";
     public static final String EXTRA_SURVEY_TICKET = "Survey_Ticket";
+
+    public static final String EXTRA_PARENT = "";
+    public static final String EXTRA_BLACK_NAME = "black_name";
+    public static final String EXTRA_BLACK_ADDRESS = "black_address";
+    public static final String EXTRA_WHITE_NAME = "white_name";
+    public static final String EXTRA_WHITE_ADDRESS = "white_address";
+
+
     private int surveyTicket;
 
     int resumePosition = 128; //error code!
@@ -40,6 +49,12 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
     EditText depthInterval;
 
     TextView errorMessage;
+
+    private String mBlackName;
+    private String mBlackAddress;
+    private String mWhiteName;
+    private String mWhiteAddress;
+    private String mParentActivity;
 
     private Menu menu;
 
@@ -60,8 +75,16 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
         errorMessage.setVisibility(View.INVISIBLE);
 
         final Intent intent = getIntent();
-        mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
-        mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+        mParentActivity = intent.getStringExtra(EXTRA_PARENT);
+        if (mParentActivity.equals("CoreMain")) {
+            mBlackName = intent.getStringExtra(EXTRA_BLACK_NAME);
+            mBlackAddress = intent.getStringExtra(EXTRA_BLACK_ADDRESS);
+            mWhiteName = intent.getStringExtra(EXTRA_WHITE_NAME);
+            mWhiteAddress = intent.getStringExtra(EXTRA_WHITE_ADDRESS);
+        } else {
+            mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+            mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+        }
         try {
             surveyTicket = Integer.valueOf(intent.getStringExtra(EXTRA_SURVEY_TICKET));
         } catch (Exception e) {
@@ -265,20 +288,30 @@ public class AllSurveyOptionsActivity extends AppCompatActivity {
     }
 
     public void back() {
-        Intent intent = new Intent(this, MainActivity.class);
-        Log.d(TAG, "Device name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
-        surveyTicket = -1; //error code
+        if (mParentActivity.equals("CoreMain")) {
+            Intent intent = new Intent(this, CoreMain.class);
+            intent.putExtra(CoreMain.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
+            intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_NAME, mBlackName);
+            intent.putExtra(CoreMain.EXTRA_BLACK_DEVICE_ADDRESS, mBlackAddress);
+            intent.putExtra(CoreMain.EXTRA_WHITE_DEVICE_NAME, mWhiteName);
+            intent.putExtra(CoreMain.EXTRA_WHITE_DEVICE_ADDRESS, mWhiteAddress);
+            startActivity(intent);
+        } else {
+            Intent intent = new Intent(this, MainActivity.class);
+            Log.d(TAG, "Device name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+            intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
+            surveyTicket = -1; //error code
 
-        try {
-            TakeMeasurements.detailedRecordedShots = null;
-            TakeMeasurements.recordedShots = null;
-        } catch (Exception e) {
-            Log.e(TAG, "Exception thrown in removing existing survey from short term: " + e);
+            try {
+                TakeMeasurements.detailedRecordedShots = null;
+                TakeMeasurements.recordedShots = null;
+            } catch (Exception e) {
+                Log.e(TAG, "Exception thrown in removing existing survey from short term: " + e);
+            }
+
+            startActivity(intent);
         }
-
-        startActivity(intent);
     }
 }

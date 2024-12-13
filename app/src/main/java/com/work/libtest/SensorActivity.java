@@ -84,6 +84,7 @@ public class SensorActivity extends AppCompatActivity {
     public static final String EXTRA_DEVICE_DEVICE_ADDRESS = "Device_gathered_addresses";
     public static final String EXTRA_DEVICE_VERSION = "Device_firmware_version";
     public static final String EXTRA_PARENT_ACTIVITY = "Device_parent_activity";
+    public static final String EXTRA_COLOR = "probe_color";
 
     private static final int REQ_CODE_ENABLE_BT = 1;
     private static final int REQ_CODE_SCAN_ACTIVITY = 2;
@@ -256,6 +257,9 @@ public class SensorActivity extends AppCompatActivity {
 
     private TextView shotFormat;
 
+    private String mParentActivity = "parent";
+    private String mProbeColor = "color"; //if in the core probe mode need to be able to tell whether we are collecting data from a white or black probe
+
     /******************************************************************************************
      * Methods for handling the life cycle of the activity
      */
@@ -292,6 +296,10 @@ public class SensorActivity extends AppCompatActivity {
             final Intent intent = getIntent();
             mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
             mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+            mParentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
+            if (mParentActivity.equals("CoreProbeDetails")) {
+                mProbeColor = intent.getStringExtra(EXTRA_COLOR);
+            }
 
             textAccX = findViewById(R.id.accelerometer_x_data);
             textAccY = findViewById(R.id.accelerometer_y_data);
@@ -453,15 +461,25 @@ public class SensorActivity extends AppCompatActivity {
          * hence this is not bad programming practice
          */
         if (item.getItemId() == R.id.sensor_back_button) {
-            Log.d(TAG, "exit sensor activity to main activity");
-            Log.e(TAG, "Sensor name: " + mDeviceName + ", address: " + mDeviceAddress);
-            Log.e(TAG, "Probe name: " + bleDeviceName + ", address: " + bleDeviceAddress);
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, bleDeviceName);
-            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+            if (mProbeColor.equals("Black") || mProbeColor.equals("White")) {
+                Intent intent = new Intent(this, CoreProbeDetails.class);
+                intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_NAME, bleDeviceName);
+                intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+                intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_COLOR, mProbeColor);
+                intent.putExtra(CoreProbeDetails.EXTRA_PARENT_ACTIVITY, "ProbeDetails");
+                startActivity(intent);
+            } else {
+                Log.d(TAG, "exit sensor activity to main activity");
+                Log.e(TAG, "Sensor name: " + mDeviceName + ", address: " + mDeviceAddress);
+                Log.e(TAG, "Probe name: " + bleDeviceName + ", address: " + bleDeviceAddress);
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, bleDeviceName);
+                intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
 //            intent.putExtra(MainActivity.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
-            intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "ProbeDetails");
-            startActivity(intent);
+                intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "ProbeDetails");
+                startActivity(intent);
+            }
+
         } else if (item.getItemId() == R.id.sensor_save_button) {
             saveData();
         } else if (item.getItemId() == R.id.sensor_hold_button) {

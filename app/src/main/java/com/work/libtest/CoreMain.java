@@ -49,6 +49,7 @@ import androidx.core.content.ContextCompat;
 
 import com.work.libtest.Preferences.Preferences;
 import com.work.libtest.Preferences.PreferencesActivity;
+import com.work.libtest.SurveyOptions.AllSurveyOptionsActivity;
 import com.work.libtest.SurveyOptions.SurveyOptions;
 import com.work.libtest.SurveyOptions.SurveyOptionsActivity;
 
@@ -81,21 +82,28 @@ public class CoreMain extends AppCompatActivity {
     private static final int REQ_CODE_ACCESS_LOC2 = 4;                                            //or requesting location access a second time.
     private static final long CONNECT_TIMEOUT = 10000;                                        //Length of time in milliseconds to try to connect to a device
 
-    private BleService bleService;                                                                  //Service that handles all interaction with the Bluetooth radio and remote device
+    private BleService bleServiceBlack;
+    private BleService bleServiceWhite;
     private ByteArrayOutputStream transparentUartData = new ByteArrayOutputStream();                //Stores all the incoming byte arrays received from BLE device in bleService
     private ShowAlertDialogs showAlert;                                                             //Object that creates and shows all the alert pop ups used in the app
-    private Handler connectTimeoutHandler;                                                          //Handler to provide a time out if connection attempt takes too long
+    private Handler connectTimeoutHandlerBlack;
+    private Handler connectTimeoutHandlerWhite;                                                          //Handler to provide a time out if connection attempt takes too long
+    //Handler to provide a time out if connection attempt takes too long
     public static String bleDeviceNameWhite;
     public static String bleDeviceAddressWhite;
     public static String bleDeviceNameBlack;
     public static String bleDeviceAddressBlack;
 
-    private boolean haveSuitableProbeConnected = false;
+    private boolean haveSuitableBlackProbeConnected = false;
+    private boolean haveSuitableWhiteProbeConnected = false;
 
     private TextView textDeviceNameAndAddress;                                                      //To show device and status information on the screen
     private TextView textDeviceStatus;
 
     private ImageView blackProbeStatusImg;
+
+    private TextView whiteTextDeviceStatus;
+    private ImageView whiteProbeStatusImg;
 //    private LinearLayout WhiteProbeContainer; //the second container for a probe, used if the app is in dual mode
 
     private boolean forceUncalibratedMode = false;  // user can tap CalibrationDate label and disable calibration
@@ -111,7 +119,8 @@ public class CoreMain extends AppCompatActivity {
 
     private enum StateApp {STARTING_SERVICE, REQUEST_PERMISSION, ENABLING_BLUETOOTH, RUNNING}       //States of the app
 
-    private StateApp stateApp;
+    private StateApp stateAppBlack;
+    private StateApp stateAppWhite;
 
     public static Preferences preferences = new Preferences();
 
@@ -137,31 +146,33 @@ public class CoreMain extends AppCompatActivity {
             long millis = System.currentTimeMillis() - startTime;
             seconds = (int) (millis / 1000);
 
-            //Check black device connection
-            if (bleDeviceNameBlack != null && bleDeviceAddressBlack != null) {
-                if (stateConnectionBlack == CoreMain.StateConnection.DISCONNECTED || stateConnectionBlack == CoreMain.StateConnection.DISCONNECTING) {
-                    if ((bleDeviceNameBlack != null) && (bleDeviceAddressBlack != null) /**&& bleService.isCalibrated()**/) {                                                //See if there is a device name
-                        // attempt a reconnection
-                        stateConnectionBlack = CoreMain.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-                        connectWithAddress(bleDeviceAddressBlack);                                       //Initiate a connection
-                    }
-
-                    updateConnectionState();
-                }
-            }
-            timerHandler.postDelayed(this, 1000);
+            //Check black device connection - this bugs out the app
+//            if (bleDeviceNameBlack != null && bleDeviceAddressBlack != null) {
+//                Log.e(TAG, "Black Device null, attempting a reconnection");
+//                if (stateConnectionBlack == CoreMain.StateConnection.DISCONNECTED || stateConnectionBlack == CoreMain.StateConnection.DISCONNECTING) {
+//                    if ((bleDeviceNameBlack != null) && (bleDeviceAddressBlack != null) /**&& bleService.isCalibrated()**/) {                                                //See if there is a device name
+//                        // attempt a reconnection
+//                        stateConnectionBlack = CoreMain.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+//                        connectWithAddressBlack(bleDeviceAddressBlack);                                       //Initiate a connection
+//                    }
+//
+//                    updateConnectionStateBlack();
+//                }
+//            }
 
             //Check White device connection
-            if (bleDeviceNameWhite != null && bleDeviceAddressWhite != null) {
-                if (stateConnectionWhite == CoreMain.StateConnection.DISCONNECTED || stateConnectionWhite == CoreMain.StateConnection.DISCONNECTING) {
-                    if ((bleDeviceNameWhite != null) && (bleDeviceAddressWhite != null) /**&& bleService.isCalibrated()**/) {                                                //See if there is a device name
-                        // attempt a reconnection
-                        stateConnectionWhite = CoreMain.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-                        connectWithAddress(bleDeviceAddressWhite);                                       //Initiate a connection
-                    }
-                    updateConnectionState();
-                }
-            }
+//            if (bleDeviceNameWhite != null && bleDeviceAddressWhite != null) {
+//                Log.e(TAG, "White Device null, attempting a reconnection");
+//                if (stateConnectionWhite == CoreMain.StateConnection.DISCONNECTED || stateConnectionWhite == CoreMain.StateConnection.DISCONNECTING) {
+//                    if ((bleDeviceNameWhite != null) && (bleDeviceAddressWhite != null) /**&& bleService.isCalibrated()**/) {                                                //See if there is a device name
+//                        // attempt a reconnection
+//                        stateConnectionWhite = CoreMain.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+//                        connectWithAddressWhite(bleDeviceAddressWhite);                                       //Initiate a connection
+//                    }
+//                    updateConnectionStateWhite();
+//                }
+//            }
+
             timerHandler.postDelayed(this, 1000);
         }
     };
@@ -187,18 +198,30 @@ public class CoreMain extends AppCompatActivity {
             Log.i(TAG, "PJH - ========== onCreate ============");    // just as a separator in hte logcat window (to distinguish this run from the previous run)
             stateConnectionBlack = StateConnection.DISCONNECTED;                                             //Initial stateConnection when app starts
             stateConnectionWhite = StateConnection.DISCONNECTED;                                             //Initial stateConnection when app starts
-            stateApp = StateApp.STARTING_SERVICE;                                                       //Are going to start the BleService service
+            stateAppBlack = StateApp.STARTING_SERVICE;
+            stateAppWhite = StateApp.STARTING_SERVICE;
             Log.i(TAG, "PJH - about to request FINE permission");
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) { //Check whether we have location permission, required to scan
-                stateApp = StateApp.REQUEST_PERMISSION;                                                 //Are requesting Location permission
+                stateAppBlack = StateApp.REQUEST_PERMISSION;                                                 //Are requesting Location permission
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQ_CODE_ACCESS_LOC1); //Request fine location permission
             }
-            if (stateApp == StateApp.STARTING_SERVICE) {                                                //Only start BleService if we already have location permission
+            if (stateAppBlack == StateApp.STARTING_SERVICE) {                                                //Only start BleService if we already have location permission
                 Intent bleServiceIntent = new Intent(this, BleService.class);             //Create Intent to start the BleService
-                this.bindService(bleServiceIntent, bleServiceConnection, BIND_AUTO_CREATE);             //Create and bind the new service with bleServiceConnection object that handles service connect and disconnect
+                this.bindService(bleServiceIntent, bleServiceConnectionBlack, BIND_AUTO_CREATE);             //Create and bind the new service with bleServiceConnection object that handles service connect and disconnect
             }
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) { //Check whether we have location permission, required to scan
+                stateAppWhite = StateApp.REQUEST_PERMISSION;                                                 //Are requesting Location permission
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQ_CODE_ACCESS_LOC1); //Request fine location permission
+            }
+            if (stateAppWhite == StateApp.STARTING_SERVICE) {                                                //Only start BleService if we already have location permission
+                Intent bleServiceIntent = new Intent(this, BleService.class);             //Create Intent to start the BleService
+                this.bindService(bleServiceIntent, bleServiceConnectionWhite, BIND_AUTO_CREATE);             //Create and bind the new service with bleServiceConnection object that handles service connect and disconnect
+            }
+
             Log.i(TAG, "PJH - ========== onCreate2 ============");    // just as a separator in hte logcat window (to distinguish this run from the previous run)
-            connectTimeoutHandler = new Handler(Looper.getMainLooper());                                //Create a handler for a delayed runnable that will stop the connection attempt after a timeout
+            connectTimeoutHandlerBlack = new Handler(Looper.getMainLooper());
+            connectTimeoutHandlerWhite = new Handler(Looper.getMainLooper());                                //Create a handler for a delayed runnable that will stop the connection attempt after a timeout
 
             HoleIDDisplayTxt = findViewById(R.id.HoleIDDisplayTxt);
             OperatorNameDisplayTxt = findViewById(R.id.OperatorNameDisplayTxt);
@@ -207,6 +230,9 @@ public class CoreMain extends AppCompatActivity {
             whiteTextDeviceNameAndAddress = findViewById(R.id.WhiteProbeTxt);
             textDeviceStatus = findViewById(R.id.BlackProbeStatusTxt);                     //Get a reference to the TextView that will display the device name and address
             blackProbeStatusImg = findViewById(R.id.BlackProbeStatusImg);
+
+            whiteTextDeviceStatus = findViewById(R.id.WhiteProbeStatusTxt);
+            whiteProbeStatusImg = findViewById(R.id.WhiteProbeStatusImg);
 
             try {
                 if (surveys.size() > 0) { //array has begun to be populated
@@ -248,14 +274,22 @@ public class CoreMain extends AppCompatActivity {
 
         //Call superclass (AppCompatActivity) onResume method
         try {
-            registerReceiver(bleServiceReceiver, bleServiceIntentFilter());                         //Register receiver to handles events fired by the BleService
-            if (bleService != null && !bleService.isBluetoothRadioEnabled()) {                      //Check if Bluetooth radio was turned off while app was paused
-                if (stateApp == StateApp.RUNNING) {                                                 //Check that app is running, to make sure service is connected
-                    stateApp = StateApp.ENABLING_BLUETOOTH;                                         //Are going to request user to turn on Bluetooth
+            registerReceiver(bleServiceReceiverBlack, bleServiceIntentFilter());
+            registerReceiver(bleServiceReceiverWhite, bleServiceIntentFilter());                         //Register receiver to handles events fired by the BleService
+            if (bleServiceBlack != null && !bleServiceBlack.isBluetoothRadioEnabled()) {                      //Check if Bluetooth radio was turned off while app was paused
+                if (stateAppBlack == StateApp.RUNNING) {                                                 //Check that app is running, to make sure service is connected
+                    stateAppBlack = StateApp.ENABLING_BLUETOOTH;                                         //Are going to request user to turn on Bluetooth
                     stateConnectionBlack = StateConnection.DISCONNECTED;                                 //Must be disconnected if Bluetooth is off
+                    startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQ_CODE_ENABLE_BT); //Start the activity to ask the user to grant permission to enable Bluetooth
+                    Log.i(TAG, "Requesting user to enable Bluetooth radio on Black probe connection");
+                }
+            }
+            if (bleServiceWhite != null && !bleServiceWhite.isBluetoothRadioEnabled()) {                      //Check if Bluetooth radio was turned off while app was paused
+                if (stateAppWhite == StateApp.RUNNING) {                                                 //Check that app is running, to make sure service is connected
+                    stateAppWhite = StateApp.ENABLING_BLUETOOTH;                                         //Are going to request user to turn on Bluetooth
                     stateConnectionWhite = StateConnection.DISCONNECTED;                                 //Must be disconnected if Bluetooth is off
                     startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQ_CODE_ENABLE_BT); //Start the activity to ask the user to grant permission to enable Bluetooth
-                    Log.i(TAG, "Requesting user to enable Bluetooth radio");
+                    Log.i(TAG, "Requesting user to enable Bluetooth radio on White probe connection");
                 }
             }
             final Intent intent = getIntent();
@@ -266,12 +300,13 @@ public class CoreMain extends AppCompatActivity {
 
                 if (parentActivityValue != null) {
                     if (parentActivityValue.equals("SurveyOptions") || parentActivityValue.equals("ProbeDetails") || parentActivityValue.equals("TakeMeasurements") || parentActivityValue.equals("AllSurveyOptions") || parentActivityValue.equals("Preferences")) {
-                        stateApp = StateApp.RUNNING;
                         Log.e(TAG, "COlour: " + color);
                         if (color.equals("Black")) {
+                            stateAppBlack = StateApp.RUNNING;
                             bleDeviceAddressBlack = intent.getStringExtra(EXTRA_BLACK_DEVICE_ADDRESS);
                             bleDeviceNameBlack = intent.getStringExtra(EXTRA_BLACK_DEVICE_NAME);
                         } else if (color.equals("White")) {
+                            stateAppWhite = StateApp.RUNNING;
                             bleDeviceAddressWhite = intent.getStringExtra(EXTRA_WHITE_DEVICE_ADDRESS);
                             bleDeviceNameWhite = intent.getStringExtra(EXTRA_WHITE_DEVICE_NAME);
                         } else {
@@ -311,7 +346,7 @@ public class CoreMain extends AppCompatActivity {
                         } else {
                             stateConnectionWhite = StateConnection.CONNECTED;
                         }
-                        updateConnectionState();
+                        updateConnectionStateWhite();
                     } else {
                         Log.e(TAG, "Impossible"); //error as these are the only activities which lead back to the main activity
                     }
@@ -323,15 +358,15 @@ public class CoreMain extends AppCompatActivity {
             if ((bleDeviceNameBlack != null) && (bleDeviceAddressBlack != null)) {                                                //See if there is a device name
                 // attempt a reconnection
                 stateConnectionBlack = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-                connectWithAddress(bleDeviceAddressBlack);                                       //Initiate a connection
+                connectWithAddressBlack(bleDeviceAddressBlack);                                       //Initiate a connection
             }
             if ((bleDeviceNameWhite != null) && (bleDeviceAddressWhite != null)) {                                                //See if there is a device name
                 // attempt a reconnection
                 stateConnectionWhite = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-                connectWithAddress(bleDeviceAddressWhite);                                       //Initiate a connection
+                connectWithAddressWhite(bleDeviceAddressWhite);                                       //Initiate a connection
             }
 
-            updateConnectionState();                                                                //Update the screen and menus
+            updateConnectionStateWhite();                                                                //Update the screen and menus
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
@@ -345,7 +380,8 @@ public class CoreMain extends AppCompatActivity {
         super.onPause();
         timerHandler.removeCallbacks(timerRunnable); //Call superclass (AppCompatActivity) onPause method
         try {
-            unregisterReceiver(bleServiceReceiver);                                                     //Unregister receiver that was registered in onResume()
+            unregisterReceiver(bleServiceReceiverBlack);
+            unregisterReceiver(bleServiceReceiverWhite); //Unregister receiver that was registered in onResume()
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
@@ -367,10 +403,14 @@ public class CoreMain extends AppCompatActivity {
         super.onDestroy();                                                                          //Call superclass (AppCompatActivity) onDestroy method
 
         // TODO - need to check...
-        bleService.setProbeIdle();
+        bleServiceBlack.setProbeIdle();
+        bleServiceWhite.setProbeIdle();
 
-        if (stateApp != StateApp.REQUEST_PERMISSION) {                                              //See if we got past the permission request
-            unbindService(bleServiceConnection);                                                    //Unbind from the service handling Bluetooth
+        if (stateAppBlack != StateApp.REQUEST_PERMISSION) {                                              //See if we got past the permission request
+            unbindService(bleServiceConnectionBlack);                                                    //Unbind from the service handling Bluetooth
+        }
+        if (stateAppWhite != StateApp.REQUEST_PERMISSION) {                                              //See if we got past the permission request
+            unbindService(bleServiceConnectionWhite);                                                    //Unbind from the service handling Bluetooth
         }
     }
 
@@ -397,8 +437,10 @@ public class CoreMain extends AppCompatActivity {
                 case R.id.menu_disconnect: {                                                        //Menu option Disconnect chosen
                     stateConnectionBlack = StateConnection.DISCONNECTING;                                //StateConnection is used to determine whether disconnect event should trigger a popup to reconnect
                     stateConnectionWhite = StateConnection.DISCONNECTING;
-                    updateConnectionState();                                                        //Update the screen and menus
-                    bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
+                    updateConnectionStateBlack();                                                        //Update the screen and menus
+                    updateConnectionStateWhite();                                                        //Update the screen and menus
+                    bleServiceBlack.disconnectBle();
+                    bleServiceWhite.disconnectBle();  //Ask the BleService to disconnect from the Bluetooth device
                     return true;
                 }
                 case R.id.menu_help: {                                                              //Menu option Help chosen
@@ -413,8 +455,11 @@ public class CoreMain extends AppCompatActivity {
                     showAlert.showExitMenuDialog(new Runnable() {                                   //Show the AlertDialog that has the Exit warning text
                         @Override
                         public void run() {                                                         //Runnable to execute if OK button pressed
-                            if (bleService != null) {                                               //Check if the service is running
-                                bleService.disconnectBle();                                         //Ask the BleService to disconnect in case there is a Bluetooth connection
+                            if (bleServiceBlack != null) {                                               //Check if the service is running
+                                bleServiceBlack.disconnectBle();                                         //Ask the BleService to disconnect in case there is a Bluetooth connection
+                            }
+                            if (bleServiceWhite != null) {                                               //Check if the service is running
+                                bleServiceWhite.disconnectBle();                                         //Ask the BleService to disconnect in case there is a Bluetooth connection
                             }
                             onBackPressed();                                                        //Exit by going back - ultimately calls finish()
                         }
@@ -444,19 +489,19 @@ public class CoreMain extends AppCompatActivity {
 
     // ----------------------------------------------------------------------------------------------------------------
     // Callbacks for BleService service connection and disconnection
-    private final ServiceConnection bleServiceConnection = new ServiceConnection() {                //Create new ServiceConnection interface to handle connection and disconnection
-
+    private final ServiceConnection bleServiceConnectionBlack = new ServiceConnection() {                //Create new ServiceConnection interface to handle connection and disconnection
+        //COMEBACK
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {              //Service connects
             try {
                 Log.i(TAG, "BleService connected");
                 BleService.LocalBinder binder = (BleService.LocalBinder) service;                   //Get the Binder for the Service
-                bleService = binder.getService();                                                   //Get a link to the Service from the Binder
-                if (bleService.isBluetoothRadioEnabled()) {                                         //See if the Bluetooth radio is on
-                    stateApp = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
+                bleServiceBlack = binder.getService();                                                   //Get a link to the Service from the Binder
+                if (bleServiceBlack.isBluetoothRadioEnabled()) {                                         //See if the Bluetooth radio is on
+                    stateAppBlack = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
                     //startBleScanActivity();                                                         //Launch the BleScanActivity to scan for BLE devices
                 } else {                                                                              //Radio needs to be enabled
-                    stateApp = StateApp.ENABLING_BLUETOOTH;                                         //Are requesting Bluetooth to be turned on
+                    stateAppBlack = StateApp.ENABLING_BLUETOOTH;                                         //Are requesting Bluetooth to be turned on
                     Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);     //Create an Intent asking the user to grant permission to enable Bluetooth
                     startActivityForResult(enableBtIntent, REQ_CODE_ENABLE_BT);                     //Send the Intent to start the Activity that will return a result based on user input
                     Log.i(TAG, "Requesting user to turn on Bluetooth");
@@ -468,8 +513,37 @@ public class CoreMain extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {                            //BleService disconnects - should never happen
-            Log.i(TAG, "BleService disconnected");
-            bleService = null;                                                                      //Not bound to BleService
+            Log.i(TAG, "BleService Black disconnected");
+            bleServiceBlack = null;                                                                      //Not bound to BleService
+        }
+    };
+
+    private final ServiceConnection bleServiceConnectionWhite = new ServiceConnection() {                //Create new ServiceConnection interface to handle connection and disconnection
+        //COMEBACK
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {              //Service connects
+            try {
+                Log.i(TAG, "BleService connected");
+                BleService.LocalBinder binder = (BleService.LocalBinder) service;                   //Get the Binder for the Service
+                bleServiceWhite = binder.getService();                                                   //Get a link to the Service from the Binder
+                if (bleServiceWhite.isBluetoothRadioEnabled()) {                                         //See if the Bluetooth radio is on
+                    stateAppWhite = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
+                    //startBleScanActivity();                                                         //Launch the BleScanActivity to scan for BLE devices
+                } else {                                                                              //Radio needs to be enabled
+                    stateAppWhite = StateApp.ENABLING_BLUETOOTH;                                         //Are requesting Bluetooth to be turned on
+                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);     //Create an Intent asking the user to grant permission to enable Bluetooth
+                    startActivityForResult(enableBtIntent, REQ_CODE_ENABLE_BT);                     //Send the Intent to start the Activity that will return a result based on user input
+                    Log.i(TAG, "Requesting user to turn on Bluetooth");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {                            //BleService disconnects - should never happen
+            Log.i(TAG, "BleService White disconnected");
+            bleServiceWhite = null;                                                                      //Not bound to BleService
         }
     };
 
@@ -482,7 +556,8 @@ public class CoreMain extends AppCompatActivity {
         switch (requestCode) {                                                                      //See which Activity returned the result
             case REQ_CODE_ENABLE_BT: {
                 if (resultCode == Activity.RESULT_OK) {                                             //User chose to enable Bluetooth
-                    stateApp = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
+                    stateAppBlack = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
+                    stateAppWhite = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
                     // PJH we want to stay on the main screen, until user taps 'Scan'
                     //startBleScanActivity();                                                         //Start the BleScanActivity to do a scan for devices
                 } else {
@@ -493,42 +568,6 @@ public class CoreMain extends AppCompatActivity {
                 break;
             }
             case REQ_CODE_SCAN_ACTIVITY: {
-                //pretty sure we dont need this here as the activity does not directly link to the bleScanCore activity
-//                showAlert.dismiss();
-//                if (resultCode == Activity.RESULT_OK) {                                             //User chose a Bluetooth device to connect
-//                    stateApp = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is fully operational
-//                    bleDeviceAddress = intent.getStringExtra(BleScanActivity.EXTRA_SCAN_ADDRESS);   //Get the address of the BLE device selected in the BleScanActivity
-//                    bleDeviceName = intent.getStringExtra(BleScanActivity.EXTRA_SCAN_NAME);         //Get the name of the BLE device selected in the BleScanActivity
-//
-//                    if (!boreMode) { //if in core mode we want to print the colour of the probe that has just been selected
-//                        String probeColor = intent.getStringExtra(BleScanActivity.EXTRA_PROBE_COLOR);
-//                        Log.e(TAG, "Probe Colour: " + probeColor);
-//                    }
-//
-//
-//                    if (bleDeviceName != null) {                                                //See if there is a device name
-//                        textDeviceNameAndAddress.setText(bleDeviceName);                        //Display the name
-//                    } else {
-//                        if (boreMode) {
-//                            textDeviceNameAndAddress.setText("Probe");                     //or display "Unknown Device"
-//                        } else {
-//                            textDeviceNameAndAddress.setText("Black Probe");                     //or display "Unknown Device"
-//                        }
-//                    }
-//                    if (bleDeviceAddress != null) {                                             //See if there is an address
-//                        textDeviceNameAndAddress.append(" - " + bleDeviceAddress);              //Display the address
-//                    }
-//
-//                    if (bleDeviceAddress == null) {                                                 //Check whether we were given a device address
-//                        stateConnection = StateConnection.DISCONNECTED;                             //No device address so not connected and not going to connect
-//                    } else {
-//                        stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-//                        connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
-//                    }
-//                } else {                                                                            //Did not get a valid result from the BleScanActivity
-//                    stateConnection = StateConnection.DISCONNECTED;                                 //No result so not connected and not going to connect
-//                }
-//                updateConnectionState();                                                            //Update the connection state on the screen and menus
                 break;
             }
         }
@@ -543,9 +582,13 @@ public class CoreMain extends AppCompatActivity {
 
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {                                 //See if location permission was granted
             Log.i(TAG, "PJH - Location permission granted");
-            stateApp = StateApp.STARTING_SERVICE;                                                   //Are going to start the BleService service
-            Intent bleServiceIntent = new Intent(this, BleService.class);             //Create Intent to start the BleService
-            this.bindService(bleServiceIntent, bleServiceConnection, BIND_AUTO_CREATE);             //Create and bind the new service to bleServiceConnection object that handles service connect and disconnect
+            stateAppBlack = StateApp.STARTING_SERVICE;
+            stateAppWhite = StateApp.STARTING_SERVICE; //Are going to start the BleService service
+            Intent bleServiceIntentBlack = new Intent(this, BleService.class);             //Create Intent to start the BleService
+            this.bindService(bleServiceIntentBlack, bleServiceConnectionBlack, BIND_AUTO_CREATE);
+
+            Intent bleServiceIntentWhite = new Intent(this, BleService.class);             //Create Intent to start the BleService
+            this.bindService(bleServiceIntentWhite, bleServiceConnectionWhite, BIND_AUTO_CREATE);  //Create and bind the new service to bleServiceConnection object that handles service connect and disconnect
         } else if (requestCode == REQ_CODE_ACCESS_LOC1) {                                             //Not granted so see if first refusal and need to ask again
             showAlert.showLocationPermissionDialog(new Runnable() {                                 //Show the AlertDialog that scan cannot be performed without permission
                 @TargetApi(Build.VERSION_CODES.M)
@@ -584,18 +627,18 @@ public class CoreMain extends AppCompatActivity {
 
     // ----------------------------------------------------------------------------------------------------------------
     // BroadcastReceiver handles various Intents sent by the BleService service.
-    private final BroadcastReceiver bleServiceReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver bleServiceReceiverBlack = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {                                     //Intent received
             final String action = intent.getAction();                                               //Get the action String from the Intent
             switch (action) {                                                                       //See which action was in the Intent
                 case BleService.ACTION_BLE_CONNECTED: {                                             //Have connected to BLE device
-                    Log.d(TAG, "Received Intent  ACTION_BLE_CONNECTED");
+                    Log.d(TAG, "Received Intent  ACTION_BLE_CONNECTED for Black probe");
                     initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
                     transparentUartData.reset();   // PJH remove                                                 //Also clear any buffered incoming data
                     stateConnectionBlack = StateConnection.DISCOVERING;                                  //BleService automatically starts service discovery after connecting
                     blackProbeStatusImg.setImageResource(R.drawable.ready); //HOW DO I ALSO DO THIS FOR WHITE????
-                    updateConnectionState();                                                        //Update the screen and menus
+                    updateConnectionStateBlack();                                                        //Update the screen and menus
                     break;
                 }
                 case BleService.ACTION_BLE_DISCONNECTED: {                                          //Have disconnected from BLE device
@@ -606,32 +649,32 @@ public class CoreMain extends AppCompatActivity {
                     blackProbeStatusImg.setImageResource(R.drawable.unconnected);
 
                     // but we want to reconnect automatically - TODO add retry counter then give up
-                    if ((bleDeviceNameBlack != null) && (bleDeviceAddressBlack != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                    if ((bleDeviceNameBlack != null) && (bleDeviceAddressBlack != null) && bleServiceBlack.isCalibrated()) {                                                //See if there is a device name
                         // attempt a reconnection
                         stateConnectionBlack = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-                        connectWithAddress(bleDeviceAddressBlack);                                       //Initiate a connection
+                        connectWithAddressBlack(bleDeviceAddressBlack);                                       //Initiate a connection
                     }
 
-                    updateConnectionState();                                                        //Update the screen and menus
+                    updateConnectionStateBlack();                                                        //Update the screen and menus
                     break;
                 }
                 case BleService.ACTION_BLE_DISCOVERY_DONE: {                                        //Have completed service discovery
                     Log.d(TAG, "PJH - Received Intent  ACTION_BLE_DISCOVERY_DONE");
-                    connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
+                    connectTimeoutHandlerBlack.removeCallbacks(abandonConnectionAttemptBlack);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
                     blackProbeStatusImg.setImageResource(R.drawable.calibrating);
                     stateConnectionBlack = StateConnection.CONNECTED;                                    //Were already connected but showing discovering, not connected
-                    updateConnectionState();                                                        //Update the screen and menus
+                    updateConnectionStateBlack();                                                        //Update the screen and menus
                     Log.i(TAG, "PJH - about to request Ezy config");
-                    bleService.requestEzyConfig();                                                         //Ask the BleService to connect to start interrogating the device for its configuration
+                    bleServiceBlack.requestEzyConfig();                                                         //Ask the BleService to connect to start interrogating the device for its configuration
                     break;
                 }
                 case BleService.ACTION_BLE_DISCOVERY_FAILED: {                                      //Service discovery failed to find the right service and characteristics
                     Log.d(TAG, "Received Intent  ACTION_BLE_DISCOVERY_FAILED");
                     blackProbeStatusImg.setImageResource(R.drawable.unconnected);
                     stateConnectionBlack = StateConnection.DISCONNECTING;                                //Were already connected but showing discovering, so are now disconnecting
-                    connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
-                    bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
-                    updateConnectionState();                                                        //Update the screen and menus
+                    connectTimeoutHandlerBlack.removeCallbacks(abandonConnectionAttemptBlack);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
+                    bleServiceBlack.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
+                    updateConnectionStateBlack();                                                        //Update the screen and menus
 //                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
 //                        @Override
 //                        public void run() {                                                         //Runnable to execute if OK button pressed
@@ -644,7 +687,6 @@ public class CoreMain extends AppCompatActivity {
                     Log.d(TAG, "Received Intent  ACTION_BLE_CONFIG_READY");
                     textDeviceStatus.setText(R.string.ready);
                     blackProbeStatusImg.setImageResource(R.drawable.ready);
-
                     try {
                         Globals.probeConnectedBlackName = bleDeviceNameBlack;
                         Globals.probeConnectedBlackAddress = bleDeviceAddressBlack;
@@ -653,9 +695,9 @@ public class CoreMain extends AppCompatActivity {
                         Log.e(TAG, "Exception thrown getting probe information from globals: " + e);
                     }
 
-                    bleService.parseBinaryCalibration();   // process thr calibration data just retrieved
-                    bleService.setNotifications(true);   // PJH - HACK - find place where this write doesn't kill something else
-                    haveSuitableProbeConnected = true;   // this enables the test stuff
+                    bleServiceBlack.parseBinaryCalibration();   // process thr calibration data just retrieved
+                    bleServiceBlack.setNotifications(true);   // PJH - HACK - find place where this write doesn't kill something else
+                    haveSuitableBlackProbeConnected = true;   // this enables the test stuff
                     Globals.setNotification = true;
                     break;
                 }
@@ -663,6 +705,99 @@ public class CoreMain extends AppCompatActivity {
                     Log.d(TAG, "Received Intent  ACTION_BLE_FETCH_CAL");
                     textDeviceStatus.setText("Fetching calibration");                            //Show "Discovering"
                     blackProbeStatusImg.setImageResource(R.drawable.calibrating);
+                    break;
+                }
+                case BleService.ACTION_BLE_NEW_DATA_RECEIVED: {                                     //Have received data (characteristic notification) from BLE device
+                    Log.i(TAG, "Received Intent ACTION_BLE_NEW_DATA_RECEIVED");
+                    break;
+                }
+                default: {
+                    Log.w(TAG, "Received Intent with invalid action: " + action);
+                }
+            }
+        }
+    };
+
+
+    private final BroadcastReceiver bleServiceReceiverWhite = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {                                     //Intent received
+            final String action = intent.getAction();                                               //Get the action String from the Intent
+            switch (action) {                                                                       //See which action was in the Intent
+                case BleService.ACTION_BLE_CONNECTED: {                                             //Have connected to BLE device
+                    Log.d(TAG, "Received Intent White ACTION_BLE_CONNECTED");
+                    initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
+                    transparentUartData.reset();   // PJH remove                                                 //Also clear any buffered incoming data
+                    stateConnectionWhite = StateConnection.DISCOVERING;                                  //BleService automatically starts service discovery after connecting
+                    whiteProbeStatusImg.setImageResource(R.drawable.ready); //HOW DO I ALSO DO THIS FOR WHITE????
+                    updateConnectionStateWhite();                                                        //Update the screen and menus
+                    break;
+                }
+                case BleService.ACTION_BLE_DISCONNECTED: {                                          //Have disconnected from BLE device
+                    Log.d(TAG, "Received Intent ACTION_BLE_DISCONNECTED");
+                    initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
+                    transparentUartData.reset();                                                    //Also clear any buffered incoming data
+                    stateConnectionWhite = StateConnection.DISCONNECTED;
+                    whiteProbeStatusImg.setImageResource(R.drawable.unconnected);
+
+                    // but we want to reconnect automatically - TODO add retry counter then give up
+                    if ((bleDeviceNameWhite != null) && (bleDeviceAddressWhite != null) && bleServiceWhite.isCalibrated()) {                                                //See if there is a device name
+                        // attempt a reconnection
+                        stateConnectionWhite = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                        connectWithAddressWhite(bleDeviceAddressWhite);                                       //Initiate a connection
+                    }
+
+                    updateConnectionStateWhite();                                                        //Update the screen and menus
+                    break;
+                }
+                case BleService.ACTION_BLE_DISCOVERY_DONE: {                                        //Have completed service discovery
+                    Log.d(TAG, "PJH - Received Intent  ACTION_BLE_DISCOVERY_DONE");
+                    connectTimeoutHandlerWhite.removeCallbacks(abandonConnectionAttemptWhite);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
+                    whiteProbeStatusImg.setImageResource(R.drawable.calibrating);
+                    stateConnectionWhite = StateConnection.CONNECTED;                                    //Were already connected but showing discovering, not connected
+                    updateConnectionStateWhite();                                                        //Update the screen and menus
+                    Log.i(TAG, "PJH - about to request Ezy config");
+                    bleServiceWhite.requestEzyConfig();                                                         //Ask the BleService to connect to start interrogating the device for its configuration
+                    break;
+                }
+                case BleService.ACTION_BLE_DISCOVERY_FAILED: {                                      //Service discovery failed to find the right service and characteristics
+                    Log.d(TAG, "Received Intent  ACTION_BLE_DISCOVERY_FAILED");
+                    whiteProbeStatusImg.setImageResource(R.drawable.unconnected);
+                    stateConnectionWhite = StateConnection.DISCONNECTING;                                //Were already connected but showing discovering, so are now disconnecting
+                    connectTimeoutHandlerWhite.removeCallbacks(abandonConnectionAttemptWhite);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
+                    bleServiceWhite.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
+                    updateConnectionStateWhite();                                                        //Update the screen and menus
+//                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+//                        }
+//                    });
+                    break;
+                }
+                case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
+                    Log.d(TAG, "Received Intent  ACTION_BLE_CONFIG_READY");
+                    whiteTextDeviceStatus.setText(R.string.ready);
+                    whiteProbeStatusImg.setImageResource(R.drawable.ready);
+
+                    try {
+                        Globals.probeConnectedWhiteName = bleDeviceNameWhite;
+                        Globals.probeConnectedWhiteAddress = bleDeviceAddressWhite;
+                        Log.e(TAG, "Name: " + Globals.probeConnectedWhiteName + ", Address: " + Globals.probeConnectedWhiteAddress);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception thrown getting probe information from globals: " + e);
+                    }
+
+                    bleServiceWhite.parseBinaryCalibration();   // process thr calibration data just retrieved
+                    bleServiceWhite.setNotifications(true);   // PJH - HACK - find place where this write doesn't kill something else
+                    haveSuitableWhiteProbeConnected = true;   // this enables the test stuff
+                    Globals.setNotification = true;
+                    break;
+                }
+                case BleService.ACTION_BLE_FETCH_CAL: {                                        //Have completed service discovery
+                    Log.d(TAG, "Received Intent  ACTION_BLE_FETCH_CAL");
+                    whiteTextDeviceStatus.setText("Fetching calibration");                            //Show "Discovering"
+                    whiteProbeStatusImg.setImageResource(R.drawable.calibrating);
                     break;
                 }
                 case BleService.ACTION_BLE_NEW_DATA_RECEIVED: {                                     //Have received data (characteristic notification) from BLE device
@@ -693,29 +828,22 @@ public class CoreMain extends AppCompatActivity {
      */
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Start the BleScanActivity that scans for available Bluetooth devices and lets the user select one
-//    private void startBleScanActivity() {
-//        try {
-//            bleService.invalidateCalibration();  // to force a full connect and reread of the calibration data
-//            if (stateApp == StateApp.RUNNING) {                                                     //Only do a scan if we got through startup (permission granted, service started, Bluetooth enabled)
-//                stateConnection = StateConnection.DISCONNECTING;                                    //Are disconnecting prior to doing a scan
-//                haveSuitableProbeConnected = false;
-//                bleService.disconnectBle();                                                         //Disconnect an existing Bluetooth connection or cancel a connection attempt
-//                final Intent bleScanActivityIntent = new Intent(CoreMain.this, BleScanActivity.class); //Create Intent to start the BleScanActivity
-//                startActivityForResult(bleScanActivityIntent, REQ_CODE_SCAN_ACTIVITY);              //Start the BleScanActivity
-//            }
-//        } catch (Exception e) {
-//            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
-//        }
-//    }
-
-    // ----------------------------------------------------------------------------------------------------------------
     // Attempt to connect to a Bluetooth device given its address and time out after CONNECT_TIMEOUT milliseconds
-    private void connectWithAddress(String address) {
+    private void connectWithAddressBlack(String address) {
         try {
-            updateConnectionState();                                                                //Update the screen and menus (stateConnection is either CONNECTING or AUTO_CONNECT
-            connectTimeoutHandler.postDelayed(abandonConnectionAttempt, CONNECT_TIMEOUT);           //Start a delayed runnable to time out if connection does not occur
-            bleService.connectBle(address);                                                         //Ask the BleService to connect to the device
+            updateConnectionStateBlack();                                                                //Update the screen and menus (stateConnection is either CONNECTING or AUTO_CONNECT
+            connectTimeoutHandlerBlack.postDelayed(abandonConnectionAttemptBlack, CONNECT_TIMEOUT);           //Start a delayed runnable to time out if connection does not occur
+            bleServiceBlack.connectBle(address);                                                         //Ask the BleService to connect to the device
+        } catch (Exception e) {
+            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+        }
+    }
+
+    private void connectWithAddressWhite(String address) {
+        try {
+            updateConnectionStateWhite();                                                                //Update the screen and menus (stateConnection is either CONNECTING or AUTO_CONNECT
+            connectTimeoutHandlerWhite.postDelayed(abandonConnectionAttemptWhite, CONNECT_TIMEOUT);           //Start a delayed runnable to time out if connection does not occur
+            bleServiceWhite.connectBle(address);                                                         //Ask the BleService to connect to the device
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
@@ -723,14 +851,35 @@ public class CoreMain extends AppCompatActivity {
 
     // ----------------------------------------------------------------------------------------------------------------
     // Runnable used by the connectTimeoutHandler to stop the connection attempt
-    private Runnable abandonConnectionAttempt = new Runnable() {
+    private Runnable abandonConnectionAttemptBlack = new Runnable() {
         @Override
         public void run() {
             try {
                 if (stateConnectionBlack == StateConnection.CONNECTING) {                                //See if still trying to connect
                     stateConnectionBlack = StateConnection.DISCONNECTING;                                //Are now disconnecting
-                    bleService.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
-                    updateConnectionState();                                                        //Update the screen and menus
+                    bleServiceBlack.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
+                    updateConnectionStateBlack();                                                        //Update the screen and menus
+//                    showAlert.showFailedToConnectDialog(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+//                        }
+//                    });
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            }
+        }
+    };
+
+    private Runnable abandonConnectionAttemptWhite = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (stateConnectionWhite == StateConnection.CONNECTING) {                                //See if still trying to connect
+                    stateConnectionWhite = StateConnection.DISCONNECTING;                                //Are now disconnecting
+                    bleServiceWhite.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
+                    updateConnectionStateWhite();                                                        //Update the screen and menus
 //                    showAlert.showFailedToConnectDialog(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
 //                        @Override
 //                        public void run() {                                                         //Runnable to execute if OK button pressed
@@ -750,7 +899,7 @@ public class CoreMain extends AppCompatActivity {
 
     // ----------------------------------------------------------------------------------------------------------------
     // Update the text showing what Bluetooth device is connected, connecting, discovering, disconnecting, or not connected
-    private void updateConnectionState() {
+    private void updateConnectionStateBlack() {
         runOnUiThread(new Runnable() {                                                              //Always do display updates on UI thread
             @Override
             public void run() {
@@ -785,17 +934,52 @@ public class CoreMain extends AppCompatActivity {
         });
     }
 
+    private void updateConnectionStateWhite() {
+        runOnUiThread(new Runnable() {                                                              //Always do display updates on UI thread
+            @Override
+            public void run() {
+                switch (stateConnectionWhite) {
+                    case CONNECTING: {
+                        whiteTextDeviceStatus.setText(R.string.waiting_to_connect);                             //Show "Connecting"
+                        whiteProbeStatusImg.setImageResource(R.drawable.disconnecting);
+                        break;
+                    }
+                    case CONNECTED: {
+                        whiteProbeStatusImg.setImageResource(R.drawable.ready);
+                        whiteTextDeviceStatus.setText(R.string.ready);
+                        break;
+                    }
+                    case DISCOVERING: {
+                        whiteTextDeviceStatus.setText(R.string.interrogating_features);                            //Show "Discovering"
+                        break;
+                    }
+                    case DISCONNECTING: {
+                        whiteTextDeviceStatus.setText(R.string.disconnecting);                          //Show "Disconnectiong"
+                        break;
+                    }
+                    case DISCONNECTED:
+                    default: {
+                        stateConnectionWhite = StateConnection.DISCONNECTED;                             //Default, in case state is unknown
+                        whiteTextDeviceStatus.setText(R.string.not_connected);                          //Show "Not Connected"
+                        break;
+                    }
+                }
+                invalidateOptionsMenu();                                                            //Update the menu to reflect the connection state stateConnection
+            }
+        });
+    }
+
     /********************************************************************************
      * On Screen button methods
      */
     public void blackProbeSelect(View v) {
         //Check if device is connected before allowing user to see data from the probe
-        if (bleDeviceNameBlack != null && haveSuitableProbeConnected) { //TODO @ANNA - add something here that says the probe has to be calibrated before we can move on
+        if (bleDeviceNameBlack != null && haveSuitableBlackProbeConnected) { //TODO @ANNA - add something here that says the probe has to be calibrated before we can move on
             Intent intent = new Intent(this, CoreProbeDetails.class);
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_NAME, bleDeviceNameBlack);
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_ADDRESS, bleDeviceAddressBlack);
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_COLOR, "Black");
-            intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableProbeConnected);
+            intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableBlackProbeConnected);
             startActivity(intent);
         } else {
             //TODO make a popup that says device not connected cannot get data
@@ -803,7 +987,7 @@ public class CoreMain extends AppCompatActivity {
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_NAME, bleDeviceNameBlack);
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_ADDRESS, bleDeviceAddressBlack);
             intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_COLOR, "Black");
-            intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableProbeConnected);
+            intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableBlackProbeConnected);
             startActivity(intent);
         }
     }
@@ -813,16 +997,18 @@ public class CoreMain extends AppCompatActivity {
         intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_NAME, bleDeviceNameWhite);
         intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_ADDRESS, bleDeviceAddressWhite);
         intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_COLOR, "White");
-        intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableProbeConnected);
+        intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_CONNECTION_STATUS, haveSuitableWhiteProbeConnected);
         startActivity(intent);
     }
 
     public void BlackProbeBtnClick(View v) {
-        if (haveSuitableProbeConnected) {
-            Intent intent = new Intent(this, InitalisePopupActivity.class);
-            Log.d(TAG, "Device Name: " + bleDeviceNameBlack + ", Device Address: " + bleDeviceAddressBlack);
-            intent.putExtra(InitalisePopupActivity.EXTRA_DEVICE_NAME, bleDeviceNameBlack);
-            intent.putExtra(InitalisePopupActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddressBlack);
+        if (haveSuitableBlackProbeConnected) {
+            Intent intent = new Intent(this, AllSurveyOptionsActivity.class);
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_PARENT, "CoreMain");
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_BLACK_NAME, "CoreMain");
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_BLACK_ADDRESS, "CoreMain");
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_WHITE_NAME, "CoreMain");
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_WHITE_ADDRESS, "CoreMain");
             startActivity(intent);
         } else {
             Log.e(TAG, "Probe is disconnected");
@@ -831,17 +1017,44 @@ public class CoreMain extends AppCompatActivity {
             if ((bleDeviceNameBlack != null) && (bleDeviceAddressBlack != null)) {                                                //See if there is a device name
                 // attempt a reconnection
                 stateConnectionBlack = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-                connectWithAddress(bleDeviceAddressBlack);                                       //Initiate a connection
+                connectWithAddressBlack(bleDeviceAddressBlack);                                       //Initiate a connection
             }
-            updateConnectionState();
+            updateConnectionStateBlack();
+        }
+    }
+
+    public void WhiteProbeBtnClick(View v) {
+        if (haveSuitableBlackProbeConnected) {
+            Intent intent = new Intent(this, InitalisePopupActivity.class);
+            Log.d(TAG, "Device Name: " + bleDeviceNameBlack + ", Device Address: " + bleDeviceAddressBlack);
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_PARENT, "CoreMain");
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_BLACK_NAME, bleDeviceNameBlack);
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_BLACK_ADDRESS, bleDeviceAddressBlack);
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_WHITE_NAME, bleDeviceNameWhite);
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_WHITE_ADDRESS, bleDeviceAddressWhite);
+            startActivity(intent);
+        } else {
+            Log.e(TAG, "Probe is disconnected");
+            stateConnectionBlack = StateConnection.DISCONNECTED;
+            blackProbeStatusImg.setImageResource(R.drawable.unconnected);
+            if ((bleDeviceNameBlack != null) && (bleDeviceAddressBlack != null)) {                                                //See if there is a device name
+                // attempt a reconnection
+                stateConnectionBlack = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                connectWithAddressBlack(bleDeviceAddressBlack);                                       //Initiate a connection
+            }
+            updateConnectionStateBlack();
         }
     }
 
     public void holeIDBtnClick(View v) {
-//        Intent intent = new Intent(this, SurveyOptionsActivity.class);
-//        intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_NAME, bleDeviceNameBlack);
-//        intent.putExtra(SurveyOptionsActivity.EXTRA_DEVICE_ADDRESS, bleDeviceAddressBlack);
-//        startActivity(intent);
+        Intent intent = new Intent(this, SurveyOptionsActivity.class);
+        intent.putExtra(SurveyOptionsActivity.EXTRA_BLACK_NAME, bleDeviceNameBlack);
+        intent.putExtra(SurveyOptionsActivity.EXTRA_BLACK_ADDRESS, bleDeviceAddressBlack);
+
+        intent.putExtra(SurveyOptionsActivity.EXTRA_WHITE_NAME, bleDeviceNameWhite);
+        intent.putExtra(SurveyOptionsActivity.EXTRA_WHITE_ADDRESS, bleDeviceAddressWhite);
+        intent.putExtra(SurveyOptionsActivity.EXTRA_PARENT, "Core");
+        startActivity(intent);
     }
 
     public void operatorIDBtnClick(View v) {

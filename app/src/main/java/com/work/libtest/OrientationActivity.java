@@ -1268,6 +1268,7 @@ public class OrientationActivity extends AppCompatActivity {
     public static final String EXTRA_PREV_DEPTH = "null";
     public static final String EXTRA_SURVEY_TICKET = "Survey_Ticket";
     private int surveyTicket;
+    public static final String EXTRA_DEVICE_COLOR = "Device_color";
 
     public static final String EXTRA_DEVICE_SERIAL_NUMBER = "Serial_number";
     public static final String EXTRA_DEVICE_VERSION = "Device_firmware_version";
@@ -1438,6 +1439,7 @@ public class OrientationActivity extends AppCompatActivity {
     int acceptTestPointDip[]  = { -50, -50, -50, -50, -60, -60, -60, -60, -30, -30, -30, -30 };
     int acceptTestPointRoll[] = { 355,  80, 170, 260, 355,  80, 170, 260, 355,  80, 170, 260 };
 
+    String probeColor = "";
     int probePosition;
 
     /******************************************************************************************
@@ -1483,6 +1485,7 @@ public class OrientationActivity extends AppCompatActivity {
             mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
             mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
             parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
+            probeColor = intent.getStringExtra(EXTRA_DEVICE_COLOR);
             Log.i(TAG, "name: " + mDeviceName + ", address: " + mDeviceAddress);
             Log.i(TAG, "Parent activity of orientation activity is: " + parentActivity);
             //check if the parent activity is the probe details page or the view measurement page
@@ -1614,6 +1617,14 @@ public class OrientationActivity extends AppCompatActivity {
                 intent.putExtra(ViewMeasurements.EXTRA_DEVICE_CONNECTION_STATUS, mConnectionStatus);
 //                intent.putExtra(ViewMeasurements.EXTRA_NEXT_DEPTH, mNextDepth);
 //                intent.putExtra(ViewMeasurements.EXTRA_PREV_DEPTH, mPrevDepth);
+                bleService.setProbeMode(0);
+                startActivity(intent);
+            } else if (parentActivity.equals("CoreProbeDetails")) {
+                Intent intent = new Intent(this, CoreProbeDetails.class);
+                intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_NAME, mDeviceName);
+                intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+                intent.putExtra(CoreProbeDetails.EXTRA_DEVICE_COLOR, probeColor);
+                intent.putExtra(CoreProbeDetails.EXTRA_PARENT_ACTIVITY, "Orientation");
                 bleService.setProbeMode(0);
                 startActivity(intent);
             } else {
