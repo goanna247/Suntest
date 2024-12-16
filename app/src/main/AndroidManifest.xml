@@ -125,6 +125,9 @@
         <service
             android:name=".BleService"
             android:enabled="true" />
+        <service
+            android:name=".BleService2"
+            android:enabled="true" />
 
         <activity
             android:name=".InitalisePopupActivity"

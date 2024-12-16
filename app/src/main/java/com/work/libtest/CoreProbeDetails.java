@@ -703,7 +703,7 @@ public class CoreProbeDetails extends AppCompatActivity {
         intent.putExtra(SensorActivity.EXTRA_DEVICE_VERSION, lFirmwareVersion);
         intent.putExtra(SensorActivity.EXTRA_SAVED_NUM, saveNum);
         intent.putExtra(SensorActivity.EXTRA_PARENT_ACTIVITY, "CoreProbeDetails");
-        intent.putExtra(SensorActivity.EXTRA_COLOR, probeColor);
+//        intent.putExtra(SensorActivity.EXTRA_COLOR, probeColor); //COMEBACK
         startActivity(intent);
     }
 

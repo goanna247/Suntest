@@ -49,6 +49,7 @@ import androidx.core.content.ContextCompat;
 
 import com.work.libtest.Preferences.Preferences;
 import com.work.libtest.Preferences.PreferencesActivity;
+import com.work.libtest.Preferences.SimplePreferences;
 import com.work.libtest.SurveyOptions.SurveyOptions;
 import com.work.libtest.SurveyOptions.SurveyOptionsActivity;
 
@@ -75,11 +76,11 @@ public class MainActivity extends AppCompatActivity {
     public static final String EXTRA_CONNECTION_STATUS = "CONNECTION_STATUS";
     public static final String EXTRA_PARENT_ACTIVITY = "Parent_Activity";
 
-    private static final int REQ_CODE_ENABLE_BT =     1;                                            //Codes to identify activities that return results such as enabling Bluetooth
+    private static final int REQ_CODE_ENABLE_BT = 1;                                            //Codes to identify activities that return results such as enabling Bluetooth
     private static final int REQ_CODE_SCAN_ACTIVITY = 2;                                            //or scanning for bluetooth devices
-    private static final int REQ_CODE_ACCESS_LOC1 =   3;                                            //or requesting location access.
-    private static final int REQ_CODE_ACCESS_LOC2 =   4;                                            //or requesting location access a second time.
-    private static final long CONNECT_TIMEOUT =       10000;                                        //Length of time in milliseconds to try to connect to a device
+    private static final int REQ_CODE_ACCESS_LOC1 = 3;                                            //or requesting location access.
+    private static final int REQ_CODE_ACCESS_LOC2 = 4;                                            //or requesting location access a second time.
+    private static final long CONNECT_TIMEOUT = 10000;                                        //Length of time in milliseconds to try to connect to a device
 
     private BleService bleService;                                                                  //Service that handles all interaction with the Bluetooth radio and remote device
     private ByteArrayOutputStream transparentUartData = new ByteArrayOutputStream();                //Stores all the incoming byte arrays received from BLE device in bleService
@@ -100,10 +101,14 @@ public class MainActivity extends AppCompatActivity {
 
     int recordCount = 0;  // number of shots recorded so far
     String recordFilename = "SensorData-Auto-yyyyMMdd-HHmmss.csv";
-                                             //Switches to control and show LED state
+
+    //Switches to control and show LED state
     private enum StateConnection {DISCONNECTED, CONNECTING, DISCOVERING, CONNECTED, DISCONNECTING}  //States of the Bluetooth connection
+
     private StateConnection stateConnection;                                                        //State of Bluetooth connection
+
     private enum StateApp {STARTING_SERVICE, REQUEST_PERMISSION, ENABLING_BLUETOOTH, RUNNING}       //States of the app
+
     private StateApp stateApp;
 
     public static Preferences preferences = new Preferences();
@@ -138,6 +143,8 @@ public class MainActivity extends AppCompatActivity {
                     updateConnectionState();
                 }
             }
+            Log.e(TAG, "Seconds: " + seconds);
+
             timerHandler.postDelayed(this, 1000);
         }
     };
@@ -187,6 +194,10 @@ public class MainActivity extends AppCompatActivity {
 
 //            blackProbeStatusImg.setImageResource(R.drawable.unconnected);
 
+            if (!Globals.simplePreferences.getBoreMode()) { //in core mode so need to change the main activity
+                Intent intent = new Intent(this, CoreMain.class);
+                startActivity(intent);
+            }
 
             try {
                 if (surveys.size() > 0) { //array has begun to be populated
@@ -359,18 +370,15 @@ public class MainActivity extends AppCompatActivity {
             if (stateConnection == StateConnection.CONNECTED) {                                     //See if we are connected
                 menu.findItem(R.id.menu_disconnect).setVisible(true);                               //Are connected so show Disconnect menu
                 menu.findItem(R.id.menu_connect).setVisible(false);                                 //and hide Connect menu
-            }
-            else {                                                                                  //Else are not connected so
+            } else {                                                                                  //Else are not connected so
                 menu.findItem(R.id.menu_disconnect).setVisible(false);                              // hide the disconnect menu
                 if (bleDeviceAddress != null) {                                                     //See if we have a device address
                     menu.findItem(R.id.menu_connect).setVisible(true);                              // then show the connect menu
-                }
-                else {                                                                              //Else no device address so
+                } else {                                                                              //Else no device address so
                     menu.findItem(R.id.menu_connect).setVisible(false);                             // hide the connect menu
                 }
             }
-        }
-        else {
+        } else {
             menu.findItem(R.id.menu_scan).setVisible(false);                                        //No permission so hide scan menu item
             menu.findItem(R.id.menu_connect).setVisible(false);                                     //and hide Connect menu
             menu.findItem(R.id.menu_disconnect).setVisible(false);                                  //Are not connected so hide the disconnect menu
@@ -455,8 +463,7 @@ public class MainActivity extends AppCompatActivity {
                 if (bleService.isBluetoothRadioEnabled()) {                                         //See if the Bluetooth radio is on
                     stateApp = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
                     //startBleScanActivity();                                                         //Launch the BleScanActivity to scan for BLE devices
-                }
-                else {                                                                              //Radio needs to be enabled
+                } else {                                                                              //Radio needs to be enabled
                     stateApp = StateApp.ENABLING_BLUETOOTH;                                         //Are requesting Bluetooth to be turned on
                     Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);     //Create an Intent asking the user to grant permission to enable Bluetooth
                     startActivityForResult(enableBtIntent, REQ_CODE_ENABLE_BT);                     //Send the Intent to start the Activity that will return a result based on user input
@@ -546,8 +553,7 @@ public class MainActivity extends AppCompatActivity {
             stateApp = StateApp.STARTING_SERVICE;                                                   //Are going to start the BleService service
             Intent bleServiceIntent = new Intent(this, BleService.class);             //Create Intent to start the BleService
             this.bindService(bleServiceIntent, bleServiceConnection, BIND_AUTO_CREATE);             //Create and bind the new service to bleServiceConnection object that handles service connect and disconnect
-        }
-        else if (requestCode == REQ_CODE_ACCESS_LOC1) {                                             //Not granted so see if first refusal and need to ask again
+        } else if (requestCode == REQ_CODE_ACCESS_LOC1) {                                             //Not granted so see if first refusal and need to ask again
             showAlert.showLocationPermissionDialog(new Runnable() {                                 //Show the AlertDialog that scan cannot be performed without permission
                 @TargetApi(Build.VERSION_CODES.M)
                 @Override
@@ -555,8 +561,7 @@ public class MainActivity extends AppCompatActivity {
                     requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_CODE_ACCESS_LOC2); //Ask for location permission again
                 }
             });
-        }
-        else {
+        } else {
             //Permission refused twice so send user to settings
             Log.i(TAG, "PJH - Location permission NOT granted");
             Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);               //Create Intent to open the app settings page
@@ -634,12 +639,12 @@ public class MainActivity extends AppCompatActivity {
                     connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
                     bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
-                        @Override
-                        public void run() {                                                         //Runnable to execute if OK button pressed
-                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
-                        }
-                    });
+//                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+//                        }
+//                    });
                     break;
                 }
                 case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
@@ -747,12 +752,12 @@ public class MainActivity extends AppCompatActivity {
                     stateConnection = StateConnection.DISCONNECTING;                                //Are now disconnecting
                     bleService.disconnectBle();                                                     //Stop the Bluetooth connection attempt in progress
                     updateConnectionState();                                                        //Update the screen and menus
-                    showAlert.showFailedToConnectDialog(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
-                        @Override
-                        public void run() {                                                         //Runnable to execute if OK button pressed
-                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
-                        }
-                    });
+//                    showAlert.showFailedToConnectDialog(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
+//                        @Override
+//                        public void run() {                                                         //Runnable to execute if OK button pressed
+//                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+//                        }
+//                    });
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
@@ -786,7 +791,8 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     }
                     case DISCONNECTING: {
-                        textDeviceStatus.setText(R.string.disconnecting);                          //Show "Disconnectiong"
+                        textDeviceStatus.setText(R.string.waiting_to_connect);                          //Show "Disconnectiong"
+                        attemptConnection();
                         break;
                     }
                     case DISCONNECTED:
@@ -799,6 +805,15 @@ public class MainActivity extends AppCompatActivity {
                 invalidateOptionsMenu();                                                            //Update the menu to reflect the connection state stateConnection
             }
         });
+    }
+
+    public void attemptConnection() {
+        if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+            // attempt a reconnection
+            stateConnection = StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+            connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+        }
+        updateConnectionState();
     }
 
     /********************************************************************************

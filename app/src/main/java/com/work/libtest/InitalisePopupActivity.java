@@ -101,12 +101,16 @@ public class InitalisePopupActivity extends AppCompatActivity {
      * go back to the Main Activity
      */
     public void back() {
-        Intent intent = new Intent(this, MainActivity.class);
-        Log.d(TAG, "Device name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
-        startActivity(intent);
+        try {
+            Intent intent = new Intent(this, MainActivity.class);
+            Log.d(TAG, "Device name: " + mDeviceName + ", Device Address: " + mDeviceAddress);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_NAME, mDeviceName);
+            intent.putExtra(MainActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+            intent.putExtra(MainActivity.EXTRA_PARENT_ACTIVITY, "SurveyOptions");
+            startActivity(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown: " + e);
+        }
     }
 
     /**
@@ -114,29 +118,32 @@ public class InitalisePopupActivity extends AppCompatActivity {
      * @param v
      */
     public void startNewClick(View v) {
-        //Need to open a new "ticket" for a new set of measurements
-        int surveyTicket = Globals.storedMeasurements.size(); //this is the index that new data needs to be added in at.
-//        Globals.storedMeasurements.add(null);
-        //open survey preferences with initial depth and depth interval
-        Intent intent = new Intent(this, AllSurveyOptionsActivity.class);
-        intent.putExtra(AllSurveyOptionsActivity.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(AllSurveyOptionsActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(AllSurveyOptionsActivity.EXTRA_MEASUREMENT_TYPE, "NEW");
-        intent.putExtra(AllSurveyOptionsActivity.EXTRA_SURVEY_TICKET, String.valueOf(surveyTicket));
-        startActivity(intent);
+        try {
+            //Need to open a new "ticket" for a new set of measurements
+            int surveyTicket = Globals.storedMeasurements.size(); //this is the index that new data needs to be added in at.
+    //        Globals.storedMeasurements.add(null);
+            //open survey preferences with initial depth and depth interval
+            Intent intent = new Intent(this, AllSurveyOptionsActivity.class);
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_DEVICE_NAME, mDeviceName);
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_MEASUREMENT_TYPE, "NEW");
+            intent.putExtra(AllSurveyOptionsActivity.EXTRA_SURVEY_TICKET, String.valueOf(surveyTicket));
+            startActivity(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown: " + e);
+        }
     }
 
-    /**
-     * Open a previous survey - TODO
-     *
-     * TODO - NOT IMPLEMENTED
-     */
     public void resumePrevClick(View v) {
-        Intent intent = new Intent(this, ResumePrevious.class);
-        intent.putExtra(PreviousSurvey.EXTRA_DEVICE_NAME, mDeviceName);
-        intent.putExtra(PreviousSurvey.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
-        intent.putExtra(PreviousSurvey.EXTRA_MEASUREMENT_TYPE, "OLD");
-        startActivity(intent);
+        try {
+            Intent intent = new Intent(this, ResumePrevious.class);
+            intent.putExtra(PreviousSurvey.EXTRA_DEVICE_NAME, mDeviceName);
+            intent.putExtra(PreviousSurvey.EXTRA_DEVICE_ADDRESS, mDeviceAddress);
+            intent.putExtra(PreviousSurvey.EXTRA_MEASUREMENT_TYPE, "OLD");
+            startActivity(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown: " + e);
+        }
     }
 
 }

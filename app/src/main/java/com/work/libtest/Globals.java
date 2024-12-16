@@ -45,4 +45,6 @@ public class Globals {
     public static boolean setNotification = false; //keep track of whether we have already set the probes notification values
 
     public static SimplePreferences simplePreferences = new SimplePreferences(true, true); //start with bore mode and 0-360 results
+
+    public static boolean boreCamCalibrated = false;
 }

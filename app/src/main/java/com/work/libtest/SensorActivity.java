@@ -260,9 +260,35 @@ public class SensorActivity extends AppCompatActivity {
     private String mParentActivity = "parent";
     private String mProbeColor = "color"; //if in the core probe mode need to be able to tell whether we are collecting data from a white or black probe
 
+    public int seconds;
+    private long startTime = 0;
+
     /******************************************************************************************
      * Methods for handling the life cycle of the activity
      */
+
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            long millis = System.currentTimeMillis() - startTime;
+            seconds = (int) (millis / 1000);
+
+            if (bleDeviceName != null && bleDeviceAddress != null) {
+                if (stateConnection == SensorActivity.StateConnection.DISCONNECTED || stateConnection == SensorActivity.StateConnection.DISCONNECTING) {
+                    if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+                        // attempt a reconnection
+                        stateConnection = SensorActivity.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+                        connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+                    }
+
+                    updateConnectionState();
+                    Log.e(TAG, "Seconds: " + seconds);
+                }
+            }
+            timerHandler.postDelayed(this, 1000);
+        }
+    };
 
     @Override
     protected void onStart() {
@@ -272,6 +298,10 @@ public class SensorActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        startTime = System.currentTimeMillis();
+        timerHandler.removeCallbacks(timerRunnable);
+        timerHandler.postDelayed(timerRunnable, 0);
 
         try {
             setContentView(R.layout.activity_sensor);
@@ -292,14 +322,6 @@ public class SensorActivity extends AppCompatActivity {
             textDeviceNameAndAddress = findViewById(R.id.probe_info);                     //Get a reference to the TextView that will display the device name and address
             textDeviceStatus = findViewById(R.id.orientation_connection_Txt);                     //Get a reference to the TextView that will display the device name and address
             shotFormat = findViewById(R.id.dev_format_info);
-
-            final Intent intent = getIntent();
-            mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
-            mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
-            mParentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
-            if (mParentActivity.equals("CoreProbeDetails")) {
-                mProbeColor = intent.getStringExtra(EXTRA_COLOR);
-            }
 
             textAccX = findViewById(R.id.accelerometer_x_data);
             textAccY = findViewById(R.id.accelerometer_y_data);
@@ -325,40 +347,80 @@ public class SensorActivity extends AppCompatActivity {
 
             dev_record_number = (TextView) findViewById(R.id.dev_record_number_info);
             buttonLive = (Button) findViewById(R.id.shot_request_button);
-            buttonLive.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Log.i(TAG, "PJH - processing Live Data button press");
-                    if (buttonLive.getText() == "PAUSE"){
-                        buttonLive.setText("LIVE DATA");
-                        bleService.setProbeIdle();
-                    }
-                    else {
-                        buttonLive.setText("PAUSE");
-                        boolean success = bleService.setProbeModeReturn(2);
-                        if (success) {
-                            Log.e(TAG, "Set mode successful");
-                        } else {
-                            Log.e(TAG, "Set mode BAD!"); //elloquently worded
-                        }
+//            buttonLive.setOnClickListener(new View.OnClickListener() {
+//                public void onClick(View v) {
+//                    try {
+//                        Log.i(TAG, "PJH - processing Live Data button press");
+//                        if (buttonLive.getText() == "PAUSE"){
+//                            buttonLive.setText("LIVE DATA");
+//                            bleService.setProbeIdle();
+//                        }
+//                        else {
+//                            buttonLive.setText("PAUSE");
+//                            boolean success = bleService.setProbeModeReturn(2);
+//                            if (success) {
+//                                Log.e(TAG, "Set mode successful");
+//                            } else {
+//                                Log.e(TAG, "Set mode BAD!"); //elloquently worded
+//                            }
+//                        }
+//                    } catch (Exception e) {
+//                        Log.e(TAG, "Exception thrown in live data button press: " + e);
+//                    }
+//                }
+//            });
+
+            //put this at the end of the function bc it's most likely to crash lol
+            try {
+                final Intent intent = getIntent();
+                mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
+                mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
+                mParentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
+                if (mParentActivity != null) {
+                    if (mParentActivity.equals("CoreProbeDetails")) {
+                        mProbeColor = intent.getStringExtra(EXTRA_COLOR);
                     }
                 }
-            });
+            } catch (Exception e) {
+                Log.e(TAG, "Exception thrown receiving intent in onCreate: " + e);
+            }
             initializeDisplay();
         } catch (Exception e) {
             Log.e(TAG, "Exception thrown in onCreate in SensorActivity: " + e);
         }
     }
 
-    public void modeRequest(View view) {
-        //return the current mode of the probe -> this will determine whether its a write issue, a read issue or a notify issue
-        double[] coreShot = bleService.getLatestCoreshot(1);
-        double[] boreShot = bleService.getLatestBoreshot(1); //should really do a check here to determine what type of probe we are working with before printing
-        for (int i = 0; i < coreShot.length; i++) {
-            Log.e(TAG, "Core: " + String.valueOf(coreShot[i]));
-            Log.e(TAG, "Bore: " + String.valueOf(boreShot[i])); //wont print all the stuff in a boreshot
+    public void shotRequest(View view) {
+        try {
+            Log.i(TAG, "PJH - processing Live Data button press");
+            if (buttonLive.getText() == "PAUSE"){
+                buttonLive.setText("LIVE DATA");
+                bleService.setProbeIdle();
+            }
+            else {
+                buttonLive.setText("PAUSE");
+                boolean success = bleService.setProbeModeReturn(2);
+                if (success) {
+                    Log.e(TAG, "Set mode successful");
+                } else {
+                    Log.e(TAG, "Set mode BAD!"); //elloquently worded
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown in live data button press: " + e);
         }
-        Log.e(TAG, "Probe Mode: " + String.valueOf(bleService.getProbeMode()));
     }
+
+//    public void modeRequest(View view) {
+//        //return the current mode of the probe -> this will determine whether its a write issue, a read issue or a notify issue
+//        double[] coreShot = bleService.getLatestCoreshot(1);
+//        double[] boreShot = bleService.getLatestBoreshot(1); //should really do a check here to determine what type of probe we are working with before printing
+//        for (int i = 0; i < coreShot.length; i++) {
+//            Log.e(TAG, "Core: " + String.valueOf(coreShot[i]));
+//            Log.e(TAG, "Bore: " + String.valueOf(boreShot[i])); //wont print all the stuff in a boreshot
+//        }
+//        Log.e(TAG, "Probe Mode: " + String.valueOf(bleService.getProbeMode()));
+//    }
 
     @Override
     protected void onResume() {
@@ -410,7 +472,7 @@ public class SensorActivity extends AppCompatActivity {
 
             updateConnectionState();                                                                //Update the screen and menus
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in onResume:  " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
 
@@ -420,7 +482,7 @@ public class SensorActivity extends AppCompatActivity {
         try {
             unregisterReceiver(bleServiceReceiver);                                                     //Unregister receiver that was registered in onResume()
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in onPause method:  " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
 
@@ -587,7 +649,7 @@ public class SensorActivity extends AppCompatActivity {
                     Log.i(TAG, "Requesting user to turn on Bluetooth");
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+                Log.e(TAG, "Oops, exception caught in service connected " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
             }
         }
 
@@ -728,35 +790,26 @@ public class SensorActivity extends AppCompatActivity {
                     connectTimeoutHandler.removeCallbacks(abandonConnectionAttempt);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
                     bleService.disconnectBle();                                                     //Ask the BleService to disconnect from the Bluetooth device
                     updateConnectionState();                                                        //Update the screen and menus
-//                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
-//                        @Override
-//                        public void run() {                                                         //Runnable to execute if OK button pressed
-//                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
-//                        }
-//                    });
+                    showAlert.showFaultyDeviceDialog(new Runnable() {                               //Show the AlertDialog for a faulty device
+                        @Override
+                        public void run() {                                                         //Runnable to execute if OK button pressed
+                            startBleScanActivity();                                                 //Launch the BleScanActivity to scan for BLE devices
+                        }
+                    }); //COMEBACK
                     break;
                 }
                 case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
                     Log.d(TAG, "Received Intent  ACTION_BLE_CONFIG_READY");
 
-//                    String verString = bleService.getFirmwareVersionString();
-//                    textDeviceStatus.setText(R.string.ready);
-                    if (!Globals.setNotification) {
-                        bleService.parseBinaryCalibration();
-                        bleService.setNotifications(true);
-                    }
+                    String verString = bleService.getFirmwareVersionString();
+                    textDeviceStatus.setText(R.string.ready);
+                    bleService.parseBinaryCalibration();
+                    bleService.setNotifications(true);
                     haveSuitableProbeConnected = true;
-                    boolean success = bleService.setProbeModeReturn(2);
-                    if (success) {
-                        Log.e(TAG, "Set mode successful");
-                    } else {
-                        Log.e(TAG, "Set mode BAD!"); //elloquently worded
-                    }
                     break;
                 }
                 case BleService.ACTION_BLE_FETCH_CAL: {                                        //Have completed service discovery
                     Log.d(TAG, "PJH - Received Intent  ACTION_BLE_FETCH_CAL");
-//                    textDeviceStatus.setText("Fetching calibration");                            //Show "Discovering"
                     break;
                 }
                 case BleService.ACTION_BLE_NEW_DATA_RECEIVED: {                                     //Have received data (characteristic notification) from BLE device
@@ -810,7 +863,7 @@ public class SensorActivity extends AppCompatActivity {
 ////            textAcceptResultDip.setText("");
 
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in initialise display" + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
 
@@ -842,6 +895,11 @@ public class SensorActivity extends AppCompatActivity {
             double newVal[] = bleService.getLatestBoreshot(count);
 //            double newVal[] = bleService.getLatestCoreshot(count);
 
+            if (Globals.simplePreferences.getRollMode()) { //roll should be between 0 to 360
+                newVal[7] = newVal[7] + 180;
+            } else { //roll should be between -180 and 180
+                //probs dont need to do anything
+            }
 
             recordCount = bleService.getSensorDataCount();
             dev_record_number.setText(String.format("%7.1f", newVal[0]));
@@ -1023,7 +1081,7 @@ public class SensorActivity extends AppCompatActivity {
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in processing a new reading " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
 
@@ -1042,7 +1100,7 @@ public class SensorActivity extends AppCompatActivity {
                 startActivityForResult(bleScanActivityIntent, REQ_CODE_SCAN_ACTIVITY);              //Start the BleScanActivity
             }
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in startBleScanActivity: " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
 
@@ -1054,7 +1112,7 @@ public class SensorActivity extends AppCompatActivity {
             connectTimeoutHandler.postDelayed(abandonConnectionAttempt, CONNECT_TIMEOUT);           //Start a delayed runnable to time out if connection does not occur
             bleService.connectBle(address);                                                         //Ask the BleService to connect to the device
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in connect with address function " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
 
@@ -1071,17 +1129,17 @@ public class SensorActivity extends AppCompatActivity {
 //                    showAlert.showFailToAccessProbe(new Runnable() {                            //Show the AlertDialog for a connection attempt that failed
 //                        @Override
 //                        public void run() {                                                         //Runnable to execute if OK button pressed
-                            if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
-                                // attempt a reconnection
-                                stateConnection = SensorActivity.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
-                                connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
-                            }
-                            updateConnectionState();                                                 //Launch the BleScanActivity to scan for BLE devices
+//                            if ((bleDeviceName != null) && (bleDeviceAddress != null) && bleService.isCalibrated()) {                                                //See if there is a device name
+//                                // attempt a reconnection
+//                                stateConnection = SensorActivity.StateConnection.CONNECTING;                               //Got an address so we are going to start connecting
+//                                connectWithAddress(bleDeviceAddress);                                       //Initiate a connection
+//                            }
+//                            updateConnectionState();                                                 //Launch the BleScanActivity to scan for BLE devices
 //                        }
 //                    });
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+                Log.e(TAG, "Oops, exception caught in abondon connection timer " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
             }
         }
     };
@@ -1163,3 +1221,4 @@ public class SensorActivity extends AppCompatActivity {
         }
     }
 }
+

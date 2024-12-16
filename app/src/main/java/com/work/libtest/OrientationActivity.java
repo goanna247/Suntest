@@ -1875,6 +1875,12 @@ public class OrientationActivity extends AppCompatActivity {
             int count = 1;
             double newVal[] = bleService.getLatestBoreshot(count);
 
+            if (Globals.simplePreferences.getRollMode()) { //roll should be between 0 to 360
+                newVal[7] = newVal[7] + 180;
+            } else { //roll should be between -180 and 180
+                //probs dont need to do anything
+            }
+
             textRoll.setText(String.format("%7.4f", newVal[7]));
             textDip.setText(String.format("%7.4f", newVal[8]));
             textAz.setText(String.format("%7.4f", newVal[9]));
