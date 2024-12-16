@@ -1987,74 +1987,74 @@ public class BleService extends Service {
 
 
 //            if (UUID_CORE_SHOT.equals(characteristic.getUuid())) {
-            Log.d(TAG, "CORE SHOT NOTIFICATION SETTING ON");
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Log.e(TAG, "ERROR SLEEPING");
-                e.printStackTrace();
-            }
-            btGatt.setCharacteristicNotification(coreShotCharacteristic, true);
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Log.e(TAG, "ERROR SLEEPING");
-                e.printStackTrace();
-            }
-
-            for (BluetoothGattDescriptor descriptor : coreShotCharacteristic.getDescriptors()) {
-                Log.e(TAG, "BluetoothGattDescriptor: " + descriptor.getUuid().toString());
-                Log.d(TAG, "setting enable notifiction value: " + descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE));
-                if (descriptor.getUuid().toString().equals("00002902-0000-1000-8000-00805f9b34fb")) {
-                    BluetoothGattDescriptor descriptorToBeRead = coreShotCharacteristic.getDescriptor(descriptor.getUuid());
-                    btGatt.readDescriptor(descriptorToBeRead);
-
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "ERROR SLEEPING");
-                        e.printStackTrace();
-                    }
-                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "ERROR SLEEPING");
-                        e.printStackTrace();
-                    }
-                    btGatt.writeDescriptor(descriptor);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "ERROR SLEEPING");
-                        e.printStackTrace();
-                    }
-
-                } else if (descriptor.getUuid().toString().equals("00002901-0000-1000-8000-00805f9b34fb")) {
-                    BluetoothGattDescriptor descriptorToBeRead = coreShotCharacteristic.getDescriptor(descriptor.getUuid());
-                    btGatt.readDescriptor(descriptorToBeRead);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "ERROR SLEEPING");
-                        e.printStackTrace();
-                    }
-                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "ERROR SLEEPING");
-                        e.printStackTrace();
-                    }
-                    btGatt.writeDescriptor(descriptor);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "ERROR SLEEPING");
-                        e.printStackTrace();
-                    }
-                }
-            }
+//            Log.d(TAG, "CORE SHOT NOTIFICATION SETTING ON");
+//            try {
+//                Thread.sleep(500);
+//            } catch (InterruptedException e) {
+//                Log.e(TAG, "ERROR SLEEPING");
+//                e.printStackTrace();
+//            }
+//            btGatt.setCharacteristicNotification(coreShotCharacteristic, true);
+//            try {
+//                Thread.sleep(500);
+//            } catch (InterruptedException e) {
+//                Log.e(TAG, "ERROR SLEEPING");
+//                e.printStackTrace();
+//            }
+//
+//            for (BluetoothGattDescriptor descriptor : coreShotCharacteristic.getDescriptors()) {
+//                Log.e(TAG, "BluetoothGattDescriptor: " + descriptor.getUuid().toString());
+//                Log.d(TAG, "setting enable notifiction value: " + descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE));
+//                if (descriptor.getUuid().toString().equals("00002902-0000-1000-8000-00805f9b34fb")) {
+//                    BluetoothGattDescriptor descriptorToBeRead = coreShotCharacteristic.getDescriptor(descriptor.getUuid());
+//                    btGatt.readDescriptor(descriptorToBeRead);
+//
+//                    try {
+//                        Thread.sleep(500);
+//                    } catch (InterruptedException e) {
+//                        Log.e(TAG, "ERROR SLEEPING");
+//                        e.printStackTrace();
+//                    }
+//                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//                    try {
+//                        Thread.sleep(500);
+//                    } catch (InterruptedException e) {
+//                        Log.e(TAG, "ERROR SLEEPING");
+//                        e.printStackTrace();
+//                    }
+//                    btGatt.writeDescriptor(descriptor);
+//                    try {
+//                        Thread.sleep(500);
+//                    } catch (InterruptedException e) {
+//                        Log.e(TAG, "ERROR SLEEPING");
+//                        e.printStackTrace();
+//                    }
+//
+//                } else if (descriptor.getUuid().toString().equals("00002901-0000-1000-8000-00805f9b34fb")) {
+//                    BluetoothGattDescriptor descriptorToBeRead = coreShotCharacteristic.getDescriptor(descriptor.getUuid());
+//                    btGatt.readDescriptor(descriptorToBeRead);
+//                    try {
+//                        Thread.sleep(500);
+//                    } catch (InterruptedException e) {
+//                        Log.e(TAG, "ERROR SLEEPING");
+//                        e.printStackTrace();
+//                    }
+//                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//                    try {
+//                        Thread.sleep(500);
+//                    } catch (InterruptedException e) {
+//                        Log.e(TAG, "ERROR SLEEPING");
+//                        e.printStackTrace();
+//                    }
+//                    btGatt.writeDescriptor(descriptor);
+//                    try {
+//                        Thread.sleep(500);
+//                    } catch (InterruptedException e) {
+//                        Log.e(TAG, "ERROR SLEEPING");
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
 
         } catch (Exception e) {
             Log.e(TAG, "PJH - Oops, exception caught in setting notification values " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());

@@ -1191,6 +1191,8 @@ import static com.work.libtest.Operation.OPERATION_READ;
 import static com.work.libtest.Operation.OPERATION_WRITE;
 //import static com.work.libtest.TakeMeasurements.shotWriteType;
 
+import static java.lang.Math.abs;
+
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -1444,6 +1446,8 @@ public class OrientationActivity extends AppCompatActivity {
     int probePosition;
 
     private ImageView compassImage;
+    private ImageView secondaryImage;
+    private ImageView rollIndicator;
     private float currentAngle = 0f;
 
     /******************************************************************************************
@@ -1485,6 +1489,8 @@ public class OrientationActivity extends AppCompatActivity {
             probeAz = findViewById(R.id.measurement_azimuthValue);
 
             compassImage = findViewById(R.id.compassImage);
+            secondaryImage = findViewById(R.id.secondaryImage);
+            rollIndicator = findViewById(R.id.rollIndicator);
 
             rotateCompass(0f); //make the compass start at 0 by default
 
@@ -1508,12 +1514,18 @@ public class OrientationActivity extends AppCompatActivity {
                         probeRoll.setText(TakeMeasurements.recordedShots.get(probePosition).getRoll());
                         probeDip.setText(TakeMeasurements.recordedShots.get(probePosition).getDip());
                         probeAz.setText(TakeMeasurements.recordedShots.get(probePosition).getAzimuth());
+
+                        setTopAngle(Float.valueOf(TakeMeasurements.recordedShots.get(probePosition).getRoll()));
                     } catch (Exception e) {
                         Log.e(TAG, "error setting measurement data collected from survey: " + e);
                     }
                 } else {
-
+                    rollIndicator.setVisibility(ProgressBar.INVISIBLE);
+                    setTopAngle(0f);
                 }
+            } else {
+                rollIndicator.setVisibility(ProgressBar.INVISIBLE);
+                setTopAngle(0f);
             }
 
             connectTimeoutHandler = new Handler(Looper.getMainLooper());
@@ -1548,13 +1560,16 @@ public class OrientationActivity extends AppCompatActivity {
     }
 
     private void rotateCompass(float angle) {
+        // Adjust angle to account for the custom 'top' direction
+        float targetAngle = (angle - topAngle + 360) % 360;
+
         // Adjust angle for smooth transition across 0/360 boundary
-        float adjustedAngle = angle;
-        if (Math.abs(angle - currentAngle) > 180) {
-            if (angle > currentAngle) {
-                adjustedAngle = angle - 360;
+        float adjustedAngle = targetAngle;
+        if (abs(targetAngle - currentAngle) > 180) {
+            if (targetAngle > currentAngle) {
+                adjustedAngle = targetAngle - 360;
             } else {
-                adjustedAngle = angle + 360;
+                adjustedAngle = targetAngle + 360;
             }
         }
 
@@ -1568,9 +1583,15 @@ public class OrientationActivity extends AppCompatActivity {
         rotateAnimation.setDuration(500); // Animation duration in milliseconds
         rotateAnimation.setFillAfter(true); // Retain the end position
 
+        // Apply the animation to both images
         compassImage.startAnimation(rotateAnimation);
+        secondaryImage.startAnimation(rotateAnimation);
 
-        currentAngle = angle; // Update the current angle
+        currentAngle = targetAngle; // Update the current angle
+    }
+
+    public void setTopAngle(float angle) {
+        topAngle = angle % 360;
     }
 
     @Override
@@ -1902,6 +1923,8 @@ public class OrientationActivity extends AppCompatActivity {
         return null;
     }
 
+    private float topAngle = 0f; // Custom angle that represents the 'top' direction
+    private static final float THRESHOLD = 5f;
 
     // a new shot has been received, so retrieve and display it
     private void processNewReading() {
@@ -1922,6 +1945,49 @@ public class OrientationActivity extends AppCompatActivity {
             float roll = (float) newVal[7];
             Log.e(TAG, "Current roll: " + roll);
             rotateCompass(roll);
+
+            try {
+
+                if (parentActivity.equals("MEASUREMENT")) {
+                    float measurementRoll = Float.parseFloat(probeRoll.getText().toString());
+                    float threshold = 5f; //COMEBACK - make this an option in the preferences
+
+                    Log.e(TAG, "Error: " + (measurementRoll-roll));
+
+//                    if ((measurementRoll-roll) > threshold) {
+//                        rollIndicator.setImageResource(R.drawable.rollclockwise);
+//                        Log.e(TAG, "Clockwise");
+//                    } else if ((measurementRoll-roll) < -threshold) {
+//                        rollIndicator.setImageResource(R.drawable.rollcounterclockwise);
+//                        Log.e(TAG, "Counter-Clockwise");
+//                    } else {
+//                        rollIndicator.setImageResource(R.drawable.rollaquired);
+//                        Log.e(TAG, "Good");
+//                    }
+
+                    float difference = (measurementRoll - roll + 360) % 360;
+
+                    if (difference > 180) {
+                        difference -= 360; // Normalize to -180 to 180 range
+                    }
+
+                    if (Math.abs(difference) <= THRESHOLD) {
+                        // Set status image to green (aligned)
+//                        statusImage.setImageResource(R.drawable.green_icon);
+                        rollIndicator.setImageResource(R.drawable.rollaquired);
+                    } else if (difference > 0) {
+                        // Set status image to indicate clockwise turn needed
+//                        statusImage.setImageResource(R.drawable.clockwise_icon);
+                        rollIndicator.setImageResource(R.drawable.rollclockwise);
+                    } else {
+                        // Set status image to indicate counter-clockwise turn needed
+//                        statusImage.setImageResource(R.drawable.counter_clockwise_icon);
+                        rollIndicator.setImageResource(R.drawable.rollcounterclockwise);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error with setting the desired vaule: " + e);
+            }
 
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
