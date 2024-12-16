@@ -2116,6 +2116,8 @@ public class TakeMeasurements extends AppCompatActivity {
                         }
                     });
                     collectionNumImg.setImageResource(R.drawable.s0);
+                    ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+                    toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP,150);
                     break;
             }
 
