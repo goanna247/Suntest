@@ -83,6 +83,11 @@ public class ViewMeasurements extends AppCompatActivity {
         setContentView(R.layout.activity_view_measurements);
         Toolbar toolbar = findViewById(R.id.toolbar);
 
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRA_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
