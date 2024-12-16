@@ -32,6 +32,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -1442,6 +1443,9 @@ public class OrientationActivity extends AppCompatActivity {
     String probeColor = "";
     int probePosition;
 
+    private ImageView compassImage;
+    private float currentAngle = 0f;
+
     /******************************************************************************************
      * Methods for handling the life cycle of the activity
      */
@@ -1479,6 +1483,10 @@ public class OrientationActivity extends AppCompatActivity {
             probeRoll = findViewById(R.id.measurement_rollValue);
             probeDip = findViewById(R.id.measurement_dipValue);
             probeAz = findViewById(R.id.measurement_azimuthValue);
+
+            compassImage = findViewById(R.id.compassImage);
+
+            rotateCompass(0f); //make the compass start at 0 by default
 
 
             final Intent intent = getIntent();
@@ -1537,6 +1545,32 @@ public class OrientationActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Exception thrown in onCreate in Orientation Activity: " + e);
         }
+    }
+
+    private void rotateCompass(float angle) {
+        // Adjust angle for smooth transition across 0/360 boundary
+        float adjustedAngle = angle;
+        if (Math.abs(angle - currentAngle) > 180) {
+            if (angle > currentAngle) {
+                adjustedAngle = angle - 360;
+            } else {
+                adjustedAngle = angle + 360;
+            }
+        }
+
+        RotateAnimation rotateAnimation = new RotateAnimation(
+                currentAngle, // Start angle
+                adjustedAngle, // End angle
+                RotateAnimation.RELATIVE_TO_SELF, 0.5f, // Pivot X
+                RotateAnimation.RELATIVE_TO_SELF, 0.5f  // Pivot Y
+        );
+
+        rotateAnimation.setDuration(500); // Animation duration in milliseconds
+        rotateAnimation.setFillAfter(true); // Retain the end position
+
+        compassImage.startAnimation(rotateAnimation);
+
+        currentAngle = angle; // Update the current angle
     }
 
     @Override
@@ -1884,6 +1918,10 @@ public class OrientationActivity extends AppCompatActivity {
             textRoll.setText(String.format("%7.4f", newVal[7]));
             textDip.setText(String.format("%7.4f", newVal[8]));
             textAz.setText(String.format("%7.4f", newVal[9]));
+
+            float roll = (float) newVal[7];
+            Log.e(TAG, "Current roll: " + roll);
+            rotateCompass(roll);
 
         } catch (Exception e) {
             Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
