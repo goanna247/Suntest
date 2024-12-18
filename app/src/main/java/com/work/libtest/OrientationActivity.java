@@ -1965,6 +1965,8 @@ public class OrientationActivity extends AppCompatActivity {
 //                        Log.e(TAG, "Good");
 //                    }
 
+
+
                     float difference = (measurementRoll - roll + 360) % 360;
 
                     if (difference > 180) {
