@@ -103,8 +103,8 @@
 
                 <LinearLayout
                     android:id="@+id/preferences_presentation_showRoll"
-                    android:layout_width="fill_parent"
-                    android:layout_height="40dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:background="#ffffff"
                     android:orientation="horizontal"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -140,6 +140,80 @@
 
                 </LinearLayout>
 
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/black_rec"></ImageView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:background="#ffffff"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_home"
+                    android:gravity="bottom">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.9"
+                        android:paddingLeft="10dp"
+                        android:paddingTop="10dp"
+                        android:text="Nominal Magnitude"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/preferences_nominalMagDisplayOption_"
+                        android:layout_width="94dp"
+                        android:layout_height="60dp"
+                        android:layout_weight="0.3"
+                        android:gravity="right"
+                        android:paddingRight="20dp"
+                        android:ems="10"
+                        android:inputType="number"/>
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/black_rec"></ImageView>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="60dp"
+                    android:background="#ffffff"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_home"
+                    android:gravity="bottom">
+
+                    <TextView
+                        android:layout_width="289dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.9"
+                        android:paddingLeft="10dp"
+                        android:paddingTop="10dp"
+                        android:text="Roll Display"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/preferences_magDevDisplay_"
+                        android:layout_width="wrap_content"
+                        android:layout_height="60dp"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:inputType="number" />
+
+                </LinearLayout>
+
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -153,9 +227,5 @@
         app:layout_anchor="@+id/appBarLayout"
         app:layout_anchorGravity="center"
         app:popupTheme="@style/AppTheme.PopupOverlay" />
-
-    <!--    <include layout="@layout/content_preferences" />-->
-
-    <!--    This is gonna be a long file :|-->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

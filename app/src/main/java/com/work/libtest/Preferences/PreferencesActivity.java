@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -68,6 +69,9 @@ public class PreferencesActivity extends AppCompatActivity {
     TextView preferences_rollOptions;
     CheckBox preferences_rollOptions_check;
 
+    EditText preferences_nomValue; //nominal magnitude for the magnetic field of the probe;
+    EditText preferences_maxDev; //maximum deviation for the magnetic field of the probe;
+
     private Menu menu;
 
     /**
@@ -89,6 +93,9 @@ public class PreferencesActivity extends AppCompatActivity {
 
         preferences_rollOptions = findViewById(R.id.preferences_roll);
         preferences_rollOptions_check = findViewById(R.id.preferences_roll_check);
+
+        preferences_nomValue = (EditText) findViewById(R.id.preferences_nominalMagDisplayOption_);
+        preferences_maxDev = (EditText) findViewById(R.id.preferences_magDevDisplay_);
 
         final Intent intent = getIntent();
         parentActivity = intent.getStringExtra(EXTRA_PARENT_ACTIVITY);
@@ -137,6 +144,8 @@ public class PreferencesActivity extends AppCompatActivity {
     private void loadPreferences() {
         boolean bore = Globals.simplePreferences.getBoreMode();
         boolean rollOptions = Globals.simplePreferences.getRollMode();
+        int nomMag = Globals.simplePreferences.getNominalValueMagneticField();
+        int maxDev = Globals.simplePreferences.getMaximumDeviationMagneticField();
 
         preferences_mode_check.setChecked(bore);
         if (bore) {
@@ -151,6 +160,10 @@ public class PreferencesActivity extends AppCompatActivity {
         } else {
             preferences_rollOptions.setText("-180 to 180");
         }
+
+
+        preferences_nomValue.setText(String.valueOf(nomMag), TextView.BufferType.EDITABLE);
+        preferences_maxDev.setText(String.valueOf(maxDev), TextView.BufferType.EDITABLE);
     }
 
     /**
@@ -188,7 +201,7 @@ public class PreferencesActivity extends AppCompatActivity {
      */
     private void back() {
         //save all the current data
-        SimplePreferences newPreferences = new SimplePreferences(preferences_mode_check.isChecked(), preferences_rollOptions_check.isChecked());
+        SimplePreferences newPreferences = new SimplePreferences(preferences_mode_check.isChecked(), preferences_rollOptions_check.isChecked(), Integer.valueOf(preferences_nomValue.getText().toString()), Integer.valueOf(preferences_maxDev.getText().toString()));
         Globals.simplePreferences = newPreferences;
 
         if (preferences_mode_check.isChecked()) { //Bore
@@ -206,7 +219,5 @@ public class PreferencesActivity extends AppCompatActivity {
             intent.putExtra(CoreMain.EXTRA_PARENT_ACTIVITY, "Preferences");
             startActivity(intent);
         }
-
-
     }
 }

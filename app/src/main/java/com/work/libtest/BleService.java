@@ -290,7 +290,7 @@ public class BleService extends Service {
                 Log.e(TAG, "Could not get a BluetoothAdapter on this device");
             }
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in service onBind " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
         return new LocalBinder();                                                                   //Return Binder object that the binding Activity needs to use the service
     }
@@ -321,7 +321,7 @@ public class BleService extends Service {
                 btGatt.close();                                                                     //Close the connection as the service is ending
             }
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in onDestroy " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
         super.onDestroy();
     }
@@ -350,7 +350,7 @@ public class BleService extends Service {
                     }
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+                Log.e(TAG, "Oops, exception caught in broadcast receiver " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
             }
         }
     };
@@ -392,7 +392,7 @@ public class BleService extends Service {
                     }
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+                Log.e(TAG, "Oops, exception caught in gatt callback " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
             }
         }
 
@@ -668,10 +668,11 @@ public class BleService extends Service {
                 //    btGatt.writeCharacteristic(transparentSendCharacteristic);                      //Write characteristic
                 //}
             } catch (Exception e) {
-                Log.e(TAG, "PJH - Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+                Log.e(TAG, "PJH - Oops, exception caught in onCharacteristic write " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
             }
         }
 
+        //am i actually doing anything here?
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) { //Write descriptor completed
             try {
@@ -684,7 +685,7 @@ public class BleService extends Service {
                 //    btGatt.writeDescriptor(descriptorWriteQueue.element());                         //Write descriptor
                 //}
             } catch (Exception e) {
-                Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+                Log.e(TAG, "Oops, exception caught in onDescriptor write" + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
             }
         }
 
@@ -838,11 +839,11 @@ public class BleService extends Service {
                     //    sendBroadcast(new Intent(ACTION_BLE_CHARACTERISTIC_READ));                        //Broadcast Intent to announce the new data. This does not send the data, it needs to be read by calling readFromTransparentUART() below
                 }
             } catch (Exception e) {
-                Log.e(TAG, "PJH - Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+                Log.e(TAG, "PJH - Oops, exception caught in on characteristic read " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
             }
 
 
-        } //Read completed - not used because this application uses Notification or Indication to receive characteristic data
+        }
 
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
@@ -920,7 +921,7 @@ public class BleService extends Service {
                 return btAdapter.isEnabled();                                                       //Return enabled state of Bluetooth radio
             }
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in is bluetooth radio enabled" + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
         return false;
     }
@@ -950,7 +951,7 @@ public class BleService extends Service {
             }
             Log.d(TAG, "Attempting to create a new Bluetooth connection");
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in connecting BLE " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
 
@@ -963,59 +964,9 @@ public class BleService extends Service {
                 btGatt.disconnect();                                                                //Disconnect
             }
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in disconnecting BLE" + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
     }
-
-    // ----------------------------------------------------------------------------------------------------------------
-    // Read from the Transparent UART - get all the bytes that have been received since the last read
-    /*
-    public byte[] readFromTransparentUART() {
-        try {
-            final byte[] out = transparentReceiveOutput.toByteArray();                              //Get bytes from the ByteArrayOutputStream where they were put when onCharacteristicChanged was executed
-            transparentReceiveOutput.reset();                                                       //Reset (empty) the ByteArrayOutputStream since we have all the bytes
-            return out;                                                                             //Return the array of bytes
-        } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
-        }
-        return new byte[0];
-    }
-
-     */
-
-    // ----------------------------------------------------------------------------------------------------------------
-    // Write to the Transparent UART
-    /*
-    public void writeToTransparentUART(byte[] bytesToWrite) {
-        try {
-
-            if (btAdapter != null && btGatt != null && transparentSendCharacteristic != null) {     //See if there is a radio, a connection, and a valid characteristic
-                while (bytesToWrite.length > 0) {                                                   //Keep doing writes (adding to the write queue) until all bytes have been written
-                    int length = Math.min(bytesToWrite.length, CharacteristicSize);                 //Get the number of bytes to write, limited to the max size of a characteristic
-                    byte[] limitedBytesToWrite = Arrays.copyOf(bytesToWrite, length);               //Get a subset of the bytes that will fit into a characteristic
-                    bytesToWrite = Arrays.copyOfRange(bytesToWrite, length, bytesToWrite.length);   //Get the remaining bytes ready for the next write
-                    characteristicWriteQueue.add(limitedBytesToWrite);                              //Put the characteristic value into the write queue
-                    if (characteristicWriteQueue.size() == 1) {                                     //If there is only 1 item in the queue, then write it.  If more than 1, we do it in the onCharacteristicWrite() callback above
-                        transparentSendCharacteristic.setValue(limitedBytesToWrite);                //Put the bytes into the characteristic value
-                        Log.i(TAG, "Characteristic write started");
-                        if (!btGatt.writeCharacteristic(transparentSendCharacteristic)) {           //Request the BluetoothGatt to do the Write
-                            Log.w(TAG, "Failed to write characteristic");                      //Warning that write request was not accepted by the BluetoothGatt
-                        }
-                    }
-                }
-            }
-            else {
-                Log.w(TAG, "Write attempted with Bluetooth uninitialized or not connected");
-            }
-
-
-        } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
-        }
-    }
-
-     */
-
 
     // ----------------------------------------------------------------------------------------------------------------
     //
@@ -1161,7 +1112,7 @@ public class BleService extends Service {
             }
 
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in processing boreshot" + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
         return new byte[0];
     }
@@ -1308,7 +1259,7 @@ public class BleService extends Service {
             }
 
         } catch (Exception e) {
-            Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "Oops, exception caught in processing coreshot" + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
         return new byte[0];
     }
@@ -1843,7 +1794,7 @@ public class BleService extends Service {
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "PJH - parse - Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+            Log.e(TAG, "PJH - parse - Oops, exception caught in parsing binary calibration " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
         }
 
         if (isCalibrated != true) {
