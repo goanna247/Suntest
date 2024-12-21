@@ -45,11 +45,7 @@ public class BleService2 extends Service {
     public final static String ACTION_BLE_NEW_DATA_RECEIVED_WHITE = "com.example.javatest.ACTION_BLE_NEW_DATA_RECEIVED"; //Identifier for Intent to announce a new characteristic notification
     public final static String ACTION_BLE_FETCH_CAL_WHITE = "com.example.javatest.ACTION_BLE_FETCH_CAL"; //Identifier for Intent to announce a new characteristic notification
 
-
-
-
     //public final static String ACTION_BLE_CHARACTERISTIC_READ =  "com.example.javatest.ACTION_BLE_CHARACTERISTIC_READ"; //Identifier for Intent to announce a new characteristic notification
-
 
     //private final static UUID UUID_TRANSPARENT_PRIVATE_SERVICE = UUID.fromString("49535343-fe7d-4ae5-8fa9-9fafd205e455"); //Private service for Transparent UART
     //private final static UUID UUID_TRANSPARENT_SEND_CHAR =       UUID.fromString("49535343-8841-43f4-a8d4-ecbe34729bb3"); //Characteristic for Transparent UART to send to RN or BM module, properties - write, write no response
@@ -428,158 +424,71 @@ public class BleService2 extends Service {
                     BluetoothGattService gattCameraService = gatt.getService(UUID_CAMERA_SERVICE); //Get the Transparent UART service
                     if (gattCameraService != null) {                                                      //Check that the service was discovered
                         Log.i(TAG, "PJH - Found Camera service");
-                        //final BluetoothGattCharacteristic transparentReceiveCharacteristic = gattService.getCharacteristic(UUID_TRANSPARENT_RECEIVE_CHAR); //Get the characteristic for receiving from the Transparent UART
-                        //if (transparentReceiveCharacteristic != null) {                             //See if the characteristic was found
-                        //    Log.i(TAG, "Found Transparent Receive characteristic");
-                        //    final int characteristicProperties = transparentReceiveCharacteristic.getProperties(); //Get the properties of the characteristic
-                        //    if ((characteristicProperties & (BluetoothGattCharacteristic.PROPERTY_NOTIFY)) > 0) { //See if the characteristic has the Notify property
-                        //        BluetoothGattDescriptor descriptor = transparentReceiveCharacteristic.getDescriptor(UUID_CCCD); //Get the descriptor that enables notification on the server
-                        //        if (descriptor != null) {                                           //See if we got the descriptor
-                        //            btGatt.setCharacteristicNotification(transparentReceiveCharacteristic, true); //If so then enable notification in the BluetoothGatt
-                        //            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE); //Set the value of the descriptor to enable notification
-                        //            descriptorWriteQueue.add(descriptor);                           //Put the descriptor into the write queue
-                        //            if (descriptorWriteQueue.size() == 1) {                         //If there is only 1 item in the queue, then write it.  If more than 1, we handle asynchronously in the onDescriptorWrite callback below
-                        //                btGatt.writeDescriptor(descriptor);                         //Write the descriptor
-                        //            }
-                        //        }
-                        //        else {
-                        //            discoveryFailed = true;
-                        //            Log.w(TAG, "No CCCD descriptor for Transparent Receive characteristic");
-                        //        }
-                        //    }
-                        //    else {
-                        //        discoveryFailed = true;
-                        //        Log.w(TAG, "Transparent Receive characteristic does not have notify property");
-                        //    }
-                        //}
-                        //else {
-                        //    discoveryFailed = true;
-                        //    Log.w(TAG, "Did not find Transparent Receive characteristic");
-                        //}
-
                         coreShotCharacteristic = gattCameraService.getCharacteristic(UUID_CORE_SHOT_CHAR);
                         if (initNonWritableCharacteristic(coreShotCharacteristic, "Core shot") == true) {
                             discoveryFailed = true;
                         }
-
                         probeModeCharacteristic = gattCameraService.getCharacteristic(UUID_PROBE_MODE_CHAR);
                         if (initWritableCharacteristic(probeModeCharacteristic, "Probe Mode") == true) {
                             discoveryFailed = true;
                         }
-
                         probeShotRequestCharacteristic = gattCameraService.getCharacteristic(UUID_SHOT_REQUEST_CHAR);
                         if (initWritableCharacteristic(probeShotRequestCharacteristic, "Shot request") == true) {
                             discoveryFailed = true;
                         }
-
                         shotIntervalCharacteristic = gattCameraService.getCharacteristic(UUID_SHOT_INTERVAL_CHAR);
                         if (initWritableCharacteristic(shotIntervalCharacteristic, "Shot Interval") == true) {
                             discoveryFailed = true;
                         }
-
                         majorVersionNumberCharacteristic = gattCameraService.getCharacteristic(UUID_MAJOR_VERSION_NUMBER_CHAR);
                         if (initNonWritableCharacteristic(shotIntervalCharacteristic, "Major Version Number") == true) {
                             discoveryFailed = true;
                         }
-
                         minorVersionNumberCharacteristic = gattCameraService.getCharacteristic(UUID_MINOR_VERSION_NUMBER_CHAR);
                         if (initNonWritableCharacteristic(shotIntervalCharacteristic, "MinorVersionNumber") == true) {
                             discoveryFailed = true;
                         }
-
-
                         surveyMaxShotsCharacteristic = gattCameraService.getCharacteristic(UUID_SURVEY_MAX_SHOTS_CHAR);
                         if (initNonWritableCharacteristic(surveyMaxShotsCharacteristic, "Survey Max Shots") == true) {
                             discoveryFailed = true;
                         }
-
                         rollingShotIntervalCharacteristic = gattCameraService.getCharacteristic(UUID_ROLLING_SHOT_INTERVAL_CHAR);
                         if (initWritableCharacteristic(rollingShotIntervalCharacteristic, "Rolling Shot Interval") == true) {
                             discoveryFailed = true;
                         }
-
                         debugCharacteristic = gattCameraService.getCharacteristic(UUID_DEBUG_CHAR);
                         if (initWritableCharacteristic(debugCharacteristic, "Debug") == true) {
                             discoveryFailed = true;
                         }
-
                         debug2Characteristic = gattCameraService.getCharacteristic(UUID_DEBUG2_CHAR);
                         if (initWritableCharacteristic(debug2Characteristic, "Debug2") == true) {
                             discoveryFailed = true;
                         }
-
-
                     } else {
                         discoveryFailed = true;
                         Log.w(TAG, "PJH - Did not find Camera service");
                     }
-
                     BluetoothGattService gattCalibrationService = gatt.getService(UUID_CALIBRATION_SERVICE); //Get the Transparent UART service
                     if (gattCalibrationService != null) {                                                      //Check that the service was discovered
                         Log.i(TAG, "PJH - Found Calibration service");
-
-
                         calibrationAddressCharacteristic = gattCalibrationService.getCharacteristic(UUID_CALIBRATION_ADDRESS_CHAR); //Get the Calibration Address characteristic
                         if (initNonWritableCharacteristic(calibrationAddressCharacteristic, "Calibration Address") == true) {
                             discoveryFailed = true;
                         }
-
                         calibrationDataCharacteristic = gattCalibrationService.getCharacteristic(UUID_CALIBRATION_DATA_CHAR); //Get the Calibration Data characteristic
                         if (initWritableCharacteristic(calibrationAddressCharacteristic, "Calibration Data") == true) {
                             discoveryFailed = true;
                         }
-
-/*
-                        probeModeCharacteristic = gattCameraService.getCharacteristic(UUID_CALIBRATION_ADDRESS_CHAR); //Get the Calibration Address characteristic
-                        if (probeModeCharacteristic != null) {                                //See if the characteristic was found
-                            Log.i(TAG, "Found Calibration Address characteristic");
-                            final int characteristicProperties = probeModeCharacteristic.getProperties(); //Get the properties of the characteristic
-                            if ((characteristicProperties & (BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) > 0) { //See if the characteristic has the Write (unacknowledged) property
-                                probeModeCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE); //If so then set the write type (write with no acknowledge) in the BluetoothGatt
-                            } else if ((characteristicProperties & (BluetoothGattCharacteristic.PROPERTY_WRITE)) > 0) { //Else see if the characteristic has the Write (acknowledged) property
-                                probeModeCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT); //If so then set the write type (write with no acknowledge) in the BluetoothGatt
-                            } else {
-                                discoveryFailed = true;
-                                Log.w(TAG, "Calibration Address characteristic does not have write property");
-                            }
-                        }
-                        else {
-                            discoveryFailed = true;
-                            Log.w(TAG, "Did not find Calibration Address characteristic");
-                        }
-
-                        probeModeCharacteristic = gattCameraService.getCharacteristic(UUID_CALIBRATION_DATA_CHAR); //Get the Calibration Data characteristic
-                        if (probeModeCharacteristic != null) {                                //See if the characteristic was found
-                            Log.i(TAG, "Found Calibration Data characteristic");
-                            final int characteristicProperties = probeModeCharacteristic.getProperties(); //Get the properties of the characteristic
-                            if ((characteristicProperties & (BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) > 0) { //See if the characteristic has the Write (unacknowledged) property
-                                probeModeCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE); //If so then set the write type (write with no acknowledge) in the BluetoothGatt
-                            } else if ((characteristicProperties & (BluetoothGattCharacteristic.PROPERTY_WRITE)) > 0) { //Else see if the characteristic has the Write (acknowledged) property
-                                probeModeCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT); //If so then set the write type (write with no acknowledge) in the BluetoothGatt
-                            } else {
-                                discoveryFailed = true;
-                                Log.w(TAG, "Calibration Data characteristic does not have write property");
-                            }
-                        }
-                        else {
-                            discoveryFailed = true;
-                            Log.w(TAG, "Did not find Calibration Data characteristic");
-                        }
- */
                     } else {
                         discoveryFailed = true;
                         Log.w(TAG, "PJH - Did not find Calibration service");
                     }
-
-
                 } else {
                     discoveryFailed = true;
                     Log.w(TAG, "PJH - Failed service discovery with status: " + status);
                 }
 
-
                 if (!discoveryFailed) {                                                             //Service discovery returned the correct service and characteristics
-                    // btGatt.requestMtu(512);     think cc2541 is limited to 20/23                                                    //Request max data length and get the negotiated length in mtu argument of onMtuChanged()
                     sendBroadcast(new Intent(ACTION_BLE_DISCOVERY_DONE_WHITE));                           //Broadcast Intent to announce the completion of service discovery
                     Log.i(TAG, "PJH - BLE discovery successful");
                 } else {

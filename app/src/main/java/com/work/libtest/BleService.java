@@ -170,6 +170,7 @@ public class BleService extends Service {
 
     // SET DURING PARSING:
     final int NUM_CAL_PARAMS_EXPECTED_DURING_PARSING = 38;
+    final int NUM_CAL_PARAMS_EXPECTED_DURING_PARSING_OLD_VERSION = 36; //some of the core probes are weird and dont have any temperature parameters
 
     private int binCalData_size = 0;  // determine the length of binCalData during parsing
 
@@ -1780,10 +1781,17 @@ public class BleService extends Service {
                                 isCalibrated = true;
                                 Log.i(TAG, String.format("PJH - parse - found %d calibration parameters", coeffs_found));
                                 Log.w(TAG, "PJH - successfully parsed binary calibration data  =======================");
+                            } else if (coeffs_found == NUM_CAL_PARAMS_EXPECTED_DURING_PARSING_OLD_VERSION) {
+                                //replace temperature coefficients here
+                                temp_param[0] = 0;
+                                temp_param[1] = 0;
+                                isCalibrated = true;
+                                Log.i(TAG, String.format("PJH - parse - found %d calibration parameters", coeffs_found));
+                                Log.w(TAG, "PJH - successfully parsed binary calibration data  =======================");
+                            } else {
+                                Log.e(TAG, "Incorrect number of calibration parameters found");
                             }
                         }
-
-
                     } else {
                         // oops, calibration data is not valid
                         Log.w(TAG, "PJH - CRC of the body of the binary cal data is incorrect - aborting");

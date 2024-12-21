@@ -175,6 +175,9 @@ public class CoreMain extends AppCompatActivity {
                 }
             }
 
+            Log.e(TAG, "Seconds: " + seconds);
+            Log.e(TAG, "Black probe: " + bleDeviceNameBlack + ", Connection status: " + stateConnectionBlack.toString());
+            Log.e(TAG, "White probe: " + bleDeviceNameWhite + ", Connection status: " + stateConnectionWhite.toString());
 
             timerHandler.postDelayed(this, 1000);
         }
@@ -523,18 +526,23 @@ public class CoreMain extends AppCompatActivity {
         //COMEBACK
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {              //Service connects
+
             try {
-                Log.i(TAG, "BleService2 connected");
-                BleService2.LocalBinder binder = (BleService2.LocalBinder) service;                   //Get the Binder for the Service
-                bleServiceWhite = binder.getService();                                                   //Get a link to the Service from the Binder
-                if (bleServiceWhite.isBluetoothRadioEnabled()) {                                         //See if the Bluetooth radio is on
-                    stateAppWhite = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
-                    //startBleScanActivity();                                                         //Launch the BleScanActivity to scan for BLE devices
-                } else {                                                                              //Radio needs to be enabled
-                    stateAppWhite = StateApp.ENABLING_BLUETOOTH;                                         //Are requesting Bluetooth to be turned on
-                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);     //Create an Intent asking the user to grant permission to enable Bluetooth
-                    startActivityForResult(enableBtIntent, REQ_CODE_ENABLE_BT);                     //Send the Intent to start the Activity that will return a result based on user input
-                    Log.i(TAG, "Requesting user to turn on Bluetooth");
+                if (bleDeviceNameWhite == null || bleDeviceNameWhite.equals("") || bleDeviceNameWhite.equals("Unknown device")) {
+
+                } else {
+                    Log.i(TAG, "BleService2 connected");
+                    BleService2.LocalBinder binder = (BleService2.LocalBinder) service;                   //Get the Binder for the Service
+                    bleServiceWhite = binder.getService();                                                   //Get a link to the Service from the Binder
+                    if (bleServiceWhite.isBluetoothRadioEnabled()) {                                         //See if the Bluetooth radio is on
+                        stateAppWhite = StateApp.RUNNING;                                                    //Service is running and Bluetooth is enabled, app is now fully operational
+                        //startBleScanActivity();                                                         //Launch the BleScanActivity to scan for BLE devices
+                    } else {                                                                              //Radio needs to be enabled
+                        stateAppWhite = StateApp.ENABLING_BLUETOOTH;                                         //Are requesting Bluetooth to be turned on
+                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);     //Create an Intent asking the user to grant permission to enable Bluetooth
+                        startActivityForResult(enableBtIntent, REQ_CODE_ENABLE_BT);                     //Send the Intent to start the Activity that will return a result based on user input
+                        Log.i(TAG, "Requesting user to turn on Bluetooth");
+                    }
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Oops, exception caught in " + e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
@@ -626,6 +634,18 @@ public class CoreMain extends AppCompatActivity {
         return intentFilter;                                                                        //Return the new IntentFilter
     }
 
+    private static IntentFilter bleServiceIntentFilterWhite() {                                          //Method to create and return an IntentFilter
+        final IntentFilter intentFilter = new IntentFilter();                                       //Create a new IntentFilter
+        intentFilter.addAction(BleService2.ACTION_BLE_CONNECTED_WHITE);                                    //Add filter for receiving an Intent from BleService announcing a new connection
+        intentFilter.addAction(BleService2.ACTION_BLE_DISCONNECTED_WHITE);                                 //Add filter for receiving an Intent from BleService announcing a disconnection
+        intentFilter.addAction(BleService2.ACTION_BLE_DISCOVERY_DONE_WHITE);                               //Add filter for receiving an Intent from BleService announcing a service discovery
+        intentFilter.addAction(BleService2.ACTION_BLE_DISCOVERY_FAILED_WHITE);                             //Add filter for receiving an Intent from BleService announcing failure of service discovery
+        intentFilter.addAction(BleService2.ACTION_BLE_NEW_DATA_RECEIVED_WHITE);                            //Add filter for receiving an Intent from BleService announcing new data received
+        intentFilter.addAction(BleService2.ACTION_BLE_CONFIG_READY_WHITE);                            //Add filter for receiving an Intent from BleService announcing new data received
+        intentFilter.addAction(BleService2.ACTION_BLE_FETCH_CAL_WHITE);  // PJH - just to update display
+        return intentFilter;                                                                        //Return the new IntentFilter
+    }
+
     // ----------------------------------------------------------------------------------------------------------------
     // BroadcastReceiver handles various Intents sent by the BleService service.
     private final BroadcastReceiver bleServiceReceiverBlack = new BroadcastReceiver() {
@@ -686,7 +706,7 @@ public class CoreMain extends AppCompatActivity {
                     break;
                 }
                 case BleService.ACTION_BLE_CONFIG_READY: {                                             //Have read all the Ezy parameters from BLE device
-                    Log.d(TAG, "Received Intent  ACTION_BLE_CONFIG_READY");
+                    Log.d(TAG, "Received Intent ACTION_BLE_CONFIG_READY");
                     textDeviceStatus.setText(R.string.ready);
                     blackProbeStatusImg.setImageResource(R.drawable.ready);
                     try {
@@ -724,7 +744,7 @@ public class CoreMain extends AppCompatActivity {
     private final BroadcastReceiver bleServiceReceiverWhite = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.e(TAG, "Intent received for WHITE PROBE"); //Intent received
+//            Log.e(TAG, "Intent received for WHITE PROBE"); //Intent received
             final String action = intent.getAction();                                               //Get the action String from the Intent
             switch (action) {                                                                       //See which action was in the Intent
                 case BleService2.ACTION_BLE_CONNECTED_WHITE: {                                             //Have connected to BLE device
@@ -737,7 +757,7 @@ public class CoreMain extends AppCompatActivity {
                     break;
                 }
                 case BleService2.ACTION_BLE_DISCONNECTED_WHITE: {                                          //Have disconnected from BLE device
-                    Log.d(TAG, "Received Intent ACTION_BLE_DISCONNECTED");
+                    Log.d(TAG, "Received Intent WHITE ACTION_BLE_DISCONNECTED");
                     initializeDisplay();                                                            //Clear the temperature and accelerometer text and graphs
                     transparentUartData.reset();                                                    //Also clear any buffered incoming data
                     stateConnectionWhite = StateConnection.DISCONNECTED;
@@ -754,17 +774,17 @@ public class CoreMain extends AppCompatActivity {
                     break;
                 }
                 case BleService2.ACTION_BLE_DISCOVERY_DONE_WHITE: {                                        //Have completed service discovery
-                    Log.d(TAG, "PJH - Received Intent  ACTION_BLE_DISCOVERY_DONE");
-                    connectTimeoutHandlerWhite.removeCallbacks(abandonConnectionAttemptWhite);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
-                    whiteProbeStatusImg.setImageResource(R.drawable.calibrating);
-                    stateConnectionWhite = StateConnection.CONNECTED;                                    //Were already connected but showing discovering, not connected
-                    updateConnectionStateWhite();                                                        //Update the screen and menus
-                    Log.i(TAG, "PJH - about to request Ezy config");
-                    bleServiceWhite.requestEzyConfig();                                                         //Ask the BleService to connect to start interrogating the device for its configuration
+//                    Log.d(TAG, "PJH - Received Intent WHITE ACTION_BLE_DISCOVERY_DONE");
+//                    connectTimeoutHandlerWhite.removeCallbacks(abandonConnectionAttemptWhite);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
+//                    whiteProbeStatusImg.setImageResource(R.drawable.calibrating);
+//                    stateConnectionWhite = StateConnection.CONNECTED;                                    //Were already connected but showing discovering, not connected
+//                    updateConnectionStateWhite();                                                        //Update the screen and menus
+//                    Log.i(TAG, "PJH - about to request Ezy config");
+//                    bleServiceWhite.requestEzyConfig();                                                         //Ask the BleService to connect to start interrogating the device for its configuration
                     break;
                 }
                 case BleService2.ACTION_BLE_DISCOVERY_FAILED_WHITE: {                                      //Service discovery failed to find the right service and characteristics
-                    Log.d(TAG, "Received Intent  ACTION_BLE_DISCOVERY_FAILED");
+                    Log.d(TAG, "Received Intent WHITE ACTION_BLE_DISCOVERY_FAILED");
                     whiteProbeStatusImg.setImageResource(R.drawable.unconnected);
                     stateConnectionWhite = StateConnection.DISCONNECTING;                                //Were already connected but showing discovering, so are now disconnecting
                     connectTimeoutHandlerWhite.removeCallbacks(abandonConnectionAttemptWhite);                //Stop the connection timeout handler from calling the runnable to stop the connection attempt
@@ -779,7 +799,7 @@ public class CoreMain extends AppCompatActivity {
                     break;
                 }
                 case BleService2.ACTION_BLE_CONFIG_READY_WHITE: {                                             //Have read all the Ezy parameters from BLE device
-                    Log.d(TAG, "Received Intent  ACTION_BLE_CONFIG_READY");
+                    Log.d(TAG, "Received Intent WHITE ACTION_BLE_CONFIG_READY");
                     whiteTextDeviceStatus.setText(R.string.ready);
                     whiteProbeStatusImg.setImageResource(R.drawable.ready);
 
@@ -798,17 +818,17 @@ public class CoreMain extends AppCompatActivity {
                     break;
                 }
                 case BleService2.ACTION_BLE_FETCH_CAL_WHITE: {                                        //Have completed service discovery
-                    Log.d(TAG, "Received Intent  ACTION_BLE_FETCH_CAL");
+                    Log.d(TAG, "Received Intent WHITE ACTION_BLE_FETCH_CAL");
                     whiteTextDeviceStatus.setText("Fetching calibration");                            //Show "Discovering"
                     whiteProbeStatusImg.setImageResource(R.drawable.calibrating);
                     break;
                 }
                 case BleService2.ACTION_BLE_NEW_DATA_RECEIVED_WHITE: {                                     //Have received data (characteristic notification) from BLE device
-                    Log.i(TAG, "Received Intent ACTION_BLE_NEW_DATA_RECEIVED");
+                    Log.i(TAG, "Received Intent WHITE ACTION_BLE_NEW_DATA_RECEIVED");
                     break;
                 }
                 default: {
-                    Log.w(TAG, "Received Intent with invalid action: " + action);
+                    Log.w(TAG, "Received Intent WHITE with invalid action: " + action);
                 }
             }
         }
